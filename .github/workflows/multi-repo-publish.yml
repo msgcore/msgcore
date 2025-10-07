@@ -1,0 +1,339 @@
+name: Multi-Repo Package Publishing
+
+on:
+  workflow_dispatch:
+    inputs:
+      publish_sdk:
+        description: 'Create PR for @msgcore/sdk'
+        required: true
+        default: true
+        type: boolean
+      publish_cli:
+        description: 'Create PR for @msgcore/cli'
+        required: true
+        default: true
+        type: boolean
+      publish_n8n:
+        description: 'Create PR for n8n-nodes-msgcore'
+        required: true
+        default: false
+        type: boolean
+
+env:
+  NODE_VERSION: '20'
+
+jobs:
+  generate-and-create-prs:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout main repo
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Get backend version (coordinates all packages)
+        id: versions
+        run: |
+          # Backend version is the source of truth for all packages
+          VERSION=$(node -p "require('./package.json').version")
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "sdk_version=$VERSION" >> $GITHUB_OUTPUT
+          echo "cli_version=$VERSION" >> $GITHUB_OUTPUT
+          echo "n8n_version=$VERSION" >> $GITHUB_OUTPUT
+          echo "📦 Backend version: $VERSION (will be used for all packages)"
+
+      - name: Generate all packages with coordinated version
+        run: |
+          npm run extract:contracts
+          npm run generate:sdk
+          npm run generate:cli
+          npm run generate:n8n
+
+          # Verify coordinated versioning
+          SDK_VER=$(node -p "require('./generated/sdk/package.json').version")
+          CLI_VER=$(node -p "require('./generated/cli/package.json').version")
+          N8N_VER=$(node -p "require('./generated/n8n/package.json').version")
+          BACKEND_VER=$(node -p "require('./package.json').version")
+
+          echo "✅ Coordinated versions:"
+          echo "   Backend: $BACKEND_VER"
+          echo "   SDK: $SDK_VER"
+          echo "   CLI: $CLI_VER"
+          echo "   n8n: $N8N_VER"
+
+          # Verify all match
+          if [ "$SDK_VER" != "$BACKEND_VER" ] || [ "$CLI_VER" != "$BACKEND_VER" ] || [ "$N8N_VER" != "$BACKEND_VER" ]; then
+            echo "❌ Version mismatch detected!"
+            exit 1
+          fi
+
+      - name: Get commit info
+        id: commit
+        run: |
+          COMMIT_SHA=$(git rev-parse --short HEAD)
+          COMMIT_MSG=$(git log -1 --pretty=%B | head -n1)
+          TIMESTAMP=$(date +%s)
+          echo "commit_sha=$COMMIT_SHA" >> $GITHUB_OUTPUT
+          echo "commit_msg=$COMMIT_MSG" >> $GITHUB_OUTPUT
+          echo "branch_suffix=$TIMESTAMP" >> $GITHUB_OUTPUT
+
+      - name: Setup Git
+        run: |
+          git config --global user.email "${{ vars.GIT_USER_EMAIL }}"
+          git config --global user.name "${{ vars.GIT_USER_NAME }}"
+
+      - name: Setup repos for Claude Code analysis
+        env:
+          GITHUB_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
+        run: |
+          # Clone repos and stage changes for git diff analysis
+          if [ "${{ inputs.publish_sdk }}" == "true" ]; then
+            echo "📦 Setting up SDK repo for analysis..."
+            git clone https://x-access-token:$GITHUB_TOKEN@github.com/${{ vars.SDK_REPO }}.git sdk-repo
+            cd sdk-repo
+            find . -maxdepth 1 -not -name '.git' -not -name '.' -not -name '..' -exec rm -rf {} \;
+            cp -r $GITHUB_WORKSPACE/generated/sdk/. .
+            git add .
+            cd ..
+          fi
+
+          if [ "${{ inputs.publish_cli }}" == "true" ]; then
+            echo "🖥️ Setting up CLI repo for analysis..."
+            git clone https://x-access-token:$GITHUB_TOKEN@github.com/${{ vars.CLI_REPO }}.git cli-repo
+            cd cli-repo
+            find . -maxdepth 1 -not -name '.git' -not -name '.' -not -name '..' -exec rm -rf {} \;
+            cp -r $GITHUB_WORKSPACE/generated/cli/. .
+            git add .
+            cd ..
+          fi
+
+          if [ "${{ inputs.publish_n8n }}" == "true" ]; then
+            echo "🎨 Setting up n8n repo for analysis..."
+            git clone https://x-access-token:$GITHUB_TOKEN@github.com/${{ vars.N8N_REPO }}.git n8n-repo
+            cd n8n-repo
+            find . -maxdepth 1 -not -name '.git' -not -name '.' -not -name '..' -exec rm -rf {} \;
+            cp -r $GITHUB_WORKSPACE/generated/n8n/. .
+            git add .
+            cd ..
+          fi
+
+      - name: Generate SDK Changelog
+        if: ${{ inputs.publish_sdk }}
+        id: sdk_changelog
+        timeout-minutes: 5
+        uses: anthropics/claude-code-base-action@beta
+        with:
+          prompt_file: .github/prompts/sdk-changelog.md
+          allowed_tools: "Bash(git:*),Bash(cd:*),Bash(ls:*),Bash(echo:*),Read,Write,Glob,Grep"
+          claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          claude_env: |
+            VERSION=${{ steps.versions.outputs.sdk_version }}
+            COMMIT_SHA=${{ steps.commit.outputs.commit_sha }}
+            COMMIT_MSG=${{ steps.commit.outputs.commit_msg }}
+            GITHUB_WORKSPACE=${{ github.workspace }}
+
+      - name: Extract SDK PR Content
+        if: ${{ inputs.publish_sdk }}
+        id: sdk_pr
+        run: |
+          if [ ! -f /tmp/sdk-pr-title.txt ] || [ ! -f /tmp/sdk-pr-body.md ]; then
+            echo "❌ Claude Code failed to generate SDK changelog"
+            exit 1
+          fi
+          delimiter="$(openssl rand -hex 16)"
+          {
+            echo "title<<${delimiter}"
+            cat /tmp/sdk-pr-title.txt
+            echo ""
+            echo "${delimiter}"
+          } >> $GITHUB_OUTPUT
+          {
+            echo "body<<${delimiter}"
+            cat /tmp/sdk-pr-body.md
+            echo ""
+            echo "${delimiter}"
+          } >> $GITHUB_OUTPUT
+
+      - name: Generate CLI Changelog
+        if: ${{ inputs.publish_cli }}
+        id: cli_changelog
+        timeout-minutes: 5
+        uses: anthropics/claude-code-base-action@beta
+        with:
+          prompt_file: .github/prompts/cli-changelog.md
+          allowed_tools: "Bash(git:*),Bash(cd:*),Bash(ls:*),Bash(echo:*),Read,Write,Glob,Grep"
+          claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          claude_env: |
+            VERSION=${{ steps.versions.outputs.cli_version }}
+            COMMIT_SHA=${{ steps.commit.outputs.commit_sha }}
+            COMMIT_MSG=${{ steps.commit.outputs.commit_msg }}
+            GITHUB_WORKSPACE=${{ github.workspace }}
+
+      - name: Extract CLI PR Content
+        if: ${{ inputs.publish_cli }}
+        id: cli_pr
+        run: |
+          if [ ! -f /tmp/cli-pr-title.txt ] || [ ! -f /tmp/cli-pr-body.md ]; then
+            echo "❌ Claude Code failed to generate CLI changelog"
+            exit 1
+          fi
+          delimiter="$(openssl rand -hex 16)"
+          {
+            echo "title<<${delimiter}"
+            cat /tmp/cli-pr-title.txt
+            echo ""
+            echo "${delimiter}"
+          } >> $GITHUB_OUTPUT
+          {
+            echo "body<<${delimiter}"
+            cat /tmp/cli-pr-body.md
+            echo ""
+            echo "${delimiter}"
+          } >> $GITHUB_OUTPUT
+
+      - name: Generate n8n Changelog
+        if: ${{ inputs.publish_n8n }}
+        id: n8n_changelog
+        timeout-minutes: 5
+        uses: anthropics/claude-code-base-action@beta
+        with:
+          prompt_file: .github/prompts/n8n-changelog.md
+          allowed_tools: "Bash(git:*),Bash(cd:*),Bash(ls:*),Bash(echo:*),Read,Write,Glob,Grep"
+          claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          claude_env: |
+            VERSION=${{ steps.versions.outputs.n8n_version }}
+            COMMIT_SHA=${{ steps.commit.outputs.commit_sha }}
+            COMMIT_MSG=${{ steps.commit.outputs.commit_msg }}
+            GITHUB_WORKSPACE=${{ github.workspace }}
+
+      - name: Extract n8n PR Content
+        if: ${{ inputs.publish_n8n }}
+        id: n8n_pr
+        run: |
+          if [ ! -f /tmp/n8n-pr-title.txt ] || [ ! -f /tmp/n8n-pr-body.md ]; then
+            echo "❌ Claude Code failed to generate n8n changelog"
+            exit 1
+          fi
+          delimiter="$(openssl rand -hex 16)"
+          {
+            echo "title<<${delimiter}"
+            cat /tmp/n8n-pr-title.txt
+            echo ""
+            echo "${delimiter}"
+          } >> $GITHUB_OUTPUT
+          {
+            echo "body<<${delimiter}"
+            cat /tmp/n8n-pr-body.md
+            echo ""
+            echo "${delimiter}"
+          } >> $GITHUB_OUTPUT
+
+      - name: Create SDK Branch and PR
+        if: ${{ inputs.publish_sdk }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
+        run: |
+          BRANCH_NAME="auto-update/v${{ steps.versions.outputs.sdk_version }}-${{ steps.commit.outputs.branch_suffix }}"
+
+          # Reuse already-cloned SDK repo
+          cd sdk-repo
+          git checkout -b $BRANCH_NAME
+
+          # Commit and push (files already copied and staged)
+          git commit -m "feat: update SDK to v${{ steps.versions.outputs.sdk_version }}"
+          git push origin $BRANCH_NAME
+
+          # Create PR with Claude-generated title and changelog
+          echo "${{ steps.sdk_pr.outputs.body }}" > /tmp/sdk-pr-body.md
+          gh pr create \
+            --title "${{ steps.sdk_pr.outputs.title }}" \
+            --body-file /tmp/sdk-pr-body.md \
+            --head $BRANCH_NAME \
+            --base main
+
+      - name: Create CLI Branch and PR
+        if: ${{ inputs.publish_cli }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
+        run: |
+          BRANCH_NAME="auto-update/v${{ steps.versions.outputs.cli_version }}-${{ steps.commit.outputs.branch_suffix }}"
+
+          # Reuse already-cloned CLI repo
+          cd cli-repo
+          git checkout -b $BRANCH_NAME
+
+          # Commit and push (files already copied and staged)
+          git commit -m "feat: update CLI to v${{ steps.versions.outputs.cli_version }}"
+          git push origin $BRANCH_NAME
+
+          # Create PR with Claude-generated title and changelog
+          echo "${{ steps.cli_pr.outputs.body }}" > /tmp/cli-pr-body.md
+          gh pr create \
+            --title "${{ steps.cli_pr.outputs.title }}" \
+            --body-file /tmp/cli-pr-body.md \
+            --head $BRANCH_NAME \
+            --base main
+
+      - name: Create n8n Branch and PR
+        if: ${{ inputs.publish_n8n }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
+        run: |
+          BRANCH_NAME="auto-update/v${{ steps.versions.outputs.n8n_version }}-${{ steps.commit.outputs.branch_suffix }}"
+
+          # Reuse already-cloned n8n repo
+          cd n8n-repo
+          git checkout -b $BRANCH_NAME
+
+          # Commit and push (files already copied and staged)
+          git commit -m "feat: update n8n nodes to v${{ steps.versions.outputs.n8n_version }}"
+          git push origin $BRANCH_NAME
+
+          # Create PR with Claude-generated title and changelog
+          echo "${{ steps.n8n_pr.outputs.body }}" > /tmp/n8n-pr-body.md
+          gh pr create \
+            --title "${{ steps.n8n_pr.outputs.title }}" \
+            --body-file /tmp/n8n-pr-body.md \
+            --head $BRANCH_NAME \
+            --base main
+
+      - name: Summary
+        run: |
+          echo "## 🚀 Multi-Repo Publishing Complete" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Backend Commit**: [${{ steps.commit.outputs.commit_sha }}](https://github.com/${{ github.repository }}/commit/${{ github.sha }})" >> $GITHUB_STEP_SUMMARY
+          echo "**Coordinated Version**: v${{ steps.versions.outputs.version }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### 📦 Packages Published:" >> $GITHUB_STEP_SUMMARY
+          if [ "${{ inputs.publish_sdk }}" == "true" ]; then
+            echo "- ✅ **SDK v${{ steps.versions.outputs.sdk_version }}** - [View PR](https://github.com/${{ vars.SDK_REPO }}/pulls)" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "- ⏭️ SDK (skipped)" >> $GITHUB_STEP_SUMMARY
+          fi
+          if [ "${{ inputs.publish_cli }}" == "true" ]; then
+            echo "- ✅ **CLI v${{ steps.versions.outputs.cli_version }}** - [View PR](https://github.com/${{ vars.CLI_REPO }}/pulls)" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "- ⏭️ CLI (skipped)" >> $GITHUB_STEP_SUMMARY
+          fi
+          if [ "${{ inputs.publish_n8n }}" == "true" ]; then
+            echo "- ✅ **n8n Nodes v${{ steps.versions.outputs.n8n_version }}** - [View PR](https://github.com/${{ vars.N8N_REPO }}/pulls)" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "- ⏭️ n8n Nodes (skipped)" >> $GITHUB_STEP_SUMMARY
+          fi
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### 🤖 Claude Code Generated:" >> $GITHUB_STEP_SUMMARY
+          echo "- PR titles and descriptions automatically generated from contract analysis" >> $GITHUB_STEP_SUMMARY
+          echo "- Breaking changes detected and documented" >> $GITHUB_STEP_SUMMARY
+          echo "- Usage examples included for new features" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Next Steps**: Review and merge PRs to publish packages to npm" >> $GITHUB_STEP_SUMMARY

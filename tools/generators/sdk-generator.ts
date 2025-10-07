@@ -1,0 +1,797 @@
+#!/usr/bin/env ts-node
+
+import * as fs from 'fs/promises';
+import * as path from 'path';
+import { ExtractedContract } from '../extractors/contract-extractor.service';
+import { CaseConverter } from '../../src/common/utils/case-converter';
+import { TemplateUtils } from './template-utils';
+import packageJson from '../../package.json';
+
+interface GeneratedSDK {
+  types: string;
+  client: string;
+  errors: string;
+  index: string;
+  packageJson: string;
+  contracts: ExtractedContract[]; // Keep contracts for README generation
+}
+
+export class SDKGenerator {
+  async generateFromContracts(
+    contractsPath: string,
+    outputDir: string,
+  ): Promise<void> {
+    console.log('🔧 Generating type-safe SDK from contracts...');
+
+    // Load contracts (now containing all type definitions)
+    const contractsContent = await fs.readFile(contractsPath, 'utf-8');
+    const contracts: ExtractedContract[] = JSON.parse(contractsContent);
+
+    // Validate contract structure
+    if (!Array.isArray(contracts) || contracts.length === 0) {
+      throw new Error('Invalid contracts file: empty or not an array');
+    }
+
+    // Get type definitions from contracts (single source of truth)
+    const typeDefinitions = contracts[0]?.typeDefinitions || {};
+    if (!typeDefinitions || Object.keys(typeDefinitions).length === 0) {
+      throw new Error('Invalid contracts file: missing type definitions');
+    }
+
+    const typeCount = Object.keys(typeDefinitions).length;
+    console.log(`📝 Using ${typeCount} TypeScript types from contract file`);
+
+    // Get platform metadata for platform options
+    const platformMetadata = contracts[0]?.platformMetadata || {};
+    const platformCount = Object.keys(platformMetadata).length;
+    console.log(`🎯 Found ${platformCount} platforms with metadata`);
+
+    // Generate SDK components
+    const sdk = this.generateSDK(contracts, typeDefinitions, platformMetadata);
+
+    // Create output directory
+    await fs.mkdir(outputDir, { recursive: true });
+
+    // Write generated files
+    await this.writeSDKFiles(outputDir, sdk);
+
+    console.log(`✅ SDK generated successfully in ${outputDir}`);
+    console.log(`📦 Ready for: cd ${outputDir} && npm publish`);
+  }
+
+  private extractTypeNames(contracts: ExtractedContract[]): string[] {
+    const typeNames = new Set<string>();
+
+    contracts.forEach((contract) => {
+      if (contract.contractMetadata.inputType) {
+        typeNames.add(contract.contractMetadata.inputType);
+      }
+      if (contract.contractMetadata.outputType) {
+        typeNames.add(contract.contractMetadata.outputType);
+      }
+    });
+
+    return Array.from(typeNames);
+  }
+
+  private generateSDK(
+    contracts: ExtractedContract[],
+    typeDefinitions: Record<string, string>,
+    platformMetadata: Record<string, any>,
+  ): GeneratedSDK {
+    return {
+      types: this.generateTypesFromDefinitions(
+        typeDefinitions,
+        platformMetadata,
+      ),
+      client: this.generateClient(contracts),
+      errors: this.generateErrors(),
+      index: this.generateIndex(contracts),
+      packageJson: this.generatePackageJson(),
+      contracts, // Store for README generation
+    };
+  }
+
+  private generateTypesFromDefinitions(
+    typeDefinitions: Record<string, string>,
+    platformMetadata: Record<string, any>,
+  ): string {
+    const typeDefinitionsList = Object.values(typeDefinitions).join('\n\n');
+
+    // Generate platform options types from metadata
+    const platformOptionsTypes =
+      this.generatePlatformOptionsTypes(platformMetadata);
+
+    return `// Generated TypeScript types for MsgCore SDK
+// DO NOT EDIT - This file is auto-generated from backend contracts
+
+${typeDefinitionsList}
+
+${platformOptionsTypes}
+
+// SDK configuration
+export interface MsgCoreConfig {
+  apiUrl: string;
+  apiKey?: string;
+  jwtToken?: string;
+  getToken?: () => string | null; // Dynamic token getter (preferred over jwtToken)
+  defaultProject?: string;
+  timeout?: number;
+  retries?: number;
+}
+`;
+  }
+
+  private generatePlatformOptionsTypes(
+    platformMetadata: Record<string, any>,
+  ): string {
+    const platformTypes: string[] = [];
+
+    // Generate individual platform option interfaces
+    for (const [platformName, metadata] of Object.entries(platformMetadata)) {
+      if (!metadata.optionsSchema) continue;
+
+      const schema = metadata.optionsSchema;
+      const interfaceName =
+        schema.className ||
+        `${CaseConverter.toPascalCase(platformName)}PlatformOptions`;
+      const properties = this.generatePropertiesFromSchema(schema.properties);
+
+      platformTypes.push(`/**
+ * Platform-specific options for ${metadata.displayName}
+ * Auto-generated from ${schema.className}
+ */
+export interface ${interfaceName} {
+${properties}
+}`);
+    }
+
+    // Generate union type for all platform options
+    if (platformTypes.length > 0) {
+      const platformNames = Object.entries(platformMetadata)
+        .filter(([_, meta]) => meta.optionsSchema)
+        .map(([name, meta]) => {
+          const interfaceName =
+            meta.optionsSchema.className ||
+            `${CaseConverter.toPascalCase(name)}PlatformOptions`;
+          return `  ${name}?: ${interfaceName};`;
+        });
+
+      platformTypes.push(`/**
+ * Platform-specific options for all supported platforms
+ * Use this in platformOptions field when sending messages
+ */
+export interface PlatformOptions {
+${platformNames.join('\n')}
+}`);
+    }
+
+    return platformTypes.join('\n\n');
+  }
+
+  private generatePropertiesFromSchema(
+    properties: Record<string, any>,
+  ): string {
+    const props: string[] = [];
+
+    for (const [propName, propSchema] of Object.entries(properties)) {
+      const description = propSchema.description;
+      const type = this.jsonSchemaTypeToTypeScript(propSchema);
+
+      if (description) {
+        props.push(`  /** ${description} */`);
+      }
+      props.push(`  ${propName}?: ${type};`);
+    }
+
+    return props.join('\n');
+  }
+
+  private jsonSchemaTypeToTypeScript(schema: any): string {
+    if (schema.type === 'array' && schema.items) {
+      const itemType = this.jsonSchemaTypeToTypeScript(schema.items);
+      return `${itemType}[]`;
+    }
+
+    if (schema.type === 'object') {
+      return 'Record<string, string>';
+    }
+
+    if (schema.type === 'string') {
+      return 'string';
+    }
+
+    if (schema.type === 'number') {
+      return 'number';
+    }
+
+    if (schema.type === 'boolean') {
+      return 'boolean';
+    }
+
+    return 'unknown';
+  }
+
+  private generateTypes(_contracts: ExtractedContract[]): string {
+    return `// Generated TypeScript types for MsgCore SDK
+// DO NOT EDIT - This file is auto-generated from backend DTOs
+
+export interface MsgCoreConfig {
+  apiUrl: string;
+  apiKey?: string;
+  jwtToken?: string;
+  getToken?: () => string | null; // Dynamic token getter (preferred over jwtToken)
+  timeout?: number;
+  retries?: number;
+}
+
+// Project types
+export interface Project {
+  id: string;
+  name: string;
+  slug: string;
+  environment: 'development' | 'staging' | 'production';
+  isDefault: boolean;
+  settings?: Record<string, unknown>;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CreateProjectDto {
+  name: string;
+  environment?: 'development' | 'staging' | 'production';
+}
+
+// Platform types
+export interface Platform {
+  id: string;
+  platform: 'discord' | 'telegram';
+  credentials: Record<string, unknown>;
+  isActive: boolean;
+  testMode: boolean;
+  webhookToken?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CreatePlatformDto {
+  platform: 'discord' | 'telegram';
+  token: string;
+  testMode?: boolean;
+}
+
+// Message types
+export interface MessageTarget {
+  platformId: string;
+  type: 'user' | 'channel' | 'group';
+  id: string;
+}
+
+export interface MessageContent {
+  text?: string;
+  attachments?: any[];
+  buttons?: any[];
+  embeds?: any[];
+}
+
+export interface SendMessageDto {
+  targets: MessageTarget[];
+  content: MessageContent;
+  options?: Record<string, unknown>;
+  metadata?: Record<string, unknown>;
+}
+
+export interface MessageJob {
+  jobId: string;
+  status: 'queued' | 'processing' | 'completed' | 'failed';
+}
+
+export interface MessageStatus {
+  id: string;
+  state: 'waiting' | 'active' | 'completed' | 'failed';
+  progress?: number;
+  data?: {
+    project: string;
+    projectId: string;
+    message: any;
+    error?: string;
+  };
+  attemptsMade: number;
+  processedOn?: number;
+  finishedOn?: number;
+}
+
+// API Key types
+export interface ApiKey {
+  id: string;
+  name: string;
+  keyId: string;
+  scopes: string[];
+  expiresAt?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CreateApiKeyDto {
+  name: string;
+  scopes: string[];
+  expiresInDays?: number;
+}
+
+export interface ApiKeyResult {
+  id: string;
+  name: string;
+  keyId: string;
+  key: string;
+  scopes: string[];
+  expiresAt?: string;
+  createdAt: string;
+}
+`;
+  }
+
+  private generateClient(contracts: ExtractedContract[]): string {
+    // Group contracts by controller/category
+    const groups = this.groupContractsByCategory(contracts);
+
+    // Dynamically collect all used types from contracts
+    const usedTypes = new Set<string>(['MsgCoreConfig']); // Always need config
+
+    contracts.forEach((contract) => {
+      if (contract.contractMetadata.inputType) {
+        usedTypes.add(contract.contractMetadata.inputType);
+      }
+      if (contract.contractMetadata.outputType) {
+        const outputType = contract.contractMetadata.outputType;
+        // For array types, only import the base type
+        if (outputType.endsWith('[]')) {
+          usedTypes.add(outputType.slice(0, -2));
+        } else {
+          usedTypes.add(outputType);
+        }
+      }
+    });
+
+    // Generate dynamic import list
+    const typeImports = Array.from(usedTypes).sort().join(',\n  ');
+
+    const apiGroups = Object.entries(groups)
+      .sort(([a], [b]) => a.localeCompare(b)) // Sort categories alphabetically for consistency
+      .map(([category, contracts]) => {
+        const className = `${CaseConverter.toValidClassName(category)}API`;
+        const methods = contracts
+          .map((contract) => this.generateAPIMethod(contract))
+          .join('\n\n  ');
+
+        return `class ${className} {
+  constructor(private client: AxiosInstance, private msgcore: MsgCore) {}
+
+  ${methods}
+}`;
+      })
+      .join('\n\n');
+
+    return `// Generated API client for MsgCore SDK
+// DO NOT EDIT - This file is auto-generated from backend contracts
+
+import axios, { AxiosInstance, AxiosResponse } from 'axios';
+import {
+  ${typeImports}
+} from './types';
+import { MsgCoreError, AuthenticationError, RateLimitError } from './errors';
+
+${apiGroups}
+
+export class MsgCore {
+  private client: AxiosInstance;
+  private defaultProject?: string;
+
+  // API group instances
+${Object.keys(groups)
+  .sort()
+  .map(
+    (category) =>
+      `  readonly ${CaseConverter.toValidPropertyName(category)}: ${CaseConverter.toValidClassName(category)}API;`,
+  )
+  .join('\n')}
+
+  constructor(config: MsgCoreConfig) {
+    this.defaultProject = config.defaultProject;
+    this.client = axios.create({
+      baseURL: config.apiUrl,
+      timeout: config.timeout || 30000,
+      headers: { 'Content-Type': 'application/json' }
+    });
+
+    this.setupAuthentication(config);
+    this.setupErrorHandling();
+
+    // Initialize API groups after client is ready
+${Object.keys(groups)
+  .sort()
+  .map(
+    (category) =>
+      `    this.${CaseConverter.toValidPropertyName(category)} = new ${CaseConverter.toValidClassName(category)}API(this.client, this);`,
+  )
+  .join('\n')}
+  }
+
+  private setupAuthentication(config: MsgCoreConfig): void {
+    // For dynamic tokens (browser apps) - use interceptor
+    if (config.getToken) {
+      this.client.interceptors.request.use((axiosConfig) => {
+        const token = config.getToken!();
+        if (token) {
+          axiosConfig.headers.Authorization = \`Bearer \${token}\`;
+        }
+        return axiosConfig;
+      });
+    }
+    // For static credentials (CLI, server-side) - use defaults (faster)
+    else if (config.apiKey) {
+      this.client.defaults.headers['X-API-Key'] = config.apiKey;
+    } else if (config.jwtToken) {
+      this.client.defaults.headers['Authorization'] = \`Bearer \${config.jwtToken}\`;
+    }
+  }
+
+  private setupErrorHandling(): void {
+    this.client.interceptors.response.use(
+      (response) => response,
+      (error) => {
+        if (error.response?.status === 401) {
+          throw new AuthenticationError('Invalid credentials');
+        }
+        if (error.response?.status === 429) {
+          throw new RateLimitError('Rate limit exceeded');
+        }
+        if (error.response?.status === 403) {
+          throw new MsgCoreError(
+            \`Insufficient permissions: \${error.response.data?.message || 'Access denied'}\`,
+            403,
+            'INSUFFICIENT_PERMISSIONS'
+          );
+        }
+        throw new MsgCoreError(
+          error.response?.data?.message || error.message,
+          error.response?.status
+        );
+      }
+    );
+  }
+
+  getDefaultProject(): string | undefined {
+    return this.defaultProject;
+  }
+}
+`;
+  }
+
+  private generateAPIMethod(contract: ExtractedContract): string {
+    const { contractMetadata, path, httpMethod } = contract;
+    const methodName = this.getMethodName(contractMetadata.command);
+
+    // Extract path parameters (e.g., ":project", ":id", ":keyId")
+    const pathParams = this.extractPathParameters(path);
+
+    // Get types from contract metadata
+    const inputType = contractMetadata.inputType;
+    const outputType = contractMetadata.outputType || 'any';
+
+    // Determine if method needs input data based on inputType presence
+    const needsInput = !!(inputType && inputType !== 'any');
+
+    // Separate project params from other path params
+    const projectParams = pathParams.filter((p) => p === 'project');
+    const otherParams = pathParams.filter((p) => p !== 'project');
+
+    // Build method signature - project goes in options object
+    const hasProject = projectParams.length > 0;
+    const methodParams = this.buildMethodSignature(
+      otherParams,
+      needsInput,
+      inputType,
+      hasProject,
+    );
+
+    // Build URL with parameter substitution
+    const urlWithParams = this.buildUrlWithParameters(path, pathParams);
+
+    // Use actual HTTP method from contract
+    const actualHttpMethod = httpMethod.toLowerCase();
+
+    if (needsInput) {
+      // Extract project property from options for cleaner payload
+      const dataExtraction =
+        projectParams.length > 0
+          ? `const { project, ...data } = options;`
+          : `const data = options;`;
+
+      // For GET requests with input data, use params config instead of request body
+      if (actualHttpMethod === 'get') {
+        return `async ${methodName}(${methodParams}): Promise<${outputType}> {
+    ${dataExtraction}
+    const response = await this.client.${actualHttpMethod}<${outputType}>(${urlWithParams}, { params: data });
+    return response.data;
+  }`;
+      } else {
+        return `async ${methodName}(${methodParams}): Promise<${outputType}> {
+    ${dataExtraction}
+    const response = await this.client.${actualHttpMethod}<${outputType}>(${urlWithParams}, data);
+    return response.data;
+  }`;
+      }
+    }
+
+    // Methods without input data - use actual HTTP method from contract
+    const httpMethodLower = httpMethod.toLowerCase();
+    return `async ${methodName}(${methodParams}): Promise<${outputType}> {
+    const response = await this.client.${httpMethodLower}<${outputType}>(${urlWithParams});
+    return response.data;
+  }`;
+  }
+
+  private extractPathParameters(path: string): string[] {
+    const matches = path.match(/:([a-zA-Z][a-zA-Z0-9]*)/g);
+    return matches ? matches.map((match) => match.substring(1)) : [];
+  }
+
+  private buildMethodSignature(
+    otherParams: string[],
+    needsInput: boolean,
+    inputType: string | null | undefined,
+    hasProject: boolean,
+  ): string {
+    const params: string[] = [];
+
+    // Add non-project path parameters as regular params
+    otherParams.forEach((param) => {
+      params.push(`${param}: string`);
+    });
+
+    // Build options type for input data + optional project
+    if (needsInput && hasProject) {
+      params.push(`options: ${inputType} & { project?: string }`);
+    } else if (needsInput) {
+      params.push(`options: ${inputType}`);
+    } else if (hasProject) {
+      params.push(`options?: { project?: string }`);
+    }
+
+    return params.join(', ');
+  }
+
+  private buildUrlWithParameters(path: string, pathParams: string[]): string {
+    let url = `'${path}'`;
+    pathParams.forEach((param) => {
+      // Use options.project for project param, with fallback to default
+      if (param === 'project') {
+        url = url.replaceAll(
+          `:${param}`,
+          `\${options?.project || this.msgcore.getDefaultProject() || ''}`,
+        );
+      } else {
+        url = url.replaceAll(`:${param}`, `\${${param}}`);
+      }
+    });
+    return '`' + url.slice(1, -1) + '`'; // Convert to template literal
+  }
+
+  private getMethodName(command: string): string {
+    const parts = command.split(' ');
+    const methodName = parts[parts.length - 1]; // 'projects create' -> 'create'
+
+    // Convert kebab-case to camelCase for valid JavaScript method names
+    return methodName.replace(/-([a-z])/g, (_, letter) => letter.toUpperCase());
+  }
+
+  private groupContractsByCategory(
+    contracts: ExtractedContract[],
+  ): Record<string, ExtractedContract[]> {
+    return contracts.reduce(
+      (groups, contract) => {
+        const category = contract.contractMetadata.category || 'General';
+        if (!groups[category]) groups[category] = [];
+        groups[category].push(contract);
+        return groups;
+      },
+      {} as Record<string, ExtractedContract[]>,
+    );
+  }
+
+  private generateErrors(): string {
+    return `// Generated error classes for MsgCore SDK
+// DO NOT EDIT - This file is auto-generated
+
+export class MsgCoreError extends Error {
+  constructor(
+    message: string,
+    public statusCode?: number,
+    public code?: string
+  ) {
+    super(message);
+    this.name = 'MsgCoreError';
+  }
+}
+
+export class AuthenticationError extends MsgCoreError {
+  constructor(message: string = 'Authentication failed') {
+    super(message, 401, 'AUTHENTICATION_ERROR');
+    this.name = 'AuthenticationError';
+  }
+}
+
+export class RateLimitError extends MsgCoreError {
+  constructor(message: string = 'Rate limit exceeded') {
+    super(message, 429, 'RATE_LIMIT_ERROR');
+    this.name = 'RateLimitError';
+  }
+}
+`;
+  }
+
+  private generateIndex(contracts: ExtractedContract[]): string {
+    return `// Generated main export for MsgCore SDK
+// DO NOT EDIT - This file is auto-generated from backend contracts
+
+export { MsgCore } from './client';
+export * from './types';
+export * from './errors';
+
+// Version info
+export const SDK_VERSION = '${packageJson.version}';
+export const GENERATED_AT = '${new Date().toISOString()}';
+export const CONTRACTS_COUNT = ${contracts.length};
+`;
+  }
+
+  private generatePackageJson(): string {
+    return JSON.stringify(
+      {
+        name: '@msgcore/sdk',
+        version: packageJson.version,
+        description:
+          'Official TypeScript SDK for MsgCore universal messaging gateway',
+        main: 'dist/index.js',
+        types: 'dist/index.d.ts',
+        files: ['dist'],
+        scripts: {
+          build: 'tsc',
+          prepublishOnly: 'npm run build',
+        },
+        dependencies: {
+          axios: '^1.12.2',
+        },
+        peerDependencies: {
+          typescript: '>=5.0.0',
+        },
+        keywords: ['msgcore', 'messaging', 'sdk', 'api-client'],
+        author: 'MsgCore',
+        license: 'MIT',
+        repository: {
+          type: 'git',
+          url: 'https://github.com/filipexyz/msgcore-sdk.git',
+        },
+        homepage: 'https://github.com/filipexyz/msgcore-sdk',
+        bugs: {
+          url: 'https://github.com/filipexyz/msgcore-sdk/issues',
+        },
+      },
+      null,
+      2,
+    );
+  }
+
+  private async writeSDKFiles(
+    outputDir: string,
+    sdk: GeneratedSDK,
+  ): Promise<void> {
+    try {
+      // Copy template files first (tsconfig.json, .gitignore, .github/workflows, etc.)
+      const categoryExamples = this.generateCategoryExamples(sdk.contracts);
+      await TemplateUtils.copyTemplateFiles('sdk', outputDir, {
+        CATEGORY_EXAMPLES: categoryExamples,
+      });
+
+      // Write generated SDK code
+      const srcDir = path.join(outputDir, 'src');
+      await fs.mkdir(srcDir, { recursive: true });
+
+      await Promise.all([
+        fs.writeFile(path.join(srcDir, 'types.ts'), sdk.types),
+        fs.writeFile(path.join(srcDir, 'client.ts'), sdk.client),
+        fs.writeFile(path.join(srcDir, 'errors.ts'), sdk.errors),
+        fs.writeFile(path.join(srcDir, 'index.ts'), sdk.index),
+        fs.writeFile(path.join(outputDir, 'package.json'), sdk.packageJson),
+      ]);
+    } catch (error) {
+      throw new Error(
+        `Failed to write SDK files: ${error instanceof Error ? error.message : String(error)}`,
+      );
+    }
+  }
+
+  private generateCategoryExamples(contracts: ExtractedContract[]): string {
+    const categories = this.groupContractsByCategory(contracts);
+    const categoryExamples = Object.entries(categories)
+      .sort(([a], [b]) => a.localeCompare(b)) // Sort categories alphabetically for consistency
+      .map(([category, contracts]) => {
+        const examples = contracts
+          .slice(0, 2)
+          .map((contract) => {
+            const example = contract.contractMetadata.examples?.[0];
+            return `### ${contract.contractMetadata.description}
+\`\`\`typescript
+// ${example?.description || 'Usage example'}
+${this.generateSDKExample(contract)}
+\`\`\``;
+          })
+          .join('\n\n');
+
+        return `## ${category}\n\n${examples}`;
+      })
+      .join('\n\n');
+
+    return categoryExamples;
+  }
+
+  private generateSDKExample(contract: ExtractedContract): string {
+    const { contractMetadata, path } = contract;
+    const category = CaseConverter.toValidPropertyName(
+      contractMetadata.category || 'api',
+    );
+    const methodName = this.getMethodName(contractMetadata.command);
+
+    // Extract path params
+    const pathParams = this.extractPathParameters(path);
+    const hasProject = pathParams.includes('project');
+    const otherParams = pathParams.filter((p) => p !== 'project');
+    const hasInput =
+      contractMetadata.inputType && contractMetadata.inputType !== 'any';
+
+    // No params, no input
+    if (pathParams.length === 0 && !hasInput) {
+      return `await gk.${category}.${methodName}();`;
+    }
+
+    // Only project param, no other params, no input
+    if (hasProject && otherParams.length === 0 && !hasInput) {
+      return `await gk.${category}.${methodName}();`;
+    }
+
+    // Only project param, no other params, with input
+    if (hasProject && otherParams.length === 0 && hasInput) {
+      return `await gk.${category}.${methodName}(data);`;
+    }
+
+    // Other params (not project), no input
+    if (otherParams.length > 0 && !hasInput) {
+      const paramList = otherParams.map((p) => `'${p}'`).join(', ');
+      return `await gk.${category}.${methodName}(${paramList});`;
+    }
+
+    // Other params (not project), with input
+    if (otherParams.length > 0 && hasInput) {
+      const paramList = otherParams.map((p) => `'${p}'`).join(', ');
+      return `await gk.${category}.${methodName}(${paramList}, data);`;
+    }
+
+    return `await gk.${category}.${methodName}(data);`;
+  }
+}
+
+// CLI execution
+async function main() {
+  const generator = new SDKGenerator();
+  const contractsPath = path.join(
+    __dirname,
+    '../../generated/contracts/contracts.json',
+  );
+  const outputDir = path.join(__dirname, '../../generated/sdk');
+
+  await generator.generateFromContracts(contractsPath, outputDir);
+}
+
+if (require.main === module) {
+  main().catch(console.error);
+}

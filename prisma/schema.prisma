@@ -1,0 +1,398 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum ProjectEnvironment {
+  production
+  staging
+  development
+  custom
+}
+
+enum ProjectRole {
+  owner
+  admin
+  member
+  viewer
+}
+
+enum ReactionType {
+  added
+  removed
+}
+
+enum IdentityLinkMethod {
+  manual
+  automatic
+}
+
+model User {
+  id           String   @id @default(uuid())
+  auth0Id      String?  @unique @map("auth0_id") // Auth0 sub field (optional for local auth)
+  email        String   @unique // Required for local auth
+  name         String?
+  passwordHash String?  @map("password_hash") // For local authentication (bcrypt)
+  isAdmin      Boolean  @default(false) @map("is_admin")
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  // Relationships
+  ownedProjects    Project[]
+  projectMembers   ProjectMember[]
+  apiKeysCreated   ApiKey[] @relation("ApiKeyCreator")
+
+  @@map("users")
+}
+
+model Project {
+  id          String              @id  // Slug is now the primary key
+  name        String
+  description String?
+  environment ProjectEnvironment  @default(development)
+  isDefault   Boolean             @default(false) @map("is_default")
+  settings    Json?
+  createdAt   DateTime            @default(now()) @map("created_at")
+  updatedAt   DateTime            @updatedAt @map("updated_at")
+
+  // User ownership
+  ownerId     String              @map("owner_id")
+  owner       User                @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+
+  // Existing relationships
+  apiKeys           ApiKey[]
+  projectPlatforms  ProjectPlatform[]
+  receivedMessages  ReceivedMessage[]
+  sentMessages      SentMessage[]
+  platformLogs      PlatformLog[]
+  webhooks          Webhook[]
+  receivedReactions ReceivedReaction[]
+
+  // New sharing relationships
+  members          ProjectMember[]
+  invites          Invite[]
+
+  // Identity relationships
+  identities       Identity[]
+  identityAliases  IdentityAlias[]
+
+  @@index([ownerId])
+  @@map("projects")
+}
+
+model ProjectMember {
+  id        String      @id @default(uuid())
+  projectId String      @map("project_id")
+  userId    String      @map("user_id")
+  role      ProjectRole @default(member)
+  createdAt DateTime    @default(now()) @map("created_at")
+  updatedAt DateTime    @updatedAt @map("updated_at")
+
+  project   Project     @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  user      User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([projectId, userId])
+  @@index([userId])
+  @@map("project_members")
+}
+
+model Invite {
+  id        String   @id @default(uuid())
+  email     String
+  projectId String   @map("project_id")
+  token     String   @unique
+  expiresAt DateTime @map("expires_at")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  project   Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@index([email])
+  @@index([token])
+  @@index([expiresAt])
+  @@map("invites")
+}
+
+model ApiKey {
+  id          String             @id @default(uuid())
+  projectId   String             @map("project_id")
+  keyHash     String             @unique @map("key_hash")
+  keyPrefix   String             @map("key_prefix")
+  keySuffix   String             @map("key_suffix")
+  name        String
+  expiresAt   DateTime?          @map("expires_at")
+  lastUsedAt  DateTime?          @map("last_used_at")
+  revokedAt   DateTime?          @map("revoked_at")
+  createdBy   String?            @map("created_by")
+  createdAt   DateTime           @default(now()) @map("created_at")
+
+  project     Project            @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  creator     User?              @relation("ApiKeyCreator", fields: [createdBy], references: [id])
+  scopes      ApiKeyScope[]
+  usage       ApiKeyUsage[]
+
+  @@index([projectId])
+  @@index([keyHash])
+  @@index([createdBy])
+  @@map("api_keys")
+}
+
+model ApiKeyScope {
+  apiKeyId String @map("api_key_id")
+  scope    String
+
+  apiKey   ApiKey @relation(fields: [apiKeyId], references: [id], onDelete: Cascade)
+
+  @@id([apiKeyId, scope])
+  @@map("api_key_scopes")
+}
+
+model ProjectPlatform {
+  id                   String   @id @default(uuid())
+  projectId            String   @map("project_id")
+  platform             String
+  name                 String   // Required friendly name for the platform
+  description          String?  // Optional description
+  credentialsEncrypted String   @map("credentials_encrypted") @db.Text
+  webhookToken         String   @unique @default(uuid()) @map("webhook_token") // UUID webhook endpoint
+  isActive             Boolean  @default(true) @map("is_active")
+  testMode             Boolean  @default(false) @map("test_mode")
+  createdAt            DateTime @default(now()) @map("created_at")
+  updatedAt            DateTime @updatedAt @map("updated_at")
+
+  project              Project           @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  receivedMessages     ReceivedMessage[]
+  sentMessages         SentMessage[]
+  platformLogs         PlatformLog[]
+  receivedReactions    ReceivedReaction[]
+  identityAliases      IdentityAlias[]
+
+  @@index([projectId])
+  @@index([webhookToken])
+  @@index([projectId, platform])
+  @@index([projectId, name])
+  @@map("project_platforms")
+}
+
+model ApiKeyUsage {
+  id             String   @id @default(uuid())
+  apiKeyId       String   @map("api_key_id")
+  endpoint       String
+  method         String
+  statusCode     Int      @map("status_code")
+  responseTimeMs Int      @map("response_time_ms")
+  timestamp      DateTime @default(now())
+  ipAddress      String   @map("ip_address")
+
+  apiKey         ApiKey   @relation(fields: [apiKeyId], references: [id], onDelete: Cascade)
+
+  @@index([apiKeyId])
+  @@index([timestamp])
+  @@map("api_key_usage")
+}
+
+model ReceivedMessage {
+  id                String           @id @default(uuid())
+  projectId         String           @map("project_id")
+  platformId        String           @map("platform_id")
+  platform          String
+  providerMessageId String           @map("provider_message_id")
+  providerChatId    String           @map("provider_chat_id")
+  providerUserId    String           @map("provider_user_id")
+  userDisplay       String?          @map("user_display")
+  messageText       String?          @map("message_text") @db.Text
+  messageType       String           @default("text") @map("message_type")
+  rawData           Json             @map("raw_data")
+  receivedAt        DateTime         @default(now()) @map("received_at")
+
+  project           Project          @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  platformConfig    ProjectPlatform  @relation(fields: [platformId], references: [id], onDelete: Cascade)
+
+  @@unique([platformId, providerMessageId])
+  @@index([projectId])
+  @@index([platformId])
+  @@index([receivedAt])
+  @@index([providerChatId])
+  @@index([providerUserId])
+  @@index([platformId, providerUserId])
+  @@map("received_messages")
+}
+
+model SentMessage {
+  id                String           @id @default(uuid())
+  projectId         String           @map("project_id")
+  platformId        String           @map("platform_id")
+  platform          String
+  jobId             String?          @map("job_id")
+  providerMessageId String?          @map("provider_message_id")
+  targetChatId      String           @map("target_chat_id")
+  targetUserId      String?          @map("target_user_id")
+  targetType        String           @map("target_type") // user, channel, group
+  messageText       String?          @map("message_text") @db.Text
+  messageContent    Json?            @map("message_content")
+  status            String           @default("pending") // pending, sent, failed
+  errorMessage      String?          @map("error_message") @db.Text
+  sentAt            DateTime?        @map("sent_at")
+  createdAt         DateTime         @default(now()) @map("created_at")
+
+  project           Project          @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  platformConfig    ProjectPlatform  @relation(fields: [platformId], references: [id], onDelete: Cascade)
+
+  @@unique([jobId, platformId, targetChatId])
+  @@index([projectId])
+  @@index([platformId])
+  @@index([status])
+  @@index([createdAt])
+  @@index([targetChatId])
+  @@index([targetUserId])
+  @@index([jobId])
+  @@map("sent_messages")
+}
+
+model ReceivedReaction {
+  id                String           @id @default(uuid())
+  projectId         String           @map("project_id")
+  platformId        String           @map("platform_id")
+  platform          String
+  providerMessageId String           @map("provider_message_id")
+  providerChatId    String           @map("provider_chat_id")
+  providerUserId    String           @map("provider_user_id")
+  userDisplay       String?          @map("user_display")
+  emoji             String           @db.VarChar(255)
+  reactionType      ReactionType     @map("reaction_type")
+  rawData           Json             @map("raw_data")
+  receivedAt        DateTime         @default(now()) @map("received_at")
+
+  project           Project          @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  platformConfig    ProjectPlatform  @relation(fields: [platformId], references: [id], onDelete: Cascade)
+
+  @@unique([platformId, providerMessageId, providerUserId, emoji, reactionType])
+  @@index([projectId])
+  @@index([platformId])
+  @@index([receivedAt])
+  @@index([providerChatId])
+  @@index([providerUserId])
+  @@index([providerMessageId])
+  @@index([reactionType])
+  @@index([platformId, providerUserId])
+  @@index([projectId, providerMessageId, providerUserId, reactionType, receivedAt])
+  @@map("received_reactions")
+}
+
+model PlatformLog {
+  id          String   @id @default(uuid())
+  projectId   String   @map("project_id")
+  platformId  String?  @map("platform_id") // nullable for project-wide logs
+  platform    String   // telegram, discord, etc.
+  level       String   // info, warn, error, debug
+  category    String   // connection, webhook, message, error
+  message     String   @db.Text
+  metadata    Json?    // additional structured data
+  error       String?  @db.Text // error stack trace if applicable
+  timestamp   DateTime @default(now())
+
+  project     Project          @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  platformConfig ProjectPlatform? @relation(fields: [platformId], references: [id], onDelete: Cascade)
+
+  @@index([projectId])
+  @@index([platformId])
+  @@index([timestamp])
+  @@index([level])
+  @@index([category])
+  @@map("platform_logs")
+}
+
+model Webhook {
+  id          String   @id @default(uuid())
+  projectId   String   @map("project_id")
+  name        String
+  url         String
+  events      String[] // ['message.received', 'message.sent', 'message.failed', 'reaction.added', 'reaction.removed']
+  secret      String   // Auto-generated or user-provided (whsec_...)
+  isActive    Boolean  @default(true) @map("is_active")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  project     Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  deliveries  WebhookDelivery[]
+
+  @@index([projectId])
+  @@index([projectId, isActive])
+  @@map("webhooks")
+}
+
+model WebhookDelivery {
+  id            String    @id @default(uuid())
+  webhookId     String    @map("webhook_id")
+  event         String    // 'message.received', 'message.sent', 'message.failed', 'reaction.added', 'reaction.removed'
+  payload       Json      // Full event payload
+  responseCode  Int?      @map("response_code")
+  responseBody  String?   @map("response_body") @db.Text
+  error         String?   @db.Text
+  attempts      Int       @default(0)
+  status        String    // 'pending', 'success', 'failed'
+  deliveredAt   DateTime? @map("delivered_at")
+  createdAt     DateTime  @default(now()) @map("created_at")
+
+  webhook       Webhook   @relation(fields: [webhookId], references: [id], onDelete: Cascade)
+
+  @@index([webhookId])
+  @@index([createdAt])
+  @@index([status])
+  @@index([event])
+  @@map("webhook_deliveries")
+}
+
+// Universal identity for users across platforms
+model Identity {
+  id            String   @id @default(uuid())
+  projectId     String   @map("project_id")
+
+  // User-provided metadata
+  displayName   String?  @map("display_name")
+  email         String?
+  metadata      Json?    // Custom fields (tags, properties, etc.)
+
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @updatedAt @map("updated_at")
+
+  project       Project         @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  aliases       IdentityAlias[]
+
+  @@index([projectId])
+  @@index([projectId, email])
+  @@index([projectId, displayName])
+  @@map("identities")
+}
+
+// Platform-specific user identifiers linked to universal identity
+model IdentityAlias {
+  id                  String               @id @default(uuid())
+  identityId          String               @map("identity_id")
+  projectId           String               @map("project_id")
+  platformId          String               @map("platform_id")
+  platform            String               // discord, telegram, whatsapp-evo
+
+  // Platform-specific identifiers
+  providerUserId      String               @map("provider_user_id")
+  providerUserDisplay String?              @map("provider_user_display")
+
+  // Link metadata
+  linkedAt            DateTime             @default(now()) @map("linked_at")
+  linkMethod          IdentityLinkMethod   @default(manual) @map("link_method")
+
+  identity            Identity             @relation(fields: [identityId], references: [id], onDelete: Cascade)
+  project             Project              @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  platformConfig      ProjectPlatform      @relation(fields: [platformId], references: [id], onDelete: Cascade)
+
+  // Ensure one alias per platform user
+  @@unique([platformId, providerUserId])
+  @@index([identityId])
+  @@index([projectId])
+  @@index([providerUserId])
+  @@index([platformId, providerUserId])
+  @@map("identity_aliases")
+}
