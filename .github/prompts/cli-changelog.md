@@ -35,7 +35,7 @@ Generate a PR description for the **@msgcore/cli** package based on actual code 
 - Start with brief summary
 - List only ACTUAL changes from git diff
 - Include version info using $VERSION: `**Version**: v$VERSION`
-- Link to source backend: `**Source**: [MsgCore Backend](https://github.com/filipexyz/msgcore)`
+- Link to source backend: `**Source**: [MsgCore Backend](https://github.com/msgcore/msgcore)`
 - Keep it concise and direct
 
 ## Structure (adapt as needed)
@@ -46,7 +46,7 @@ Generate a PR description for the **@msgcore/cli** package based on actual code 
 [1-2 sentence description of what changed]
 
 **Version**: v$VERSION
-**Source**: [MsgCore Backend](https://github.com/filipexyz/msgcore)
+**Source**: [MsgCore Backend](https://github.com/msgcore/msgcore)
 
 ### Changes
 
