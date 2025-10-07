@@ -53,6 +53,7 @@ The app will be available at `http://localhost:5173`
 ### Authentication
 
 Uses MsgCore's native authentication (`/api/v1/auth`):
+
 - Email/Password signup and login
 - JWT token-based sessions
 - Auto token refresh
@@ -92,14 +93,14 @@ import { MsgCore } from '@msgcore/sdk';
 
 const sdk = new MsgCore({
   apiUrl: 'http://localhost:3000',
-  getToken: () => localStorage.getItem('msgcore_token')
+  getToken: () => localStorage.getItem('msgcore_token'),
 });
 
 // Send message
 await sdk.messages.send({
   project: 'project-id',
   target: 'platform-id:user:123',
-  content: { text: 'Hello!' }
+  content: { text: 'Hello!' },
 });
 
 // List projects
@@ -110,11 +111,11 @@ const projects = await sdk.projects.list();
 
 ### Environment Variables
 
-| Variable | Description | Default |
-|----------|-------------|---------|
-| `MSGCORE_API_URL` | Backend API base URL | `http://localhost:3000` |
-| `MSGCORE_API_VERSION` | API version | `v1` |
-| `MSGCORE_ENV` | Environment | `development` |
+| Variable              | Description          | Default                 |
+| --------------------- | -------------------- | ----------------------- |
+| `MSGCORE_API_URL`     | Backend API base URL | `http://localhost:3000` |
+| `MSGCORE_API_VERSION` | API version          | `v1`                    |
+| `MSGCORE_ENV`         | Environment          | `development`           |
 
 ## Deployment
 

@@ -32,6 +32,7 @@ npm run dev
 ```
 
 Access:
+
 - Frontend: http://localhost:5173
 - Backend API: http://localhost:3000
 
@@ -48,6 +49,7 @@ docker compose up -d --build
 ```
 
 Access everything on http://localhost:
+
 - Frontend: http://localhost
 - API: http://localhost/api/v1
 - MCP: http://localhost/mcp
@@ -198,11 +200,11 @@ Add labels to docker-compose.yml:
 services:
   app:
     labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.msgcore.rule=Host(`msgcore.yourdomain.com`)"
-      - "traefik.http.routers.msgcore.entrypoints=websecure"
-      - "traefik.http.routers.msgcore.tls.certresolver=letsencrypt"
-      - "traefik.http.services.msgcore.loadbalancer.server.port=80"
+      - 'traefik.enable=true'
+      - 'traefik.http.routers.msgcore.rule=Host(`msgcore.yourdomain.com`)'
+      - 'traefik.http.routers.msgcore.entrypoints=websecure'
+      - 'traefik.http.routers.msgcore.tls.certresolver=letsencrypt'
+      - 'traefik.http.services.msgcore.loadbalancer.server.port=80'
 ```
 
 ### With Custom nginx

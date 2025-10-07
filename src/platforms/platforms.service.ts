@@ -511,7 +511,8 @@ export class PlatformsService {
         // Create temporary bot instance to register webhook
         const bot = new TelegramBot(credentials.token, { webHook: true });
 
-        const baseUrl = process.env.MSGCORE_API_URL || 'https://api.msgcore.dev';
+        const baseUrl =
+          process.env.MSGCORE_API_URL || 'https://api.msgcore.dev';
         const webhookUrl = `${baseUrl}/api/v1/webhooks/telegram/${platform.webhookToken}`;
 
         // Set the webhook

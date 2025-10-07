@@ -117,6 +117,7 @@ src/
 ### 1. Feature Module Pattern
 
 Each feature is self-contained with its own:
+
 - **Hooks** - Business logic using SDK directly
 - **Components** - UI components specific to the feature
 
@@ -206,17 +207,13 @@ export function useCreateProject() {
 
 ```typescript
 // Single resource
-['projects', projectId]
-['messages', messageId]
-['platforms', platformId]
-
-// List with filters
-['messages', { projectId, status: 'sent' }]
-['platforms', { projectId }]
-
-// Stats/Aggregations
-['messages', 'stats', { projectId }]
-['platforms', 'health']
+['projects', projectId][('messages', messageId)][('platforms', platformId)][
+  // List with filters
+  ('messages', { projectId, status: 'sent' })
+][('platforms', { projectId })][
+  // Stats/Aggregations
+  ('messages', 'stats', { projectId })
+][('platforms', 'health')];
 ```
 
 ### 3. Authentication Flow
@@ -237,6 +234,7 @@ export const sdk = new MsgCore({
 ```
 
 **That's it!** SDK automatically:
+
 - ✅ Reads fresh token on every request
 - ✅ Handles token changes (login/logout)
 - ✅ No manual interceptors needed
@@ -246,15 +244,15 @@ export const sdk = new MsgCore({
 
 ```typescript
 // On first load (no token)
-sdk.auth.login(data)  // → No Authorization header
+sdk.auth.login(data); // → No Authorization header
 
 // After login
 localStorage.setItem('msgcore_token', response.accessToken);
-sdk.projects.list()   // → Authorization: Bearer <token>  ✅
+sdk.projects.list(); // → Authorization: Bearer <token>  ✅
 
 // After logout
 localStorage.removeItem('msgcore_token');
-sdk.projects.list()   // → No Authorization header  ✅
+sdk.projects.list(); // → No Authorization header  ✅
 ```
 
 **Priority order:** `getToken()` > `apiKey` > `jwtToken`
@@ -346,7 +344,7 @@ export function ProtectedRoute() {
 import type {
   ProjectResponse,
   MessageResponse,
-  CreateProjectDto
+  CreateProjectDto,
 } from '@msgcore/sdk';
 
 // Components
@@ -456,7 +454,7 @@ export function useMessageFilters() {
   });
 
   const updateFilter = (key, value) => {
-    setFilters(prev => ({ ...prev, [key]: value }));
+    setFilters((prev) => ({ ...prev, [key]: value }));
   };
 
   return { filters, updateFilter };
@@ -466,18 +464,21 @@ export function useMessageFilters() {
 ## State Management Strategy
 
 ### Server State (React Query)
+
 - API data
 - Cache management
 - Background refetching
 - Optimistic updates
 
 ### UI State (React hooks)
+
 - Form state
 - Modal open/close
 - Filters
 - Local toggles
 
 ### Global State (Context - minimal use)
+
 - Theme
 - Locale
 - User session (auth)
@@ -518,24 +519,28 @@ features/
 ## Migration from Herick's Code
 
 ### Phase 1: Foundation
+
 1. Set up architecture folders
 2. Move SDK to shared/lib
 3. Set up React Query
 4. Create base UI components
 
 ### Phase 2: Auth Feature
+
 1. Setup SDK with axios interceptors
 2. Build auth hooks (useAuth, useLogin, useSignup)
 3. Migrate LoginForm and SignupForm components
 4. Set up protected routes
 
 ### Phase 3: Features Migration
+
 1. Projects feature
 2. Messages feature
 3. Platforms feature
 4. API Keys feature
 
 ### Phase 4: Pages
+
 1. Dashboard
 2. Public pages (Home, Docs)
 
