@@ -1,10 +1,16 @@
-# fly.toml app configuration file generated for msgcore-dev on 2025-09-21T15:30:00Z
+# fly.toml app configuration file for MsgCore
 #
-# See https://fly.io/docs/reference/configuration/ for information about how to use this file.
+# To deploy to Fly.io:
+# 1. Run: fly launch
+# 2. Fly will detect this config and prompt you to choose your app name and region
+# 3. After launch, set your secrets (see README.md for the list)
+# 4. Deploy with: fly deploy
+#
+# See https://fly.io/docs/reference/configuration/ for more information.
 #
 
-app = 'msgcore-dev'
-primary_region = 'gig'
+# app = 'your-app-name'        # Uncomment and set your app name, or let 'fly launch' do it
+# primary_region = 'gig'        # Uncomment and set your region, or let 'fly launch' do it
 
 [build]
 
