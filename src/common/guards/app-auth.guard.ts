@@ -41,13 +41,6 @@ export class AppAuthGuard extends AuthGuard('jwt') implements CanActivate {
 
     const authHeader = request.headers.authorization;
     if (authHeader && authHeader.startsWith('Bearer ')) {
-      const auth0Config =
-        this.configService.get<AppConfig['auth0']>('app.auth0');
-      if (!auth0Config?.domain || !auth0Config?.audience) {
-        throw new UnauthorizedException(
-          'JWT authentication is not configured. Please use API key authentication.',
-        );
-      }
       return this.validateJwt(context);
     }
 

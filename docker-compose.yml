@@ -39,24 +39,28 @@ services:
   app:
     build:
       context: .
-      dockerfile: Dockerfile
-      target: ${NODE_ENV:-development}
+      dockerfile: docker/Dockerfile
+      args:
+        # Pass frontend environment variables for build
+        MSGCORE_API_URL: ${MSGCORE_API_URL:-}
+        MSGCORE_API_VERSION: ${MSGCORE_API_VERSION:-v1}
+        MSGCORE_ENV: production
     container_name: msgcore-app
     restart: unless-stopped
     environment:
-      NODE_ENV: ${NODE_ENV:-development}
-      PORT: ${PORT:-3000}
+      NODE_ENV: production
+      PORT: 3000
+      MSGCORE_API_URL: ${MSGCORE_API_URL:-http://localhost:8080}
+      CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:3000,http://localhost:5173,http://localhost:8080}
       DATABASE_URL: postgresql://${DB_USER:-msgcore}:${DB_PASSWORD:-msgcore_password}@postgres:5432/${DB_NAME:-msgcore}?schema=public
       REDIS_URL: redis://:${REDIS_PASSWORD:-redis_password}@redis:6379
-      AUTH0_DOMAIN: ${AUTH0_DOMAIN}
-      AUTH0_AUDIENCE: ${AUTH0_AUDIENCE}
-      AUTH0_CLIENT_ID: ${AUTH0_CLIENT_ID}
-      AUTH0_CLIENT_SECRET: ${AUTH0_CLIENT_SECRET}
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      REDIS_PASSWORD: ${REDIS_PASSWORD:-redis_password}
+      JWT_SECRET: ${JWT_SECRET}
+      ENCRYPTION_KEY: ${ENCRYPTION_KEY}
     ports:
-      - "${PORT:-3000}:3000"
-    volumes:
-      - ./src:/usr/src/app/src
-      - ./prisma:/usr/src/app/prisma
+      - "8080:80"
     depends_on:
       postgres:
         condition: service_healthy
@@ -64,14 +68,6 @@ services:
         condition: service_healthy
     networks:
       - msgcore-network
-    command: >
-      sh -c "
-        if [ \"$${NODE_ENV}\" = \"development\" ]; then
-          npm run start:dev
-        else
-          node dist/main
-        fi
-      "
 
 networks:
   msgcore-network:

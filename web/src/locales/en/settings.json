@@ -1,0 +1,29 @@
+{
+  "title": "Settings",
+  "subtitle": "Manage your account preferences and security",
+
+  "password": {
+    "title": "Change Password",
+    "currentPasswordLabel": "Current Password",
+    "currentPasswordPlaceholder": "Enter your current password",
+    "newPasswordLabel": "New Password",
+    "newPasswordPlaceholder": "Minimum 8 characters, 1 uppercase letter, 1 number",
+    "confirmPasswordLabel": "Confirm New Password",
+    "confirmPasswordPlaceholder": "Enter the new password again",
+    "submit": "Change Password",
+    "submitting": "Updating...",
+    "success": "Password changed successfully!"
+  },
+
+  "passwordRequirements": {
+    "title": "Password Requirements",
+    "minLength": "Minimum 8 characters",
+    "uppercase": "At least one uppercase letter",
+    "number": "At least one number"
+  },
+
+  "errors": {
+    "passwordMismatch": "Passwords do not match",
+    "passwordTooShort": "Password must be at least 8 characters long"
+  }
+}

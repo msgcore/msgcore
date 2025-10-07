@@ -566,7 +566,7 @@ export class TelegramProvider implements PlatformProvider, PlatformAdapter {
     webhookToken: string,
   ): Promise<void> {
     try {
-      const baseUrl = process.env.API_BASE_URL || 'https://api.msgcore.dev';
+      const baseUrl = process.env.MSGCORE_API_URL || 'https://api.msgcore.dev';
       const webhookUrl = `${baseUrl}/api/v1/webhooks/telegram/${webhookToken}`;
 
       // Set the webhook URL

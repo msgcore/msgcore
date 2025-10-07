@@ -1,0 +1,61 @@
+{
+  "title": "Membros da Equipe",
+  "subtitle": "Gerencie os membros e suas permissões",
+
+  "actions": {
+    "inviteMember": "Convidar Membro",
+    "createInvite": "Criar Convite",
+    "creatingInvite": "Criando Convite...",
+    "cancel": "Cancelar",
+    "close": "Fechar",
+    "remove": "Remover",
+    "copy": "Copiar",
+    "copied": "Copiado!"
+  },
+
+  "alerts": {
+    "selectProject": "Selecione um projeto para visualizar os membros.",
+    "errorLoading": "Erro ao carregar membros. Por favor, tente novamente."
+  },
+
+  "errors": {
+    "errorGeneratingLink": "Erro ao gerar link de convite",
+    "invalidInviteLinkFormat": "Formato de link de convite inválido"
+  },
+
+  "inviteForm": {
+    "title": "Convidar Novo Membro",
+    "emailLabel": "Email do Membro",
+    "emailPlaceholder": "membro@example.com",
+    "inviteCreated": "Convite criado com sucesso! Envie o link abaixo para o novo membro:"
+  },
+
+  "roles": {
+    "admin": "Administrador",
+    "member": "Membro",
+    "viewer": "Visualizador",
+    "clientAdmin": "Administrador",
+    "clientMember": "Membro",
+    "systemAdmin": "Super Admin"
+  },
+
+  "list": {
+    "title_one": "Membro Ativo ({{count}})",
+    "title_other": "Membros Ativos ({{count}})",
+    "loading": "Carregando...",
+    "noMembers": "Nenhum membro encontrado neste projeto.",
+    "memberSince": "Membro desde {{date}}",
+    "noEmail": "Sem email",
+    "unknownUser": "Usuário Desconhecido"
+  },
+
+  "confirmDialogs": {
+    "removeTitle": "Remover Membro",
+    "removeMessage": "Tem certeza que deseja remover \"{{name}}\" do projeto?"
+  },
+
+  "permissions": {
+    "title": "Importante sobre Permissões",
+    "message": "Ao convidar um membro, tenha cuidado. Membros convidados terão acesso total ao projeto, podendo enviar mensagens, visualizar estatísticas, consultar logs, criar e gerenciar chaves de API, e acessar todas as funcionalidades do projeto."
+  }
+}

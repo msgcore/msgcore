@@ -443,7 +443,7 @@ export class WhatsAppProvider implements PlatformProvider, PlatformAdapter {
     // Use existing "msgcore" instance instead of creating new ones
     connection.instanceName = 'msgcore';
 
-    const baseUrl = process.env.API_BASE_URL || 'https://api.msgcore.dev';
+    const baseUrl = process.env.MSGCORE_API_URL || 'https://api.msgcore.dev';
     const webhookUrl = `${baseUrl}/api/v1/webhooks/whatsapp-evo/${webhookToken}`;
 
     const payload = {

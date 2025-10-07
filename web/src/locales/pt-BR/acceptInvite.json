@@ -1,0 +1,47 @@
+{
+  "title": "Aceitar Convite",
+  "subtitle": "Complete seu cadastro para acessar o projeto",
+
+  "form": {
+    "nameLabel": "Nome Completo",
+    "namePlaceholder": "Seu nome",
+    "passwordLabel": "Senha",
+    "passwordPlaceholder": "Mínimo 8 caracteres",
+    "confirmPasswordLabel": "Confirmar Senha",
+    "confirmPasswordPlaceholder": "Digite a senha novamente"
+  },
+
+  "buttons": {
+    "submit": "Aceitar Convite",
+    "submitting": "Criando Conta..."
+  },
+
+  "states": {
+    "invalid": {
+      "title": "Convite Inválido",
+      "message": "O link de convite está inválido ou ausente."
+    },
+    "success": {
+      "title": "Bem-vindo!",
+      "message": "Sua conta foi criada com sucesso. Você será redirecionado para o dashboard..."
+    }
+  },
+
+  "errors": {
+    "invalidToken": "Token de convite inválido",
+    "passwordMismatch": "As senhas não coincidem",
+    "passwordTooShort": "A senha deve ter pelo menos 8 caracteres",
+    "invalidInviteLink": "Link de convite inválido ou ausente",
+    "errorGeneratingLink": "Erro ao gerar link de convite",
+    "invalidInviteLinkFormat": "Formato de link de convite inválido"
+  },
+
+  "success": {
+    "accountCreated": "Conta criada com sucesso!"
+  },
+
+  "footer": {
+    "alreadyHaveAccount": "Já tem uma conta?",
+    "signIn": "Faça login"
+  }
+}

@@ -1,0 +1,64 @@
+{
+  "title": "Platforms",
+  "subtitle": "Connect and manage your messaging platforms",
+  "status": {
+    "active": "Active",
+    "connected": "Connected",
+    "disconnected": "Disconnected",
+    "error": "Error",
+    "pending": "Pending"
+  },
+  "connectedPlatforms": {
+    "title": "Connected Platforms",
+    "noPlatforms": "No platforms connected yet",
+    "type": "Type",
+    "createdAt": "Created on",
+    "configure": "Configure"
+  },
+  "availablePlatforms": {
+    "title": "Available Platforms",
+    "loading": "Loading available platforms...",
+    "configured": "configured",
+    "add": "Add"
+  },
+  "configurationModal": {
+    "titleEdit": "Edit",
+    "titleConfigure": "Configure",
+    "nameLabel": "Configuration Name",
+    "namePlaceholder": "Ex: {{platformName}} Main",
+    "descriptionLabel": "Description (optional)",
+    "descriptionPlaceholder": "Describe the purpose of this configuration...",
+    "optionalFields": "Optional fields:",
+    "leaveEmptyHint": "(leave empty to keep current)",
+    "leaveEmptyPlaceholder": "Leave empty to keep current value",
+    "examplePrefix": "Ex:",
+    "enterPrefix": "Enter",
+    "activateImmediately": "Activate platform immediately",
+    "updating": "Updating...",
+    "configuring": "Configuring...",
+    "update": "Update",
+    "configure": "Configure",
+    "cancel": "Cancel"
+  },
+  "deleteConfirmation": {
+    "title": "Remove Platform",
+    "message": "Are you sure you want to remove the platform \"{{platformName}}\"? This action is irreversible.",
+    "confirm": "Remove",
+    "cancel": "Cancel"
+  },
+  "validation": {
+    "fillRequiredField": "Please fill in the required field: {{field}}"
+  },
+  "alerts": {
+    "selectProject": "Select a project to manage platforms",
+    "loadError": "Error loading platforms. Please try again."
+  },
+  "features": {
+    "webhooks": "Webhooks",
+    "webSocket": "WebSocket",
+    "polling": "Polling"
+  },
+  "form": {
+    "optional": "(optional)"
+  }
+}

@@ -1,0 +1,72 @@
+{
+  "title": "Identities",
+  "subtitle": "Unify users across multiple platforms",
+
+  "actions": {
+    "newIdentity": "New Identity",
+    "createIdentity": "Create Identity",
+    "creating": "Creating...",
+    "cancel": "Cancel",
+    "save": "Save",
+    "delete": "Delete",
+    "addAlias": "Add Alias",
+    "viewMessages": "View Messages",
+    "add": "Add"
+  },
+
+  "alerts": {
+    "selectProject": "Select a project to manage identities",
+    "errorLoading": "Error loading identities. Please try again."
+  },
+
+  "createForm": {
+    "title": "Create New Identity",
+    "displayNameLabel": "Display Name",
+    "displayNamePlaceholder": "John Doe",
+    "emailLabel": "Email",
+    "emailPlaceholder": "john@example.com",
+    "aliasesLabel": "Aliases (Platforms)",
+    "selectPlatform": "Select Platform",
+    "userIdPlaceholder": "User ID",
+    "userDisplayPlaceholder": "Name on Platform"
+  },
+
+  "list": {
+    "loading": "Loading...",
+    "noIdentities": "No identities found",
+    "noIdentitiesMessage": "Create your first identity to unify users across platforms",
+    "createFirstIdentity": "Create First Identity",
+    "identityWithoutName": "Unnamed Identity",
+    "aliasesCount_one": "{{count}} alias",
+    "aliasesCount_other": "{{count}} aliases",
+    "createdAt": "Created at {{date}}",
+    "noAliases": "No alias configured"
+  },
+
+  "aliases": {
+    "title": "Aliases",
+    "selectPlatform": "Select Platform",
+    "userIdPlaceholder": "User ID on Platform",
+    "displayNamePlaceholder": "Display Name (optional)"
+  },
+
+  "messages": {
+    "title": "Identity Messages",
+    "noMessages": "No messages found for this identity",
+    "from": "from {{user}}",
+    "noText": "No text",
+    "chat": "Chat: {{chatId}}"
+  },
+
+  "confirmDialogs": {
+    "deleteTitle": "Delete Identity",
+    "deleteMessage": "Are you sure you want to delete the identity \"{{name}}\"? All aliases will be removed.",
+    "removeAliasTitle": "Remove Alias",
+    "removeAliasMessage": "Are you sure you want to remove the alias from platform \"{{platform}}\"?"
+  },
+
+  "info": {
+    "title": "About Identities",
+    "description": "Identities unify the same user across multiple platforms. When you create an identity, you link different accounts (Discord, WhatsApp, Telegram, etc.) to the same person, allowing you to track conversations and interactions in a consolidated way."
+  }
+}

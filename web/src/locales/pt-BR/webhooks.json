@@ -1,0 +1,95 @@
+{
+  "title": "Webhooks",
+  "subtitle": "Configure webhooks para receber notificações de eventos",
+
+  "actions": {
+    "newWebhook": "Novo Webhook",
+    "createWebhook": "Criar Webhook",
+    "creating": "Criando...",
+    "cancel": "Cancelar",
+    "save": "Salvar",
+    "delete": "Excluir",
+    "viewStats": "Ver Estatísticas"
+  },
+
+  "alerts": {
+    "selectProject": "Selecione um projeto para gerenciar webhooks",
+    "errorLoading": "Erro ao carregar webhooks. Por favor, tente novamente."
+  },
+
+  "createForm": {
+    "title": "Criar Novo Webhook",
+    "nameLabel": "Nome",
+    "namePlaceholder": "Ex: Notificações de Mensagens",
+    "urlLabel": "URL",
+    "urlPlaceholder": "https://seu-servidor.com/webhook",
+    "secretLabel": "Secret (opcional)",
+    "secretPlaceholder": "Secret para validação HMAC",
+    "eventsLabel": "Eventos ({{count}} selecionados)",
+    "activeLabel": "Webhook ativo"
+  },
+
+  "events": {
+    "messageReceived": {
+      "label": "Mensagem Recebida",
+      "description": "Dispara quando uma mensagem é recebida"
+    },
+    "messageSent": {
+      "label": "Mensagem Enviada",
+      "description": "Dispara quando uma mensagem é enviada com sucesso"
+    },
+    "messageFailed": {
+      "label": "Mensagem Falhou",
+      "description": "Dispara quando uma mensagem falha ao enviar"
+    },
+    "buttonClicked": {
+      "label": "Botão Clicado",
+      "description": "Dispara quando um botão interativo é clicado"
+    },
+    "reactionAdded": {
+      "label": "Reação Adicionada",
+      "description": "Dispara quando uma reação é adicionada a uma mensagem"
+    },
+    "reactionRemoved": {
+      "label": "Reação Removida",
+      "description": "Dispara quando uma reação é removida de uma mensagem"
+    }
+  },
+
+  "status": {
+    "active": "Ativo",
+    "inactive": "Inativo"
+  },
+
+  "list": {
+    "loading": "Carregando...",
+    "noWebhooks": "Nenhum webhook configurado",
+    "noWebhooksMessage": "Crie seu primeiro webhook para receber notificações de eventos",
+    "createFirstWebhook": "Criar Primeiro Webhook",
+    "createdAt": "Criado em {{date}}"
+  },
+
+  "confirmDialogs": {
+    "deleteTitle": "Excluir Webhook",
+    "deleteMessage": "Tem certeza que deseja excluir o webhook \"{{name}}\"? Esta ação é irreversível."
+  },
+
+  "stats": {
+    "title": "Estatísticas do Webhook",
+    "total": "Total",
+    "successful": "Sucesso",
+    "failed": "Falhas",
+    "pending": "Pendentes",
+    "successRate": "Taxa de Sucesso",
+    "recentDeliveries": "Entregas Recentes",
+    "attempts": "{{count}} tentativa(s)",
+    "showingCount": "Mostrando 10 de {{total}} entregas",
+    "noDeliveries": "Nenhuma entrega registrada"
+  },
+
+  "info": {
+    "title": "Sobre Webhooks",
+    "description": "Webhooks enviam notificações HTTP POST para sua URL quando eventos específicos ocorrem. Configure um secret para validar as requisições usando HMAC SHA-256.",
+    "limits": "Máximo de 50 webhooks por projeto. Entregas com retry automático (3 tentativas)."
+  }
+}

@@ -1,0 +1,134 @@
+{
+  "title": "API Keys",
+  "subtitle": "Manage your API access keys",
+
+  "actions": {
+    "newKey": "New Key",
+    "createKey": "Create Key",
+    "revokeKey": "Revoke Key",
+    "renewKey": "Renew Key",
+    "cancel": "Cancel",
+    "understood": "Understood",
+    "creating": "Creating...",
+    "copy": "Copy",
+    "copied": "Copied"
+  },
+
+  "alerts": {
+    "selectProject": "Select a project to view API keys.",
+    "errorLoading": "Error loading API keys. Please try again."
+  },
+
+  "createForm": {
+    "title": "Create New Key",
+    "nameLabel": "Key Name",
+    "namePlaceholder": "Ex: Production - Main API",
+    "expirationLabel": "Expiration (days)",
+    "expirationHint": "The key will expire in {{days}} days",
+    "expirationPresets": {
+      "7days": "7 days",
+      "30days": "30 days",
+      "90days": "90 days"
+    },
+    "permissionsLabel": "Permissions (Scopes)",
+    "permissionsCount": "Events ({{count}} selected)"
+  },
+
+  "scopes": {
+    "identitiesRead": {
+      "label": "Read Identities",
+      "description": "View identities and aliases"
+    },
+    "identitiesWrite": {
+      "label": "Manage Identities",
+      "description": "Create and modify identities"
+    },
+    "projectsRead": {
+      "label": "Read Projects",
+      "description": "View project information"
+    },
+    "projectsWrite": {
+      "label": "Manage Projects",
+      "description": "Create and modify projects"
+    },
+    "platformsRead": {
+      "label": "Read Platforms",
+      "description": "List connected platforms"
+    },
+    "platformsWrite": {
+      "label": "Manage Platforms",
+      "description": "Configure and modify platforms"
+    },
+    "messagesSend": {
+      "label": "Send Messages",
+      "description": "Allows sending messages"
+    },
+    "messagesRead": {
+      "label": "Read Messages",
+      "description": "View message history"
+    },
+    "messagesWrite": {
+      "label": "Manage Messages",
+      "description": "Modify and resend messages"
+    },
+    "webhooksRead": {
+      "label": "Read Webhooks",
+      "description": "View webhook settings"
+    },
+    "webhooksWrite": {
+      "label": "Manage Webhooks",
+      "description": "Create and modify webhooks"
+    },
+    "keysRead": {
+      "label": "Read Keys",
+      "description": "View API keys"
+    },
+    "keysManage": {
+      "label": "Manage Keys",
+      "description": "Create, renew and revoke keys"
+    },
+    "membersRead": {
+      "label": "Read Members",
+      "description": "View project members"
+    },
+    "membersWrite": {
+      "label": "Manage Members",
+      "description": "Add and remove members"
+    }
+  },
+
+  "keyCreated": {
+    "title": "Key created successfully!",
+    "message": "Copy your new key now. For security, it will not be displayed again."
+  },
+
+  "list": {
+    "title": "Active Keys ({{count}})",
+    "loading": "Loading...",
+    "noKeys": "No keys found",
+    "noKeysMessage": "Create your first API key to start integrating",
+    "createFirstKey": "Create First Key",
+    "createdAt": "Created at {{date}}",
+    "lastUsed": "Last used: {{date}}",
+    "renewKeyTitle": "Renew API Key",
+    "renewKeyTooltip": "Renew key"
+  },
+
+  "confirmDialogs": {
+    "revokeTitle": "Revoke API Key",
+    "revokeMessage": "Are you sure you want to revoke the key \"{{name}}\"? This action is irreversible and the key can no longer be used.",
+    "renewTitle": "Renew API Key",
+    "renewMessage": "Are you sure you want to renew the key \"{{name}}\"? The old key will be invalidated and a new key will be generated.",
+    "renewedKey": "Renewed Key"
+  },
+
+  "security": {
+    "title": "API Key Security",
+    "tips": {
+      "noShare": "Never share your API keys publicly",
+      "useEnv": "Use environment variables to store keys in production",
+      "rotate": "Renew your keys regularly to maintain security",
+      "minPermissions": "Configure only the necessary permissions for each key"
+    }
+  }
+}

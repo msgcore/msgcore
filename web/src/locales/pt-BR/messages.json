@@ -1,0 +1,53 @@
+{
+  "title": "Mensagens",
+  "subtitle": "Gerencie e monitore suas mensagens",
+  "actions": {
+    "sendMessage": "Enviar Mensagem",
+    "export": "Exportar",
+    "clearFilters": "Limpar filtros",
+    "loadMore": "Carregar mais"
+  },
+  "alerts": {
+    "selectProject": "Selecione um projeto para visualizar as mensagens",
+    "loadError": "Erro ao carregar mensagens. Por favor, tente novamente."
+  },
+  "stats": {
+    "received": "Recebidas",
+    "sent": "Enviadas",
+    "uniqueUsers": "usuários únicos",
+    "uniqueChats": "Chats Únicos",
+    "recent24h": "Recentes (24h)"
+  },
+  "tabs": {
+    "received": "Recebidas",
+    "sent": "Enviadas"
+  },
+  "search": {
+    "placeholder": "Buscar mensagens...",
+    "allPlatforms": "Todas plataformas"
+  },
+  "status": {
+    "completed": "Entregue",
+    "delivered": "Entregue",
+    "sent": "Enviada",
+    "failed": "Falhou",
+    "pending": "Pendente",
+    "active": "Ativa"
+  },
+  "messages": {
+    "from": "de",
+    "to": "para",
+    "chat": "Chat",
+    "type": "Tipo",
+    "error": "Erro",
+    "noText": "Sem texto",
+    "noReceived": "Nenhuma mensagem recebida",
+    "noSent": "Nenhuma mensagem enviada"
+  },
+  "pagination": {
+    "showing": "Mostrando",
+    "of": "de",
+    "messages": "mensagens",
+    "sentMessages": "mensagens enviadas"
+  }
+}

@@ -1,0 +1,53 @@
+{
+  "title": "Messages",
+  "subtitle": "Manage and monitor your messages",
+  "actions": {
+    "sendMessage": "Send Message",
+    "export": "Export",
+    "clearFilters": "Clear filters",
+    "loadMore": "Load more"
+  },
+  "alerts": {
+    "selectProject": "Select a project to view messages",
+    "loadError": "Error loading messages. Please try again."
+  },
+  "stats": {
+    "received": "Received",
+    "sent": "Sent",
+    "uniqueUsers": "unique users",
+    "uniqueChats": "Unique Chats",
+    "recent24h": "Recent (24h)"
+  },
+  "tabs": {
+    "received": "Received",
+    "sent": "Sent"
+  },
+  "search": {
+    "placeholder": "Search messages...",
+    "allPlatforms": "All platforms"
+  },
+  "status": {
+    "completed": "Delivered",
+    "delivered": "Delivered",
+    "sent": "Sent",
+    "failed": "Failed",
+    "pending": "Pending",
+    "active": "Active"
+  },
+  "messages": {
+    "from": "from",
+    "to": "to",
+    "chat": "Chat",
+    "type": "Type",
+    "error": "Error",
+    "noText": "No text",
+    "noReceived": "No messages received",
+    "noSent": "No messages sent"
+  },
+  "pagination": {
+    "showing": "Showing",
+    "of": "of",
+    "messages": "messages",
+    "sentMessages": "sent messages"
+  }
+}

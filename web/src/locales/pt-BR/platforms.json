@@ -1,0 +1,64 @@
+{
+  "title": "Plataformas",
+  "subtitle": "Conecte e gerencie suas plataformas de mensagens",
+  "status": {
+    "active": "Ativa",
+    "connected": "Conectada",
+    "disconnected": "Desconectada",
+    "error": "Erro",
+    "pending": "Pendente"
+  },
+  "connectedPlatforms": {
+    "title": "Plataformas Conectadas",
+    "noPlatforms": "Nenhuma plataforma conectada ainda",
+    "type": "Tipo",
+    "createdAt": "Criado em",
+    "configure": "Configurar"
+  },
+  "availablePlatforms": {
+    "title": "Plataformas Disponíveis",
+    "loading": "Carregando plataformas disponíveis...",
+    "configured": "configurada",
+    "add": "Adicionar"
+  },
+  "configurationModal": {
+    "titleEdit": "Editar",
+    "titleConfigure": "Configurar",
+    "nameLabel": "Nome da Configuração",
+    "namePlaceholder": "Ex: {{platformName}} Principal",
+    "descriptionLabel": "Descrição (opcional)",
+    "descriptionPlaceholder": "Descreva o propósito desta configuração...",
+    "optionalFields": "Campos opcionais:",
+    "leaveEmptyHint": "(deixe vazio para manter atual)",
+    "leaveEmptyPlaceholder": "Deixe vazio para manter o valor atual",
+    "examplePrefix": "Ex:",
+    "enterPrefix": "Digite",
+    "activateImmediately": "Ativar plataforma imediatamente",
+    "updating": "Atualizando...",
+    "configuring": "Configurando...",
+    "update": "Atualizar",
+    "configure": "Configurar",
+    "cancel": "Cancelar"
+  },
+  "deleteConfirmation": {
+    "title": "Remover Plataforma",
+    "message": "Tem certeza que deseja remover a plataforma \"{{platformName}}\"? Esta ação é irreversível.",
+    "confirm": "Remover",
+    "cancel": "Cancelar"
+  },
+  "validation": {
+    "fillRequiredField": "Por favor, preencha o campo obrigatório: {{field}}"
+  },
+  "alerts": {
+    "selectProject": "Selecione um projeto para gerenciar plataformas",
+    "loadError": "Erro ao carregar plataformas. Por favor, tente novamente."
+  },
+  "features": {
+    "webhooks": "Webhooks",
+    "webSocket": "WebSocket",
+    "polling": "Polling"
+  },
+  "form": {
+    "optional": "(opcional)"
+  }
+}
