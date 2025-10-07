@@ -295,13 +295,13 @@ describe('CLI Integration Tests (e2e)', () => {
 
       // Set API key
       const { stdout: setOutput } = await execAsync(
-        `node ${cliIndexPath} config set apiKey gk_test_secret_key_12345`,
+        `node ${cliIndexPath} config set apiKey msc_test_secret_key_12345`,
         { cwd: generatedCliDir, timeout: 5000, env },
       );
 
       expect(setOutput).toContain('Set apiKey');
       expect(setOutput).toContain('***');
-      expect(setOutput).not.toContain('gk_test_secret_key_12345');
+      expect(setOutput).not.toContain('msc_test_secret_key_12345');
 
       // Get API key
       const { stdout: getOutput } = await execAsync(
@@ -311,7 +311,7 @@ describe('CLI Integration Tests (e2e)', () => {
 
       expect(getOutput).toContain('apiKey');
       expect(getOutput).toContain('***');
-      expect(getOutput).not.toContain('gk_test_secret_key_12345');
+      expect(getOutput).not.toContain('msc_test_secret_key_12345');
     }, 30000);
 
     it('should list all configuration', async () => {
@@ -344,7 +344,7 @@ describe('CLI Integration Tests (e2e)', () => {
       const env = { ...process.env, HOME: testOutputDir };
 
       // Set a config value
-      await execAsync(`node ${cliIndexPath} config set apiKey gk_test_key`, {
+      await execAsync(`node ${cliIndexPath} config set apiKey msc_test_key`, {
         cwd: generatedCliDir,
         timeout: 5000,
         env,

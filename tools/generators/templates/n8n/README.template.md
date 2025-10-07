@@ -43,7 +43,7 @@ npm install n8n-nodes-msgcore
 The node requires MsgCore API credentials:
 
 1. **API URL**: Your MsgCore API endpoint (e.g., `https://api.msgcore.dev`)
-2. **API Key**: Your MsgCore API key (starts with `gk_`)
+2. **API Key**: Your MsgCore API key (starts with `msc_`)
 
 ### Setting up Credentials in n8n
 
@@ -84,7 +84,7 @@ The node requires MsgCore API credentials:
 
 - [n8n Community Nodes](https://www.npmjs.com/package/n8n-nodes-msgcore)
 - [MsgCore Documentation](https://docs.msgcore.dev)
-- [GitHub](https://github.com/filipexyz/n8n-nodes-msgcore)
+- [GitHub](https://github.com/msgcore/n8n-nodes-msgcore)
 - [Discord Community](https://discord.gg/bQPsvycW)
 
 ## License

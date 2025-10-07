@@ -17,7 +17,7 @@ npm install -g @msgcore/cli
 ```bash
 # Configure CLI (stores in ~/.msgcore/config.json with secure permissions)
 msgcore config set apiUrl https://api.msgcore.dev
-msgcore config set apiKey gk_live_your_api_key_here
+msgcore config set apiKey msc_live_your_api_key_here
 msgcore config set defaultProject my-project
 
 # Verify configuration
@@ -32,7 +32,7 @@ msgcore messages send --target "platform-id:user:123" --text "Hello!"
 ```bash
 # Set environment variables (override config file)
 export MSGCORE_API_URL="https://api.msgcore.dev"
-export MSGCORE_API_KEY="gk_live_your_api_key_here"
+export MSGCORE_API_KEY="msc_live_your_api_key_here"
 export MSGCORE_DEFAULT_PROJECT="my-project"
 
 # Use CLI
@@ -70,7 +70,7 @@ This allows you to:
 ```bash
 # Set configuration values
 msgcore config set apiUrl https://api.msgcore.dev
-msgcore config set apiKey gk_live_your_api_key_here
+msgcore config set apiKey msc_live_your_api_key_here
 msgcore config set defaultProject my-project
 msgcore config set outputFormat json
 
@@ -93,7 +93,7 @@ Stored in `~/.msgcore/config.json` with **secure permissions (600)**:
 ```json
 {
   "apiUrl": "https://api.msgcore.dev",
-  "apiKey": "gk_live_your_api_key_here",
+  "apiKey": "msc_live_your_api_key_here",
   "defaultProject": "my-project",
   "outputFormat": "table"
 }
@@ -112,7 +112,7 @@ Environment variables have **highest priority**:
 
 ```bash
 export MSGCORE_API_URL="https://api.msgcore.dev"
-export MSGCORE_API_KEY="gk_live_your_api_key_here"
+export MSGCORE_API_KEY="msc_live_your_api_key_here"
 export MSGCORE_JWT_TOKEN="your-jwt-token"  # Alternative to API key
 export MSGCORE_DEFAULT_PROJECT="my-project"
 export MSGCORE_OUTPUT_FORMAT="json"        # or "table"
@@ -153,7 +153,7 @@ echo $RESULT | jq '.jobId'
 ## Links
 
 - [Documentation](https://docs.msgcore.dev)
-- [GitHub](https://github.com/filipexyz/msgcore-cli)
+- [GitHub](https://github.com/msgcore/msgcore-cli)
 - [npm](https://www.npmjs.com/package/@msgcore/cli)
 - [Discord Community](https://discord.gg/bQPsvycW)
 

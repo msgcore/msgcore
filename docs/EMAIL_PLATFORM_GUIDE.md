@@ -390,7 +390,7 @@ Send OTP codes (but use dedicated services for production).
 
 - **Documentation:** https://docs.msgcore.dev
 - **Discord:** https://discord.gg/bQPsvycW
-- **GitHub Issues:** https://github.com/filipexyz/msgcore
+- **GitHub Issues:** https://github.com/msgcore/msgcore
 
 ---
 

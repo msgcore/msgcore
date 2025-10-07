@@ -777,11 +777,11 @@ export function handleError(error: any): void {
         license: 'MIT',
         repository: {
           type: 'git',
-          url: 'https://github.com/filipexyz/msgcore-cli.git',
+          url: 'https://github.com/msgcore/msgcore-cli.git',
         },
-        homepage: 'https://github.com/filipexyz/msgcore-cli',
+        homepage: 'https://github.com/msgcore/msgcore-cli',
         bugs: {
-          url: 'https://github.com/filipexyz/msgcore-cli/issues',
+          url: 'https://github.com/msgcore/msgcore-cli/issues',
         },
       },
       null,

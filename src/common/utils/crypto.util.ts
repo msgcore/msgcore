@@ -56,7 +56,7 @@ export class CryptoUtil {
     };
 
     const randomPart = randomBytes(32).toString('base64url');
-    return `gk_${envPrefix[environment]}_${randomPart}`;
+    return `msc_${envPrefix[environment]}_${randomPart}`;
   }
 
   static hashApiKey(key: string): string {

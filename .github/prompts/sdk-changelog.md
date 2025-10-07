@@ -46,7 +46,7 @@ Generate a PR description for the **@msgcore/sdk** package based on actual code 
 [1-2 sentence description of what changed]
 
 **Version**: v$VERSION
-**Source**: [MsgCore Backend](https://github.com/filipexyz/msgcore)
+**Source**: [MsgCore Backend](https://github.com/msgcore/msgcore)
 
 ### Changes
 
