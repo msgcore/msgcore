@@ -105,8 +105,9 @@ export class DiscordCredentialsValidator
     if (
       credentials.token &&
       typeof credentials.token === 'string' &&
-      (credentials.token.includes('test') ||
-        credentials.token.includes('example'))
+      (credentials.token.toLowerCase().includes('test') ||
+        credentials.token.toLowerCase().includes('example') ||
+        credentials.token.toLowerCase().includes('fake'))
     ) {
       warnings.push(
         'This appears to be a test/example token - ensure you use a real bot token',
