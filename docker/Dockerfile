@@ -25,8 +25,8 @@ COPY tools ./tools
 RUN npm run build
 
 # Generate contracts and OpenAPI for runtime
-RUN npm run extract:contracts:standalone || true
-RUN npm run generate:openapi || true
+RUN npm run extract:contracts
+RUN npm run generate:openapi
 
 # ==============================================================================
 # Stage 2: Build Frontend (Web)
@@ -95,7 +95,7 @@ COPY --from=backend-builder /app/backend/package*.json ./backend/
 COPY --from=web-builder /app/web/dist /usr/share/nginx/html
 
 # Copy nginx configuration
-COPY docker/nginx.conf /etc/nginx/nginx.conf
+COPY docker/nginx.conf.template /etc/nginx/nginx.conf
 
 # Copy entrypoint script
 COPY docker/docker-entrypoint.sh /docker-entrypoint.sh
