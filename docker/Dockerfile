@@ -101,10 +101,10 @@ COPY docker/nginx.conf.template /etc/nginx/nginx.conf
 COPY docker/docker-entrypoint.sh /docker-entrypoint.sh
 RUN chmod +x /docker-entrypoint.sh
 
-EXPOSE 80
+EXPOSE 7890
 
 # Health check to monitor container health
 HEALTHCHECK --interval=30s --timeout=3s --start-period=40s --retries=3 \
-  CMD wget --no-verbose --tries=1 --spider http://localhost/api/v1/health || exit 1
+  CMD wget --no-verbose --tries=1 --spider http://localhost:7890/api/v1/health || exit 1
 
 ENTRYPOINT ["/docker-entrypoint.sh"]

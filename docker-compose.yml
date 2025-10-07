@@ -37,20 +37,13 @@ services:
       retries: 5
 
   app:
-    build:
-      context: .
-      dockerfile: docker/Dockerfile
-      args:
-        # Pass frontend environment variables for build
-        MSGCORE_API_URL: ${MSGCORE_API_URL:-}
-        MSGCORE_API_VERSION: ${MSGCORE_API_VERSION:-v1}
-        MSGCORE_ENV: production
+    image: msgcore/msgcore:${MSGCORE_VERSION:-latest}
     container_name: msgcore-app
     restart: unless-stopped
     environment:
       NODE_ENV: production
-      PORT: ${PORT:-7890}
-      MSGCORE_API_URL: ${MSGCORE_API_URL:-http://localhost:8080}
+      PORT: 3000
+      MSGCORE_API_URL: ${MSGCORE_API_URL:-http://localhost:7890}
       CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:7890}
       DATABASE_URL: postgresql://${DB_USER:-msgcore}:${DB_PASSWORD:-msgcore_password}@postgres:5432/${DB_NAME:-msgcore}?schema=public
       REDIS_URL: redis://:${REDIS_PASSWORD:-redis_password}@redis:6379
@@ -60,7 +53,7 @@ services:
       JWT_SECRET: ${JWT_SECRET}
       ENCRYPTION_KEY: ${ENCRYPTION_KEY}
     ports:
-      - "8080:80"
+      - "7890:7890"
     depends_on:
       postgres:
         condition: service_healthy

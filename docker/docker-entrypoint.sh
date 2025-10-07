@@ -27,8 +27,8 @@ shutdown() {
 # Trap SIGTERM and SIGINT
 trap shutdown SIGTERM SIGINT
 
-# Get backend port from environment (default 7890)
-BACKEND_PORT=${PORT:-7890}
+# Get backend port from environment (default 3000)
+BACKEND_PORT=${PORT:-3000}
 export BACKEND_PORT
 
 # Generate nginx config with environment variables
@@ -63,7 +63,7 @@ if [ $attempt -eq $max_attempts ]; then
 fi
 
 # Start nginx
-echo "Starting nginx on port 80..."
+echo "Starting nginx on port 7890..."
 nginx -g "daemon off;" &
 NGINX_PID=$!
 echo "nginx started (PID: $NGINX_PID)"
@@ -72,15 +72,15 @@ echo "=========================================="
 echo "MsgCore is running!"
 echo ""
 echo "🌐 Public URLs (MSGCORE_API_URL):"
-echo "  - API: ${MSGCORE_API_URL:-http://localhost:8080}/api/v1"
-echo "  - Frontend: ${MSGCORE_API_URL:-http://localhost:8080}"
-echo "  - Health: ${MSGCORE_API_URL:-http://localhost:8080}/api/v1/health"
+echo "  - API: ${MSGCORE_API_URL:-http://localhost:7890}/api/v1"
+echo "  - Frontend: ${MSGCORE_API_URL:-http://localhost:7890}"
+echo "  - Health: ${MSGCORE_API_URL:-http://localhost:7890}/api/v1/health"
 echo ""
 echo "🔧 Internal Container URLs:"
-echo "  - Frontend: http://localhost"
-echo "  - API: http://localhost/api/v1"
-echo "  - MCP: http://localhost/mcp"
-echo "  - Docs: http://localhost/docs"
+echo "  - Frontend: http://localhost:7890"
+echo "  - API: http://localhost:7890/api/v1"
+echo "  - MCP: http://localhost:7890/mcp"
+echo "  - Docs: http://localhost:7890/docs"
 echo "=========================================="
 
 # Wait for any process to exit
