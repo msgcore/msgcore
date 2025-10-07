@@ -1,0 +1,170 @@
+name: Build and Publish Docker Image
+
+on:
+  workflow_dispatch:
+    inputs:
+      publish_to_dockerhub:
+        description: 'Publish to Docker Hub'
+        required: true
+        default: true
+        type: boolean
+
+env:
+  NODE_VERSION: '20'
+  DOCKER_ORG: 'msgcore'
+  DOCKER_IMAGE: 'msgcore'
+
+jobs:
+  build-and-publish:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Get version from package.json
+        id: version
+        run: |
+          VERSION=$(node -p "require('./package.json').version")
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "📦 Publishing version: v$VERSION"
+
+      - name: Get commit info for changelog
+        id: commit
+        run: |
+          # Get last version tag
+          LAST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "")
+          if [ -z "$LAST_TAG" ]; then
+            echo "last_tag=initial" >> $GITHUB_OUTPUT
+            echo "📝 First release - no previous tag"
+          else
+            echo "last_tag=$LAST_TAG" >> $GITHUB_OUTPUT
+            echo "📝 Last release: $LAST_TAG"
+          fi
+
+          COMMIT_SHA=$(git rev-parse --short HEAD)
+          TIMESTAMP=$(date +%s)
+          echo "commit_sha=$COMMIT_SHA" >> $GITHUB_OUTPUT
+          echo "branch_suffix=$TIMESTAMP" >> $GITHUB_OUTPUT
+
+      - name: Setup Git
+        run: |
+          git config --global user.email "${{ vars.GIT_USER_EMAIL }}"
+          git config --global user.name "${{ vars.GIT_USER_NAME }}"
+
+      - name: Generate Changelog
+        id: changelog
+        timeout-minutes: 5
+        uses: anthropics/claude-code-base-action@beta
+        with:
+          prompt_file: .github/prompts/docker-changelog.md
+          allowed_tools: "Bash(git:*),Bash(cd:*),Bash(ls:*),Bash(echo:*),Read,Write,Glob,Grep"
+          claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          claude_env: |
+            VERSION=${{ steps.version.outputs.version }}
+            LAST_TAG=${{ steps.commit.outputs.last_tag }}
+            COMMIT_SHA=${{ steps.commit.outputs.commit_sha }}
+            GITHUB_WORKSPACE=${{ github.workspace }}
+
+      - name: Extract Changelog Content
+        id: changelog_content
+        run: |
+          if [ ! -f /tmp/docker-tag-title.txt ] || [ ! -f /tmp/docker-tag-body.md ]; then
+            echo "❌ Claude Code failed to generate changelog"
+            exit 1
+          fi
+          delimiter="$(openssl rand -hex 16)"
+          {
+            echo "title<<${delimiter}"
+            cat /tmp/docker-tag-title.txt
+            echo ""
+            echo "${delimiter}"
+          } >> $GITHUB_OUTPUT
+          {
+            echo "body<<${delimiter}"
+            cat /tmp/docker-tag-body.md
+            echo ""
+            echo "${delimiter}"
+          } >> $GITHUB_OUTPUT
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to Docker Hub
+        if: ${{ github.event.inputs.publish_to_dockerhub }}
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
+      - name: Extract metadata (tags, labels)
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.DOCKER_ORG }}/${{ env.DOCKER_IMAGE }}
+          tags: |
+            type=raw,value=${{ steps.version.outputs.version }}
+            type=raw,value=latest
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./docker/Dockerfile
+          push: ${{ github.event.inputs.publish_to_dockerhub }}
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          build-args: |
+            MSGCORE_API_URL=http://localhost:7890
+            MSGCORE_API_VERSION=v1
+            MSGCORE_ENV=production
+          platforms: linux/amd64,linux/arm64
+
+      - name: Create and push git tag
+        run: |
+          git tag -a "v${{ steps.version.outputs.version }}" -m "${{ steps.changelog_content.outputs.title }}"
+          git push origin "v${{ steps.version.outputs.version }}"
+
+      - name: Create GitHub Release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          echo "${{ steps.changelog_content.outputs.body }}" > /tmp/release-notes.md
+          gh release create "v${{ steps.version.outputs.version }}" \
+            --title "${{ steps.changelog_content.outputs.title }}" \
+            --notes-file /tmp/release-notes.md
+
+      - name: Summary
+        run: |
+          echo "## 🐳 Docker Image Published" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Version**: v${{ steps.version.outputs.version }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Image**: \`${{ env.DOCKER_ORG }}/${{ env.DOCKER_IMAGE }}:${{ steps.version.outputs.version }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          if [[ "${{ github.event.inputs.publish_to_dockerhub }}" == "true" ]]; then
+            echo "### 📦 Pull the image:" >> $GITHUB_STEP_SUMMARY
+            echo '```bash' >> $GITHUB_STEP_SUMMARY
+            echo "docker pull ${{ env.DOCKER_ORG }}/${{ env.DOCKER_IMAGE }}:${{ steps.version.outputs.version }}" >> $GITHUB_STEP_SUMMARY
+            echo "# or" >> $GITHUB_STEP_SUMMARY
+            echo "docker pull ${{ env.DOCKER_ORG }}/${{ env.DOCKER_IMAGE }}:latest" >> $GITHUB_STEP_SUMMARY
+            echo '```' >> $GITHUB_STEP_SUMMARY
+          fi
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### 🏷️ Git Tag Created:" >> $GITHUB_STEP_SUMMARY
+          echo "- [View Release v${{ steps.version.outputs.version }}](https://github.com/${{ github.repository }}/releases/tag/v${{ steps.version.outputs.version }})" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### 📝 Changelog:" >> $GITHUB_STEP_SUMMARY
+          cat /tmp/docker-tag-body.md >> $GITHUB_STEP_SUMMARY
