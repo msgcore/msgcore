@@ -38,6 +38,9 @@ lerna-debug.log*
 .env
 .env.local
 
+# Deployment guides (user-specific)
+DEPLOY.md
+
 # Database
 *.sqlite
 *.sqlite3
