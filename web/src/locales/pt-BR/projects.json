@@ -1,0 +1,49 @@
+{
+  "page": {
+    "title": "Projetos",
+    "subtitle": "Gerencie seus projetos e configurações"
+  },
+  "buttons": {
+    "newProject": "Novo Projeto",
+    "createProject": "Criar Projeto",
+    "creating": "Criando...",
+    "cancel": "Cancelar",
+    "save": "Salvar",
+    "select": "Selecionar",
+    "createFirstProject": "Criar Primeiro Projeto"
+  },
+  "form": {
+    "createTitle": "Criar Novo Projeto",
+    "editTitle": "Editar Projeto",
+    "nameLabel": "Nome do Projeto",
+    "namePlaceholder": "Ex: Meu Projeto Principal",
+    "descriptionLabel": "Descrição",
+    "descriptionPlaceholder": "Descreva brevemente seu projeto...",
+    "descriptionEditPlaceholder": "Descrição..."
+  },
+  "deleteDialog": {
+    "title": "Excluir Projeto",
+    "message": "Tem certeza que deseja excluir o projeto \"{{projectName}}\"? Esta ação é irreversível e removerá todos os dados associados.",
+    "confirmText": "Excluir",
+    "cancelText": "Cancelar"
+  },
+  "badges": {
+    "active": "Ativo"
+  },
+  "info": {
+    "createdAt": "Criado em {{date}}",
+    "members_one": "{{count}} membro",
+    "members_other": "{{count}} membros"
+  },
+  "empty": {
+    "title": "Nenhum projeto encontrado",
+    "message": "Crie seu primeiro projeto para começar a usar o MsgCore"
+  },
+  "about": {
+    "title": "Sobre Projetos",
+    "description": "Projetos no MsgCore isolam completamente seus dados e configurações. Cada projeto tem suas próprias chaves de API, membros, plataformas conectadas e histórico de mensagens. Selecione um projeto para trabalhar com ele."
+  },
+  "errors": {
+    "loadError": "Erro ao carregar projetos. Por favor, tente novamente."
+  }
+}

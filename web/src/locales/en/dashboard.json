@@ -1,0 +1,71 @@
+{
+  "header": {
+    "title": "Dashboard",
+    "subtitle": "Overview of your project and metrics"
+  },
+  "stats": {
+    "receivedMessages": "Received Messages",
+    "sentMessages": "Sent Messages",
+    "uniqueUsers": "Unique Users",
+    "uniqueChats": "Unique Chats"
+  },
+  "status": {
+    "delivered": "Delivered",
+    "sent": "Sent",
+    "failed": "Failed",
+    "pending": "Pending"
+  },
+  "empty": {
+    "welcome": "Welcome to MsgCore!",
+    "createProject": "Create your first project to start sending messages",
+    "createButton": "Create First Project"
+  },
+  "features": {
+    "multiplePlatforms": {
+      "title": "Multiple Platforms",
+      "description": "Connect WhatsApp, Discord, Telegram and more"
+    },
+    "simpleApi": {
+      "title": "Simple API",
+      "description": "Generate keys and start sending in minutes"
+    },
+    "realTimeMetrics": {
+      "title": "Real-Time Metrics",
+      "description": "Track deliveries and performance"
+    }
+  },
+  "recentMessages": {
+    "title": "Recent Messages",
+    "viewAll": "View all",
+    "empty": "No messages yet",
+    "noText": "No text"
+  },
+  "platforms": {
+    "title": "Connected Platforms",
+    "manage": "Manage",
+    "empty": "No platform connected",
+    "connectButton": "Connect Platform",
+    "active": "Active",
+    "inactive": "Inactive"
+  },
+  "quickActions": {
+    "apiKeys": {
+      "title": "API Keys",
+      "description": "Generate and manage your access keys",
+      "action": "Manage"
+    },
+    "webhooks": {
+      "title": "Webhooks",
+      "description": "Configure event notifications",
+      "action": "Manage"
+    },
+    "members": {
+      "title": "Members",
+      "description": "Invite and manage team members",
+      "action": "View members"
+    }
+  },
+  "actions": {
+    "viewMessages": "View Messages"
+  }
+}

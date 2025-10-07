@@ -38,7 +38,8 @@ async function bootstrap() {
       if (corsOrigins && corsOrigins.includes(origin)) {
         callback(null, true);
       } else {
-        callback(new Error('Not allowed by CORS'));
+        // Reject without throwing error (standard CORS behavior)
+        callback(null, false);
       }
     },
     credentials: true,

@@ -1,0 +1,29 @@
+{
+  "title": "Configurações",
+  "subtitle": "Gerencie suas preferências e segurança da conta",
+
+  "password": {
+    "title": "Alterar Senha",
+    "currentPasswordLabel": "Senha Atual",
+    "currentPasswordPlaceholder": "Digite sua senha atual",
+    "newPasswordLabel": "Nova Senha",
+    "newPasswordPlaceholder": "Mínimo 8 caracteres, 1 letra maiúscula, 1 número",
+    "confirmPasswordLabel": "Confirmar Nova Senha",
+    "confirmPasswordPlaceholder": "Digite a nova senha novamente",
+    "submit": "Alterar Senha",
+    "submitting": "Atualizando...",
+    "success": "Senha alterada com sucesso!"
+  },
+
+  "passwordRequirements": {
+    "title": "Requisitos de Senha",
+    "minLength": "Mínimo de 8 caracteres",
+    "uppercase": "Pelo menos uma letra maiúscula",
+    "number": "Pelo menos um número"
+  },
+
+  "errors": {
+    "passwordMismatch": "As senhas não coincidem",
+    "passwordTooShort": "A senha deve ter pelo menos 8 caracteres"
+  }
+}

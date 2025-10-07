@@ -1,0 +1,53 @@
+{
+  "appName": "MsgCore",
+  "loading": "Carregando...",
+  "error": "Erro",
+  "success": "Sucesso",
+  "cancel": "Cancelar",
+  "save": "Salvar",
+  "delete": "Excluir",
+  "edit": "Editar",
+  "create": "Criar",
+  "close": "Fechar",
+  "confirm": "Confirmar",
+  "back": "Voltar",
+  "next": "Próximo",
+  "search": "Buscar",
+  "filter": "Filtrar",
+  "actions": "Ações",
+  "noData": "Nenhum dado disponível",
+  "tryAgain": "Tentar novamente",
+  "copy": "Copiar",
+  "copied": "Copiado!",
+
+  "nav": {
+    "dashboard": "Dashboard",
+    "projects": "Projetos",
+    "messages": "Mensagens",
+    "platforms": "Plataformas",
+    "apiKeys": "Chaves de API",
+    "members": "Membros",
+    "webhooks": "Webhooks",
+    "identities": "Identidades",
+    "settings": "Configurações",
+    "logout": "Sair"
+  },
+
+  "project": {
+    "selectProject": "Selecione um projeto",
+    "manageProjects": "Gerenciar Projetos",
+    "active": "Ativo"
+  },
+
+  "user": {
+    "user": "Usuário"
+  },
+
+  "errors": {
+    "generic": "Ocorreu um erro. Por favor, tente novamente.",
+    "network": "Erro de rede. Verifique sua conexão.",
+    "unauthorized": "Não autorizado. Faça login novamente.",
+    "notFound": "Recurso não encontrado.",
+    "serverError": "Erro no servidor. Tente novamente mais tarde."
+  }
+}

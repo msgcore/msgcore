@@ -29,7 +29,7 @@ export class PlatformsService {
   ) {}
 
   private getWebhookUrl(platform: string, webhookToken: string): string {
-    const baseUrl = process.env.API_BASE_URL || 'http://localhost:3000';
+    const baseUrl = process.env.MSGCORE_API_URL || 'http://localhost:3000';
     return `${baseUrl}/api/v1/webhooks/${platform}/${webhookToken}`;
   }
 
@@ -511,7 +511,7 @@ export class PlatformsService {
         // Create temporary bot instance to register webhook
         const bot = new TelegramBot(credentials.token, { webHook: true });
 
-        const baseUrl = process.env.API_BASE_URL || 'https://api.msgcore.dev';
+        const baseUrl = process.env.MSGCORE_API_URL || 'https://api.msgcore.dev';
         const webhookUrl = `${baseUrl}/api/v1/webhooks/telegram/${platform.webhookToken}`;
 
         // Set the webhook

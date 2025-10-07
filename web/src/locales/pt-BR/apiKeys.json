@@ -1,0 +1,134 @@
+{
+  "title": "Chaves de API",
+  "subtitle": "Gerencie as chaves de acesso à API",
+
+  "actions": {
+    "newKey": "Nova Chave",
+    "createKey": "Criar Chave",
+    "revokeKey": "Revogar Chave",
+    "renewKey": "Renovar Chave",
+    "cancel": "Cancelar",
+    "understood": "Entendi",
+    "creating": "Criando...",
+    "copy": "Copiar",
+    "copied": "Copiado"
+  },
+
+  "alerts": {
+    "selectProject": "Selecione um projeto para visualizar as chaves de API.",
+    "errorLoading": "Erro ao carregar chaves de API. Por favor, tente novamente."
+  },
+
+  "createForm": {
+    "title": "Criar Nova Chave",
+    "nameLabel": "Nome da Chave",
+    "namePlaceholder": "Ex: Produção - API Principal",
+    "expirationLabel": "Expiração (dias)",
+    "expirationHint": "A chave expirará em {{days}} dias",
+    "expirationPresets": {
+      "7days": "7 dias",
+      "30days": "30 dias",
+      "90days": "90 dias"
+    },
+    "permissionsLabel": "Permissões (Scopes)",
+    "permissionsCount": "Eventos ({{count}} selecionados)"
+  },
+
+  "scopes": {
+    "identitiesRead": {
+      "label": "Ler Identidades",
+      "description": "Visualizar identidades e aliases"
+    },
+    "identitiesWrite": {
+      "label": "Gerenciar Identidades",
+      "description": "Criar e modificar identidades"
+    },
+    "projectsRead": {
+      "label": "Ler Projetos",
+      "description": "Visualizar informações do projeto"
+    },
+    "projectsWrite": {
+      "label": "Gerenciar Projetos",
+      "description": "Criar e modificar projetos"
+    },
+    "platformsRead": {
+      "label": "Ler Plataformas",
+      "description": "Listar plataformas conectadas"
+    },
+    "platformsWrite": {
+      "label": "Gerenciar Plataformas",
+      "description": "Configurar e modificar plataformas"
+    },
+    "messagesSend": {
+      "label": "Enviar Mensagens",
+      "description": "Permite enviar mensagens"
+    },
+    "messagesRead": {
+      "label": "Ler Mensagens",
+      "description": "Visualizar histórico de mensagens"
+    },
+    "messagesWrite": {
+      "label": "Gerenciar Mensagens",
+      "description": "Modificar e reenviar mensagens"
+    },
+    "webhooksRead": {
+      "label": "Ler Webhooks",
+      "description": "Visualizar configurações de webhooks"
+    },
+    "webhooksWrite": {
+      "label": "Gerenciar Webhooks",
+      "description": "Criar e modificar webhooks"
+    },
+    "keysRead": {
+      "label": "Ler Chaves",
+      "description": "Visualizar chaves de API"
+    },
+    "keysManage": {
+      "label": "Gerenciar Chaves",
+      "description": "Criar, renovar e revogar chaves"
+    },
+    "membersRead": {
+      "label": "Ler Membros",
+      "description": "Visualizar membros do projeto"
+    },
+    "membersWrite": {
+      "label": "Gerenciar Membros",
+      "description": "Adicionar e remover membros"
+    }
+  },
+
+  "keyCreated": {
+    "title": "Chave criada com sucesso!",
+    "message": "Copie sua nova chave agora. Por segurança, ela não será exibida novamente."
+  },
+
+  "list": {
+    "title": "Chaves Ativas ({{count}})",
+    "loading": "Carregando...",
+    "noKeys": "Nenhuma chave encontrada",
+    "noKeysMessage": "Crie sua primeira chave de API para começar a integrar",
+    "createFirstKey": "Criar Primeira Chave",
+    "createdAt": "Criada em {{date}}",
+    "lastUsed": "Último uso: {{date}}",
+    "renewKeyTitle": "Renovar Chave de API",
+    "renewKeyTooltip": "Renovar chave"
+  },
+
+  "confirmDialogs": {
+    "revokeTitle": "Revogar Chave de API",
+    "revokeMessage": "Tem certeza que deseja revogar a chave \"{{name}}\"? Esta ação é irreversível e a chave não poderá mais ser usada.",
+    "renewTitle": "Renovar Chave de API",
+    "renewMessage": "Tem certeza que deseja renovar a chave \"{{name}}\"? A chave antiga será invalidada e uma nova chave será gerada.",
+    "renewedKey": "Chave Renovada"
+  },
+
+  "security": {
+    "title": "Segurança das Chaves de API",
+    "tips": {
+      "noShare": "Nunca compartilhe suas chaves de API publicamente",
+      "useEnv": "Use variáveis de ambiente para armazenar chaves em produção",
+      "rotate": "Renove suas chaves regularmente para manter a segurança",
+      "minPermissions": "Configure apenas as permissões necessárias para cada chave"
+    }
+  }
+}

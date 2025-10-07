@@ -21,3 +21,14 @@ generated/cli/
 generated/sdk/
 generated/n8n/
 test-sdk.ts
+
+# Web frontend build artifacts
+web/node_modules
+web/dist
+web/.env
+web/.env.local
+
+# Test files
+test
+*.spec.ts
+*.e2e-spec.ts

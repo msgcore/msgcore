@@ -1,0 +1,71 @@
+{
+  "header": {
+    "title": "Dashboard",
+    "subtitle": "Visão geral do seu projeto e métricas"
+  },
+  "stats": {
+    "receivedMessages": "Mensagens Recebidas",
+    "sentMessages": "Mensagens Enviadas",
+    "uniqueUsers": "Usuários Únicos",
+    "uniqueChats": "Chats Únicos"
+  },
+  "status": {
+    "delivered": "Entregue",
+    "sent": "Enviada",
+    "failed": "Falhou",
+    "pending": "Pendente"
+  },
+  "empty": {
+    "welcome": "Bem-vindo ao MsgCore!",
+    "createProject": "Crie seu primeiro projeto para começar a enviar mensagens",
+    "createButton": "Criar Primeiro Projeto"
+  },
+  "features": {
+    "multiplePlatforms": {
+      "title": "Múltiplas Plataformas",
+      "description": "Conecte WhatsApp, Discord, Telegram e mais"
+    },
+    "simpleApi": {
+      "title": "API Simples",
+      "description": "Gere chaves e comece a enviar em minutos"
+    },
+    "realTimeMetrics": {
+      "title": "Métricas em Tempo Real",
+      "description": "Acompanhe entregas e performance"
+    }
+  },
+  "recentMessages": {
+    "title": "Mensagens Recentes",
+    "viewAll": "Ver todas",
+    "empty": "Nenhuma mensagem ainda",
+    "noText": "Sem texto"
+  },
+  "platforms": {
+    "title": "Plataformas Conectadas",
+    "manage": "Gerenciar",
+    "empty": "Nenhuma plataforma conectada",
+    "connectButton": "Conectar Plataforma",
+    "active": "Ativa",
+    "inactive": "Inativa"
+  },
+  "quickActions": {
+    "apiKeys": {
+      "title": "Chaves de API",
+      "description": "Gere e gerencie suas chaves de acesso",
+      "action": "Gerenciar"
+    },
+    "webhooks": {
+      "title": "Webhooks",
+      "description": "Configure notificações de eventos",
+      "action": "Gerenciar"
+    },
+    "members": {
+      "title": "Membros",
+      "description": "Convide e gerencie membros da equipe",
+      "action": "Ver membros"
+    }
+  },
+  "actions": {
+    "viewMessages": "Ver Mensagens"
+  }
+}

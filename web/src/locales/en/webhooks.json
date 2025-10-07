@@ -1,0 +1,95 @@
+{
+  "title": "Webhooks",
+  "subtitle": "Configure webhooks to receive event notifications",
+
+  "actions": {
+    "newWebhook": "New Webhook",
+    "createWebhook": "Create Webhook",
+    "creating": "Creating...",
+    "cancel": "Cancel",
+    "save": "Save",
+    "delete": "Delete",
+    "viewStats": "View Statistics"
+  },
+
+  "alerts": {
+    "selectProject": "Select a project to manage webhooks",
+    "errorLoading": "Error loading webhooks. Please try again."
+  },
+
+  "createForm": {
+    "title": "Create New Webhook",
+    "nameLabel": "Name",
+    "namePlaceholder": "Ex: Message Notifications",
+    "urlLabel": "URL",
+    "urlPlaceholder": "https://your-server.com/webhook",
+    "secretLabel": "Secret (optional)",
+    "secretPlaceholder": "Secret for HMAC validation",
+    "eventsLabel": "Events ({{count}} selected)",
+    "activeLabel": "Webhook active"
+  },
+
+  "events": {
+    "messageReceived": {
+      "label": "Message Received",
+      "description": "Triggers when a message is received"
+    },
+    "messageSent": {
+      "label": "Message Sent",
+      "description": "Triggers when a message is sent successfully"
+    },
+    "messageFailed": {
+      "label": "Message Failed",
+      "description": "Triggers when a message fails to send"
+    },
+    "buttonClicked": {
+      "label": "Button Clicked",
+      "description": "Triggers when an interactive button is clicked"
+    },
+    "reactionAdded": {
+      "label": "Reaction Added",
+      "description": "Triggers when a reaction is added to a message"
+    },
+    "reactionRemoved": {
+      "label": "Reaction Removed",
+      "description": "Triggers when a reaction is removed from a message"
+    }
+  },
+
+  "status": {
+    "active": "Active",
+    "inactive": "Inactive"
+  },
+
+  "list": {
+    "loading": "Loading...",
+    "noWebhooks": "No webhook configured",
+    "noWebhooksMessage": "Create your first webhook to receive event notifications",
+    "createFirstWebhook": "Create First Webhook",
+    "createdAt": "Created at {{date}}"
+  },
+
+  "confirmDialogs": {
+    "deleteTitle": "Delete Webhook",
+    "deleteMessage": "Are you sure you want to delete the webhook \"{{name}}\"? This action is irreversible."
+  },
+
+  "stats": {
+    "title": "Webhook Statistics",
+    "total": "Total",
+    "successful": "Success",
+    "failed": "Failed",
+    "pending": "Pending",
+    "successRate": "Success Rate",
+    "recentDeliveries": "Recent Deliveries",
+    "attempts": "{{count}} attempt(s)",
+    "showingCount": "Showing 10 of {{total}} deliveries",
+    "noDeliveries": "No deliveries recorded"
+  },
+
+  "info": {
+    "title": "About Webhooks",
+    "description": "Webhooks send HTTP POST notifications to your URL when specific events occur. Configure a secret to validate requests using HMAC SHA-256.",
+    "limits": "Maximum of 50 webhooks per project. Deliveries with automatic retry (3 attempts)."
+  }
+}

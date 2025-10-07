@@ -1,0 +1,49 @@
+{
+  "page": {
+    "title": "Projects",
+    "subtitle": "Manage your projects and settings"
+  },
+  "buttons": {
+    "newProject": "New Project",
+    "createProject": "Create Project",
+    "creating": "Creating...",
+    "cancel": "Cancel",
+    "save": "Save",
+    "select": "Select",
+    "createFirstProject": "Create First Project"
+  },
+  "form": {
+    "createTitle": "Create New Project",
+    "editTitle": "Edit Project",
+    "nameLabel": "Project Name",
+    "namePlaceholder": "Ex: My Main Project",
+    "descriptionLabel": "Description",
+    "descriptionPlaceholder": "Briefly describe your project...",
+    "descriptionEditPlaceholder": "Description..."
+  },
+  "deleteDialog": {
+    "title": "Delete Project",
+    "message": "Are you sure you want to delete the project \"{{projectName}}\"? This action is irreversible and will remove all associated data.",
+    "confirmText": "Delete",
+    "cancelText": "Cancel"
+  },
+  "badges": {
+    "active": "Active"
+  },
+  "info": {
+    "createdAt": "Created on {{date}}",
+    "members_one": "{{count}} member",
+    "members_other": "{{count}} members"
+  },
+  "empty": {
+    "title": "No projects found",
+    "message": "Create your first project to start using MsgCore"
+  },
+  "about": {
+    "title": "About Projects",
+    "description": "Projects in MsgCore completely isolate your data and settings. Each project has its own API keys, members, connected platforms, and message history. Select a project to work with it."
+  },
+  "errors": {
+    "loadError": "Error loading projects. Please try again."
+  }
+}

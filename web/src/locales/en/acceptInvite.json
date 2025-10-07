@@ -1,0 +1,47 @@
+{
+  "title": "Accept Invite",
+  "subtitle": "Complete your registration to access the project",
+
+  "form": {
+    "nameLabel": "Full Name",
+    "namePlaceholder": "Your name",
+    "passwordLabel": "Password",
+    "passwordPlaceholder": "Minimum 8 characters",
+    "confirmPasswordLabel": "Confirm Password",
+    "confirmPasswordPlaceholder": "Enter password again"
+  },
+
+  "buttons": {
+    "submit": "Accept Invite",
+    "submitting": "Creating Account..."
+  },
+
+  "states": {
+    "invalid": {
+      "title": "Invalid Invite",
+      "message": "The invite link is invalid or missing."
+    },
+    "success": {
+      "title": "Welcome!",
+      "message": "Your account was successfully created. You will be redirected to the dashboard..."
+    }
+  },
+
+  "errors": {
+    "invalidToken": "Invalid invite token",
+    "passwordMismatch": "Passwords do not match",
+    "passwordTooShort": "Password must be at least 8 characters",
+    "invalidInviteLink": "Invalid or missing invite link",
+    "errorGeneratingLink": "Error generating invite link",
+    "invalidInviteLinkFormat": "Invalid invite link format"
+  },
+
+  "success": {
+    "accountCreated": "Account created successfully!"
+  },
+
+  "footer": {
+    "alreadyHaveAccount": "Already have an account?",
+    "signIn": "Sign in"
+  }
+}

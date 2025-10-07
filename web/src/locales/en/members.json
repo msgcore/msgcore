@@ -1,0 +1,61 @@
+{
+  "title": "Team Members",
+  "subtitle": "Manage members and their permissions",
+
+  "actions": {
+    "inviteMember": "Invite Member",
+    "createInvite": "Create Invite",
+    "creatingInvite": "Creating Invite...",
+    "cancel": "Cancel",
+    "close": "Close",
+    "remove": "Remove",
+    "copy": "Copy",
+    "copied": "Copied!"
+  },
+
+  "alerts": {
+    "selectProject": "Select a project to view members.",
+    "errorLoading": "Error loading members. Please try again."
+  },
+
+  "errors": {
+    "errorGeneratingLink": "Error generating invite link",
+    "invalidInviteLinkFormat": "Invalid invite link format"
+  },
+
+  "inviteForm": {
+    "title": "Invite New Member",
+    "emailLabel": "Member Email",
+    "emailPlaceholder": "member@example.com",
+    "inviteCreated": "Invite created successfully! Send the link below to the new member:"
+  },
+
+  "roles": {
+    "admin": "Administrator",
+    "member": "Member",
+    "viewer": "Viewer",
+    "clientAdmin": "Administrator",
+    "clientMember": "Member",
+    "systemAdmin": "Super Admin"
+  },
+
+  "list": {
+    "title_one": "Active Member ({{count}})",
+    "title_other": "Active Members ({{count}})",
+    "loading": "Loading...",
+    "noMembers": "No members found in this project.",
+    "memberSince": "Member since {{date}}",
+    "noEmail": "No email",
+    "unknownUser": "Unknown User"
+  },
+
+  "confirmDialogs": {
+    "removeTitle": "Remove Member",
+    "removeMessage": "Are you sure you want to remove \"{{name}}\" from the project?"
+  },
+
+  "permissions": {
+    "title": "Important about Permissions",
+    "message": "When inviting a member, be careful. Invited members will have full access to the project, being able to send messages, view statistics, check logs, create and manage API keys, and access all project features."
+  }
+}

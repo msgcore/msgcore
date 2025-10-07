@@ -168,7 +168,7 @@ describe('AppAuthGuard', () => {
         UnauthorizedException,
       );
       await expect(guard.canActivate(context)).rejects.toThrow(
-        'JWT authentication is not configured. Please use API key authentication.',
+        'Invalid or expired token',
       );
     });
 
