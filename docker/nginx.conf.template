@@ -33,9 +33,9 @@ http {
                application/rss+xml font/truetype font/opentype
                application/vnd.ms-fontobject image/svg+xml;
 
-    # Backend upstream
+    # Backend upstream (port from environment variable, default 7890)
     upstream backend {
-        server localhost:3000;
+        server localhost:${BACKEND_PORT};
         keepalive 32;
     }
 

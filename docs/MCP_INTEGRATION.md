@@ -45,7 +45,7 @@ The MCP integration uses MsgCore's contract-driven architecture to automatically
 
 ## MCP Endpoint
 
-**Base URL:** `http://localhost:3000/mcp`
+**Base URL:** `http://localhost:7890/mcp`
 
 ### Supported Methods
 
@@ -211,7 +211,7 @@ Example configuration (format may vary by MCP client):
 {
   "mcpServers": {
     "msgcore": {
-      "url": "http://localhost:3000/mcp",
+      "url": "http://localhost:7890/mcp",
       "transport": "http",
       "headers": {
         "Authorization": "Bearer YOUR_JWT_TOKEN"
@@ -227,7 +227,7 @@ Or with API key:
 {
   "mcpServers": {
     "msgcore": {
-      "url": "http://localhost:3000/mcp",
+      "url": "http://localhost:7890/mcp",
       "transport": "http",
       "headers": {
         "X-API-Key": "YOUR_API_KEY"
@@ -292,7 +292,7 @@ create(@Body() dto: CreateProjectDto) { ... }
 1. MCP client calls `tools/call` with tool name and arguments
 2. Executor service looks up contract metadata (HTTP method, path)
 3. Builds internal API request with proper authentication headers
-4. Makes HTTP request to `localhost:3000/{path}`
+4. Makes HTTP request to `localhost:7890/{path}`
 5. Formats API response as MCP tool result
 
 ### Security
@@ -323,7 +323,7 @@ npm link
 
 ```bash
 # Set API URL and key
-msgcore config set apiUrl http://localhost:3000
+msgcore config set apiUrl http://localhost:7890
 msgcore config set apiKey msc_dev_your_api_key_here
 ```
 

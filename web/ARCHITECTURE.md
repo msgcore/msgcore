@@ -224,7 +224,7 @@ export function useCreateProject() {
 // shared/lib/sdk.ts
 import { MsgCore } from '@msgcore/sdk';
 
-const API_URL = import.meta.env.MSGCORE_API_URL || 'http://localhost:3000';
+const API_URL = import.meta.env.MSGCORE_API_URL || 'http://localhost:7890';
 
 // Create SDK instance with dynamic token getter
 export const sdk = new MsgCore({

@@ -31,7 +31,7 @@ cp .env.example .env
 npm run start:dev
 ```
 
-Server runs on `http://localhost:3000`
+Server runs on `http://localhost:7890`
 
 ## Installation
 
@@ -45,7 +45,7 @@ npm install @msgcore/sdk
 import { MsgCore } from '@msgcore/sdk';
 
 const msgcore = new MsgCore({
-  apiUrl: 'http://localhost:3000',
+  apiUrl: 'http://localhost:7890',
   apiKey: 'your-api-key',
 });
 
@@ -78,7 +78,7 @@ msgcore messages send --target "platform:user:123" --text "Hello"
 {
   "mcpServers": {
     "msgcore": {
-      "url": "http://localhost:3000/mcp",
+      "url": "http://localhost:7890/mcp",
       "transport": "http",
       "headers": {
         "X-API-Key": "your-api-key"

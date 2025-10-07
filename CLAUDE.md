@@ -553,7 +553,7 @@ AUTH0_AUDIENCE=https://api.msgcore.dev
 Create the first admin user:
 
 ```bash
-curl -X POST http://localhost:3000/api/v1/auth/signup \
+curl -X POST http://localhost:7890/api/v1/auth/signup \
   -H "Content-Type: application/json" \
   -d '{
     "email": "admin@example.com",

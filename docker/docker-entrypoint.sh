@@ -27,8 +27,16 @@ shutdown() {
 # Trap SIGTERM and SIGINT
 trap shutdown SIGTERM SIGINT
 
+# Get backend port from environment (default 7890)
+BACKEND_PORT=${PORT:-7890}
+export BACKEND_PORT
+
+# Generate nginx config with environment variables
+echo "Generating nginx configuration..."
+envsubst '${BACKEND_PORT}' < /etc/nginx/nginx.conf.template > /etc/nginx/nginx.conf
+
 # Start backend
-echo "Starting backend API on port 3000..."
+echo "Starting backend API on port $BACKEND_PORT..."
 cd /app/backend
 node dist/src/main &
 BACKEND_PID=$!
@@ -39,7 +47,7 @@ echo "Waiting for backend to be ready..."
 max_attempts=30
 attempt=0
 while [ $attempt -lt $max_attempts ]; do
-    if wget -q --spider http://localhost:3000/api/v1/health 2>/dev/null; then
+    if wget -q --spider http://localhost:$BACKEND_PORT/api/v1/health 2>/dev/null; then
         echo "✓ Backend is ready!"
         break
     fi

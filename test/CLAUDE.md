@@ -127,23 +127,23 @@ After making changes, always verify security features:
 
 ```bash
 # Test API key authentication
-curl -s http://localhost:3000/api/v1/projects
+curl -s http://localhost:7890/api/v1/projects
 # Expected: 401 {"message":"API key is required"}
 
 # Test with invalid key
-curl -s -H "X-API-Key: invalid" http://localhost:3000/api/v1/projects
+curl -s -H "X-API-Key: invalid" http://localhost:7890/api/v1/projects
 # Expected: 401 {"message":"Invalid API key"}
 
 # Test with valid key
-curl -H "X-API-Key: <your-key>" http://localhost:3000/api/v1/projects
+curl -H "X-API-Key: <your-key>" http://localhost:7890/api/v1/projects
 # Expected: 200 with data
 
 # Test CORS with unauthorized origin
-curl -H "Origin: http://evil.com" -I http://localhost:3000/api/v1/projects
+curl -H "Origin: http://evil.com" -I http://localhost:7890/api/v1/projects
 # Expected: No Access-Control-Allow-Origin header
 
 # Test rate limiting
-for i in {1..110}; do curl -H "X-API-Key: <key>" http://localhost:3000/api/v1/projects; done
+for i in {1..110}; do curl -H "X-API-Key: <key>" http://localhost:7890/api/v1/projects; done
 # Expected: 429 Too Many Requests after limit
 ```
 

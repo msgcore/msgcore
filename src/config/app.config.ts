@@ -30,11 +30,11 @@ export const appConfig = registerAs(
   'app',
   (): AppConfig => ({
     nodeEnv: process.env.NODE_ENV || 'development',
-    port: parseInt(process.env.PORT || '3000', 10),
+    port: parseInt(process.env.PORT || '7890', 10),
     encryptionKey: process.env.ENCRYPTION_KEY || '',
     jwtSecret: process.env.JWT_SECRET || '',
     corsOrigins: process.env.CORS_ORIGINS?.split(',') || [
-      'http://localhost:3000',
+      'http://localhost:7890',
     ],
     database: {
       url: process.env.DATABASE_URL || '',
@@ -63,7 +63,7 @@ export const configValidationSchema = Joi.object({
   NODE_ENV: Joi.string()
     .valid('development', 'production', 'test')
     .default('development'),
-  PORT: Joi.number().default(3000),
+  PORT: Joi.number().default(7890),
   ENCRYPTION_KEY: Joi.string().min(32).required().messages({
     'string.min':
       'ENCRYPTION_KEY must be at least 32 characters. Generate using: openssl rand -hex 32',
