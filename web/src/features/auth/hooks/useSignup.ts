@@ -11,8 +11,8 @@ export function useSignup() {
     onSuccess: (response) => {
       // Save token to localStorage
       localStorage.setItem('msgcore_token', response.accessToken);
-      // Redirect to app
-      navigate('/app');
+      // Redirect to dashboard
+      navigate('/dashboard');
     },
   });
 }
