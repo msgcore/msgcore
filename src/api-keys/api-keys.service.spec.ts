@@ -66,9 +66,9 @@ describe('ApiKeysService', () => {
 
         environment: 'development',
       };
-      const mockApiKey = 'gk_test_abc123';
+      const mockApiKey = 'msc_test_abc123';
       const mockKeyHash = 'hashed_key';
-      const mockKeyPrefix = 'gk_test_abc1';
+      const mockKeyPrefix = 'msc_test_abc1';
 
       mockPrismaService.project.findUnique.mockResolvedValue(mockProject);
       (CryptoUtil.generateApiKey as jest.Mock).mockReturnValue(mockApiKey);
@@ -139,9 +139,9 @@ describe('ApiKeysService', () => {
         id: 'project-id',
         environment: 'test',
       });
-      (CryptoUtil.generateApiKey as jest.Mock).mockReturnValue('gk_test_key');
+      (CryptoUtil.generateApiKey as jest.Mock).mockReturnValue('msc_test_key');
       (CryptoUtil.hashApiKey as jest.Mock).mockReturnValue('hash');
-      (CryptoUtil.getKeyPrefix as jest.Mock).mockReturnValue('gk_test_');
+      (CryptoUtil.getKeyPrefix as jest.Mock).mockReturnValue('msc_test_');
       (CryptoUtil.getKeySuffix as jest.Mock).mockReturnValue('wxyz');
 
       mockPrismaService.apiKey.create.mockResolvedValue({
@@ -175,7 +175,7 @@ describe('ApiKeysService', () => {
         {
           id: 'key-1',
           name: 'Key 1',
-          keyPrefix: 'gk_test_abcd',
+          keyPrefix: 'msc_test_abcd',
           keySuffix: 'abcd',
           environment: 'test',
           lastUsedAt: null,
@@ -189,7 +189,7 @@ describe('ApiKeysService', () => {
 
       expect(result).toHaveLength(1);
       expect(result[0]).toHaveProperty('maskedKey');
-      expect(result[0].maskedKey).toBe('gk_test_abcd...abcd');
+      expect(result[0].maskedKey).toBe('msc_test_abcd...abcd');
     });
 
     it('should throw NotFoundException when project does not exist', async () => {
@@ -260,7 +260,7 @@ describe('ApiKeysService', () => {
 
   describe('validateApiKey', () => {
     it('should validate and return key data for valid API key', async () => {
-      const apiKey = 'gk_test_valid';
+      const apiKey = 'msc_test_valid';
       const keyHash = 'hashed_valid';
 
       (CryptoUtil.hashApiKey as jest.Mock).mockReturnValue(keyHash);

@@ -324,7 +324,7 @@ npm link
 ```bash
 # Set API URL and key
 msgcore config set apiUrl http://localhost:3000
-msgcore config set apiKey gk_dev_your_api_key_here
+msgcore config set apiKey msc_dev_your_api_key_here
 ```
 
 ### Usage

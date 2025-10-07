@@ -83,7 +83,7 @@ describe('AppAuthGuard', () => {
     });
 
     it('should authenticate with valid API key', async () => {
-      const mockApiKey = 'gk_test_validkey123';
+      const mockApiKey = 'msc_test_validkey123';
       const mockValidatedKey = {
         id: 'key-id',
         project: { id: 'project-id', name: 'Test Project' },

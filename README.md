@@ -129,9 +129,9 @@ MsgCore supports three authentication methods:
 
 ## Generated Packages
 
-- [@msgcore/sdk](https://github.com/filipexyz/msgcore-sdk) - TypeScript client
-- [@msgcore/cli](https://github.com/filipexyz/msgcore-cli) - Command-line tool
-- [n8n-nodes-msgcore](https://github.com/filipexyz/n8n-nodes-msgcore) - Visual automation
+- [@msgcore/sdk](https://github.com/msgcore/msgcore-sdk) - TypeScript client
+- [@msgcore/cli](https://github.com/msgcore/msgcore-cli) - Command-line tool
+- [n8n-nodes-msgcore](https://github.com/msgcore/n8n-nodes-msgcore) - Visual automation
 
 ## License
 

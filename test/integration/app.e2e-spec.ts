@@ -233,7 +233,7 @@ describe('MsgCore API (e2e)', () => {
           .expect(201)
           .expect((res) => {
             expect(res.body).toHaveProperty('key');
-            expect(res.body.key).toMatch(/^gk_dev_/);
+            expect(res.body.key).toMatch(/^msc_dev_/);
             expect(res.body).toHaveProperty('name', 'New API Key');
             expect(res.body.scopes).toEqual(['messages:write']);
           });
@@ -288,7 +288,7 @@ describe('MsgCore API (e2e)', () => {
             expect(res.body.length).toBeGreaterThan(0);
             expect(res.body[0]).toHaveProperty('name');
             expect(res.body[0]).toHaveProperty('maskedKey');
-            expect(res.body[0].maskedKey).toMatch(/^gk_dev_.*\.\.\..*$/);
+            expect(res.body[0].maskedKey).toMatch(/^msc_dev_.*\.\.\..*$/);
           });
       });
 
@@ -343,7 +343,7 @@ describe('MsgCore API (e2e)', () => {
           .expect(200)
           .expect((res) => {
             expect(res.body).toHaveProperty('key');
-            expect(res.body.key).toMatch(/^gk_dev_/);
+            expect(res.body.key).toMatch(/^msc_dev_/);
             expect(res.body).toHaveProperty('name', 'Key to Roll');
             expect(res.body).toHaveProperty('oldKeyRevokedAt');
           });

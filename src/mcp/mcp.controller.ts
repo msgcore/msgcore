@@ -174,7 +174,7 @@ export class McpController {
     let scopes: string[] = [];
     let project: { id: string } | undefined;
     if (apiKeyHeader) {
-      // Extract key hash from the API key (format: gk_live_xxx or gk_test_xxx)
+      // Extract key hash from the API key (format: msc_live_xxx or msc_test_xxx)
       const keyHash = createHash('sha256').update(apiKeyHeader).digest('hex');
 
       const apiKey = await this.prisma.apiKey.findUnique({

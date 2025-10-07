@@ -17,7 +17,7 @@ import { MsgCore } from '@msgcore/sdk';
 
 const gk = new MsgCore({
   apiUrl: 'https://api.msgcore.dev',
-  apiKey: 'gk_live_your_api_key_here',
+  apiKey: 'msc_live_your_api_key_here',
 });
 
 // Send a message
@@ -46,7 +46,7 @@ const result = await gk.messages.send({
 ```typescript
 const gk = new MsgCore({
   apiUrl: 'https://api.msgcore.dev',
-  apiKey: 'gk_live_your_api_key_here',
+  apiKey: 'msc_live_your_api_key_here',
   defaultProject: 'my-project', // optional
 });
 ```
@@ -81,7 +81,7 @@ try {
 ## Links
 
 - [Documentation](https://docs.msgcore.dev)
-- [GitHub](https://github.com/filipexyz/msgcore-sdk)
+- [GitHub](https://github.com/msgcore/msgcore-sdk)
 - [npm](https://www.npmjs.com/package/@msgcore/sdk)
 - [Discord Community](https://discord.gg/bQPsvycW)
 

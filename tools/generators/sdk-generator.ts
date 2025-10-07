@@ -670,11 +670,11 @@ export const CONTRACTS_COUNT = ${contracts.length};
         license: 'MIT',
         repository: {
           type: 'git',
-          url: 'https://github.com/filipexyz/msgcore-sdk.git',
+          url: 'https://github.com/msgcore/msgcore-sdk.git',
         },
-        homepage: 'https://github.com/filipexyz/msgcore-sdk',
+        homepage: 'https://github.com/msgcore/msgcore-sdk',
         bugs: {
-          url: 'https://github.com/filipexyz/msgcore-sdk/issues',
+          url: 'https://github.com/msgcore/msgcore-sdk/issues',
         },
       },
       null,
