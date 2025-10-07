@@ -3,6 +3,7 @@ import TelegramBot = require('node-telegram-bot-api');
 import {
   PlatformProvider,
   WebhookConfig,
+  PlatformLifecycleEvent,
 } from '../interfaces/platform-provider.interface';
 import { PlatformAdapter } from '../interfaces/platform-adapter.interface';
 import type { IEventBus } from '../interfaces/event-bus.interface';
@@ -87,6 +88,91 @@ export class TelegramProvider implements PlatformProvider, PlatformAdapter {
 
   async initialize(): Promise<void> {
     this.logger.log('Telegram provider initialized');
+  }
+
+  async onPlatformEvent(event: PlatformLifecycleEvent): Promise<void> {
+    this.logger.log(
+      `Telegram platform event: ${event.type} for ${event.projectId}:${event.platformId}`,
+    );
+
+    if (event.type === 'created' || event.type === 'activated') {
+      // Automatically set up webhook when platform is created or activated
+      await this.setupWebhookForPlatform(event);
+    } else if (event.type === 'updated') {
+      // Re-setup webhook in case credentials changed
+      await this.setupWebhookForPlatform(event);
+    } else if (event.type === 'deactivated' || event.type === 'deleted') {
+      // Clean up connection if it exists
+      const connectionKey = `${event.projectId}:${event.platformId}`;
+      await this.removeAdapter(connectionKey);
+    }
+  }
+
+  private async setupWebhookForPlatform(
+    event: PlatformLifecycleEvent,
+  ): Promise<void> {
+    if (!event.webhookToken) {
+      this.logger.warn(
+        `No webhook token provided for platform ${event.platformId}`,
+      );
+      return;
+    }
+
+    if (!event.credentials?.token) {
+      this.logger.warn(
+        `No bot token provided in credentials for platform ${event.platformId}`,
+      );
+      return;
+    }
+
+    try {
+      // Create temporary bot instance to register webhook
+      const bot = new TelegramBot(event.credentials.token, {
+        webHook: true,
+      });
+
+      await this.registerWebhook(
+        bot,
+        event.credentials.token,
+        event.webhookToken,
+      );
+
+      const platformLogger = this.createPlatformLogger(
+        event.projectId,
+        event.platformId,
+      );
+      platformLogger.logConnection(
+        `Telegram webhook automatically configured on platform ${event.type}`,
+        {
+          connectionKey: `${event.projectId}:${event.platformId}`,
+          webhookToken: event.webhookToken,
+          botToken: event.credentials.token ? 'present' : 'missing',
+        },
+      );
+
+      this.logger.log(
+        `Telegram webhook automatically set up for ${event.projectId}:${event.platformId} on ${event.type}`,
+      );
+    } catch (error) {
+      const platformLogger = this.createPlatformLogger(
+        event.projectId,
+        event.platformId,
+      );
+      platformLogger.errorConnection(
+        `Failed to auto-setup Telegram webhook on platform ${event.type}`,
+        error,
+        {
+          platformId: event.platformId,
+          webhookToken: event.webhookToken,
+          errorMessage: error.message,
+        },
+      );
+
+      this.logger.error(
+        `Failed to auto-setup Telegram webhook for ${event.projectId}:${event.platformId}: ${error.message}`,
+      );
+      // Don't throw - allow platform creation to succeed even if webhook setup fails
+    }
   }
 
   private createPlatformLogger(
