@@ -29,7 +29,7 @@ export class PlatformsService {
   ) {}
 
   private getWebhookUrl(platform: string, webhookToken: string): string {
-    const baseUrl = process.env.MSGCORE_API_URL || 'http://localhost:3000';
+    const baseUrl = process.env.MSGCORE_API_URL || 'http://localhost:7890';
     return `${baseUrl}/api/v1/webhooks/${platform}/${webhookToken}`;
   }
 

@@ -28,7 +28,7 @@ async function bootstrap() {
 
   // Configure CORS with specific origins
   const corsOrigins = configService.get<string[]>('app.corsOrigins') || [
-    'http://localhost:3000',
+    'http://localhost:7890',
   ];
   app.enableCors({
     origin: (origin, callback) => {

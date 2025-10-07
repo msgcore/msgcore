@@ -28,7 +28,7 @@ cp .env.example .env
 Edit `.env` and set your backend API URL:
 
 ```env
-MSGCORE_API_URL=http://localhost:3000
+MSGCORE_API_URL=http://localhost:7890
 ```
 
 3. **Start development server:**
@@ -92,7 +92,7 @@ The frontend uses `@msgcore/sdk` for all API interactions:
 import { MsgCore } from '@msgcore/sdk';
 
 const sdk = new MsgCore({
-  apiUrl: 'http://localhost:3000',
+  apiUrl: 'http://localhost:7890',
   getToken: () => localStorage.getItem('msgcore_token'),
 });
 
@@ -113,7 +113,7 @@ const projects = await sdk.projects.list();
 
 | Variable              | Description          | Default                 |
 | --------------------- | -------------------- | ----------------------- |
-| `MSGCORE_API_URL`     | Backend API base URL | `http://localhost:3000` |
+| `MSGCORE_API_URL`     | Backend API base URL | `http://localhost:7890` |
 | `MSGCORE_API_VERSION` | API version          | `v1`                    |
 | `MSGCORE_ENV`         | Environment          | `development`           |
 

@@ -34,7 +34,7 @@ npm run dev
 Access:
 
 - Frontend: http://localhost:5173
-- Backend API: http://localhost:3000
+- Backend API: http://localhost:7890
 
 ### Production (Unified Container)
 
@@ -103,7 +103,7 @@ JWT_SECRET=your-super-secret-jwt-key-min-32-chars
 ENCRYPTION_KEY=your-encryption-key-here
 
 # Frontend (MSGCORE_ prefix for professional branding)
-MSGCORE_API_URL=http://localhost:3000
+MSGCORE_API_URL=http://localhost:7890
 MSGCORE_API_VERSION=v1
 MSGCORE_ENV=development
 ```
