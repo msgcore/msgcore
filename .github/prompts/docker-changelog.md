@@ -103,6 +103,9 @@ docker pull msgcore/msgcore:latest
 
 ## Important Notes
 
+- **ONLY use git commands**: Analyze ONLY git log and git diff output - ignore ALL other terminal output
+- **NO Docker output**: Do NOT include Docker build logs, pull logs, or any Docker command output
+- **NO random terminal output**: Ignore bash prompts, environment variables, or any non-git data
 - **Be truthful**: Only include changes that actually happened (based on git log/diff)
 - **Group logically**: Similar changes should be grouped together
 - **User perspective**: Write for users deploying the image, not developers
