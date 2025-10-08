@@ -19,21 +19,20 @@ Use npm's built-in version commands:
 
 ```bash
 # Patch release (bug fixes): 1.2.1 → 1.2.2
-npm run version:patch
+npm version patch
 
 # Minor release (new features): 1.2.1 → 1.3.0
-npm run version:minor
+npm version minor
 
 # Major release (breaking changes): 1.2.1 → 2.0.0
-npm run version:major
+npm version major
 ```
 
 **What happens:**
 
 - ✅ Backend `package.json` version updated
-- ✅ All packages regenerated with new version
-- ✅ Git commit created automatically
-- ✅ Ready to push and publish
+- ✅ Git commit created automatically with new version tag
+- ⚠️ **Note:** Packages are NOT auto-regenerated. Run `npm run generate:all` separately if needed
 
 ### 2. Verify Coordinated Versions
 
@@ -102,7 +101,7 @@ npm publish
 
 ```bash
 # Fixed Discord message delivery bug
-npm run version:patch
+npm version patch
 ```
 
 ### Minor (1.2.1 → 1.3.0)
@@ -118,7 +117,7 @@ npm run version:patch
 
 ```bash
 # Added WhatsApp platform support
-npm run version:minor
+npm version minor
 ```
 
 ### Major (1.2.1 → 2.0.0)
@@ -134,7 +133,7 @@ npm run version:minor
 
 ```bash
 # Redesigned message queue system
-npm run version:major
+npm version major
 ```
 
 ## Version Workflow Best Practices
@@ -153,7 +152,7 @@ git checkout main
 git merge feat/new-platform
 
 # 4. Bump version (minor for new feature)
-npm run version:minor
+npm version minor
 
 # 5. Push with tags
 git push origin main --tags
@@ -187,7 +186,7 @@ git checkout -b hotfix/critical-bug v1.2.1
 git commit -m "fix: resolve critical message delivery bug"
 
 # 3. Bump patch version
-npm run version:patch
+npm version patch
 
 # 4. Push and publish
 git push origin hotfix/critical-bug --tags

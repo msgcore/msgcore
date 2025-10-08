@@ -9,7 +9,7 @@
 3. **Create PR** - validation workflow runs automatically
 4. **Review generated packages** in workflow artifacts (7-day retention)
 5. **Merge to main**
-6. **Bump version**: `npm run version:minor` (or patch/major)
+6. **Bump version**: `npm version minor` (or patch/major)
 7. **Push with tags**: `git push origin main --tags`
 8. **Trigger publish workflow** manually in GitHub Actions
 
@@ -19,10 +19,10 @@
 # 1. Ensure all changes merged to main
 git checkout main && git pull
 
-# 2. Bump version (auto-generates packages)
-npm run version:patch   # Bug fixes
-npm run version:minor   # New features
-npm run version:major   # Breaking changes
+# 2. Bump version
+npm version patch   # Bug fixes
+npm version minor   # New features
+npm version major   # Breaking changes
 
 # 3. Verify coordination
 npm run version:check
