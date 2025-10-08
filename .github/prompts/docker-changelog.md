@@ -1,128 +1,42 @@
-# Docker Release Changelog Generation
+# Generate Docker Release Changelog
 
-Generate a release changelog for the **MsgCore Docker image** based on git changes since the last release.
+You are creating a GitHub release for the **MsgCore Docker image**. Analyze the git history to understand what changed since the last release.
 
-## Your Task
+## Task
 
-1. **Analyze git changes** since the last tag:
+Review the commits and changes in the MsgCore repository and write release notes that will help users understand what's new in this Docker image version.
 
-   ```bash
-   cd $GITHUB_WORKSPACE
+## Steps
 
-   if [ "$LAST_TAG" = "initial" ]; then
-     echo "Initial release - analyzing all commits"
-     git log --oneline --no-merges
-   else
-     echo "Analyzing changes since $LAST_TAG"
-     git log --oneline --no-merges "$LAST_TAG..HEAD"
-     git diff --stat "$LAST_TAG..HEAD"
-   fi
-   ```
+1. Check `package.json` for the current version number
+2. Use git log to identify changes since the last release tag
+3. Categorize the changes (features, fixes, breaking changes, dependencies, security)
+4. Write two output files:
+   - `/tmp/docker-tag-title.txt` - A single-line release title (no emojis, no version)
+   - `/tmp/docker-tag-body.md` - Full release notes in markdown
 
-2. **Categorize changes** - Look for:
-   - **Features**: New functionality, endpoints, platforms
-   - **Fixes**: Bug fixes, improvements
-   - **Breaking Changes**: API changes, removed features
-   - **Dependencies**: Updated packages
-   - **Performance**: Optimizations
-   - **Security**: Security fixes
-   - **Documentation**: Docs updates
+## Release Notes Requirements
 
-3. **Write concise output files**:
-   - `/tmp/docker-tag-title.txt` - One line title (no emojis, no version number)
-   - `/tmp/docker-tag-body.md` - Markdown release notes
+The release body should include:
+- Brief summary of this release (1-2 sentences)
+- Version number from package.json
+- Changes grouped by category:
+  - ✨ Features (new functionality)
+  - 🐛 Fixes (bug fixes and improvements)
+  - ⚠️ Breaking Changes (API changes requiring user action)
+  - 📦 Dependencies (updated packages)
+  - 🔒 Security (security fixes)
+- Docker pull command with correct version
+- Upgrade instructions if breaking changes exist
+- Link to full changelog comparing tags
 
-## Output Guidelines
+## Quality Guidelines
 
-**Title** (`/tmp/docker-tag-title.txt`):
-
-- One line, descriptive, no emojis, no version
-- Focus on the MAIN theme of this release
-- Examples: "Add webhook support and fix message delivery", "Platform improvements and bug fixes", "Initial release"
-
-**Body** (`/tmp/docker-tag-body.md`):
-
-- Start with brief summary
-- Group changes by category (Features, Fixes, etc.)
-- Use bullet points for each change
-- Include breaking changes section if any
-- Add upgrade instructions if needed
-- Keep it concise and user-focused
-
-## Structure
-
-````markdown
-## Summary
-
-[1-2 sentence description of this release]
-
-**Version**: v$VERSION
-
-## Changes
-
-### ✨ Features
-
-- New feature description
-- Another feature
-
-### 🐛 Fixes
-
-- Fix description
-- Another fix
-
-### ⚠️ Breaking Changes
-
-- Breaking change description with migration guide
-
-### 📦 Dependencies
-
-- Updated dependency X to vY.Z
-
-### 🔒 Security
-
-- Security fix description
-
-## Docker Image
-
-```bash
-docker pull msgcore/msgcore:$VERSION
-# or
-docker pull msgcore/msgcore:latest
-```
-````
-
-## Upgrade Instructions
-
-[If there are breaking changes or migration steps needed]
-
----
-
-**Full Changelog**: https://github.com/msgcore/msgcore/compare/LAST_TAG...v$VERSION
-
-````
-
-## Important Notes
-
-- **ONLY use git commands**: Analyze ONLY git log and git diff output - ignore ALL other terminal output
-- **NO Docker output**: Do NOT include Docker build logs, pull logs, or any Docker command output
-- **NO random terminal output**: Ignore bash prompts, environment variables, or any non-git data
-- **Be truthful**: Only include changes that actually happened (based on git log/diff)
-- **Group logically**: Similar changes should be grouped together
-- **User perspective**: Write for users deploying the image, not developers
-- **Breaking changes**: Always highlight these prominently
-- **No fluff**: Skip sections with no changes
-
-## Example Analysis Commands
-
-```bash
-# View commit messages
-git log --oneline --no-merges "$LAST_TAG..HEAD"
-
-# See file changes
-git diff --name-status "$LAST_TAG..HEAD"
-
-# See detailed changes in specific areas
-git log --no-merges --grep="feat\|fix\|breaking" "$LAST_TAG..HEAD"
-````
-
-Now analyze the changes and generate the changelog files.
+- Be accurate - only describe changes found in git history
+- Be specific - mention actual features, files, or API endpoints that changed
+- Be user-focused - write for people deploying the Docker image, not developers
+- Ignore non-git output (no Docker build logs, bash prompts, or other terminal noise)
+- Group similar changes together logically
+- Skip sections with no relevant changes
+- Highlight breaking changes prominently
+- No hallucinations - if you don't see it in git history, don't mention it

@@ -1,92 +1,34 @@
-# SDK Changelog Generation
+# Generate SDK Package PR Description
 
-Generate a PR description for the **@msgcore/sdk** package based on actual code changes.
+You are creating a pull request for the **@msgcore/sdk** package. The repository has been cloned to `sdk-repo/` and all changes are staged in git.
 
-## Your Task
+## Task
 
-1. **Analyze the git diff** to see what actually changed:
+Analyze what changed in this SDK update and write a pull request description that will help reviewers understand the changes.
 
-   ```bash
-   cd $GITHUB_WORKSPACE/sdk-repo
-   git diff --staged
-   ```
+## Steps
 
-2. **Understand the changes** - Look for:
-   - New methods/endpoints
-   - Updated dependencies
-   - Type changes
-   - Configuration updates
-   - Breaking changes
+1. Navigate to `sdk-repo/` directory
+2. Review the staged git changes to understand what's new or different
+3. Check `package.json` for the version number
+4. Write two output files:
+   - `/tmp/sdk-pr-title.txt` - A single-line PR title (no emojis)
+   - `/tmp/sdk-pr-body.md` - Full PR description in markdown
 
-3. **Write concise output files**:
-   - `/tmp/sdk-pr-title.txt` - One line title (no emojis)
-   - `/tmp/sdk-pr-body.md` - Markdown PR description
+## PR Description Requirements
 
-## Output Guidelines
+The PR body should include:
+- Brief summary of changes (1-2 sentences)
+- Version number from package.json
+- Source attribution: `**Source**: [MsgCore Backend](https://github.com/msgcore/msgcore)`
+- Specific changes found in the diff (new methods, type updates, dependency changes)
+- Breaking changes section if applicable
+- Migration guide if breaking changes exist
 
-**Title** (`/tmp/sdk-pr-title.txt`):
+## Quality Guidelines
 
-- One line, descriptive, no emojis
-- Focus on the MAIN change
-- Examples: "Update SDK dependencies", "Add webhook support", "Fix message delivery"
-
-**Body** (`/tmp/sdk-pr-body.md`):
-
-- Start with brief summary
-- List only ACTUAL changes from git diff
-- Include version info using $VERSION: `**Version**: v$VERSION`
-- Link to source backend: `**Source**: [MsgCore Backend](https://github.com/msgcore/msgcore)`
-- Keep it concise and direct
-
-## Structure (adapt as needed)
-
-```markdown
-## Summary
-
-[1-2 sentence description of what changed]
-
-**Version**: v$VERSION
-**Source**: [MsgCore Backend](https://github.com/msgcore/msgcore)
-
-### Changes
-
-[List actual changes - be specific and direct]
-
-- If new features: describe them
-- If dependency updates: list old→new versions
-- If breaking changes: explain clearly
-- If bug fixes: mention what was fixed
-
-### Migration (only if breaking changes)
-
-[Instructions if needed]
-```
-
-## Important Rules
-
-✅ **DO**:
-
-- Be flexible - adapt structure to fit actual changes
-- Focus on what matters - skip sections if not applicable
-- Be direct and concise
-- Use actual code/version numbers from git diff
-- Include only relevant information
-
-❌ **DON'T**:
-
-- Add sections that don't apply
-- Include placeholder text like "X contracts extracted" if not relevant
-- Add generic "improvements" that aren't real
-- Use rigid template when simple is better
-- Hallucinate features
-
-## Environment Variables
-
-Available as shell environment variables (access with `$VARIABLE_NAME`):
-
-- `$VERSION` - Package version (e.g., "1.2.1")
-- `$COMMIT_SHA` - Commit hash (e.g., "a1b2c3d")
-- `$COMMIT_MSG` - Commit message
-- `$GITHUB_WORKSPACE` - Workspace directory
-
-**IMPORTANT**: Use these actual values in your output, not placeholder text!
+- Be accurate - only describe changes you see in the git diff
+- Be specific - use actual method names, version numbers, file names
+- Be concise - focus on what matters to developers using this SDK
+- Adapt the structure to fit the actual changes (skip sections that don't apply)
+- No hallucinations - if you don't see it in the diff, don't mention it
