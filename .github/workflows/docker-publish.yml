@@ -139,8 +139,18 @@ jobs:
 
       - name: Create and push git tag
         run: |
-          git tag -a "v${{ steps.version.outputs.version }}" -m "${{ steps.changelog_content.outputs.title }}"
-          git push origin "v${{ steps.version.outputs.version }}"
+          TAG_NAME="v${{ steps.version.outputs.version }}"
+
+          # Check if tag already exists
+          if git rev-parse "$TAG_NAME" >/dev/null 2>&1; then
+            echo "⚠️  Tag $TAG_NAME already exists, deleting and recreating..."
+            git tag -d "$TAG_NAME"
+            git push origin ":refs/tags/$TAG_NAME" 2>/dev/null || true
+          fi
+
+          # Create and push new tag
+          git tag -a "$TAG_NAME" -m "${{ steps.changelog_content.outputs.title }}"
+          git push origin "$TAG_NAME"
 
       - name: Create GitHub Release
         env:
