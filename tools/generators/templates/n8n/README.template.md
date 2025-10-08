@@ -27,6 +27,7 @@ npm install n8n-nodes-msgcore
 ## Features
 
 - ✅ **Visual automation** - Drag-and-drop workflow builder
+- ✅ **AI Agent compatible** - Use MsgCore as a tool in AI Agent workflows
 - ✅ **Auto-generated** - Always synced with MsgCore API
 - ✅ **300k+ n8n users** - Massive automation community
 - ✅ **All operations** - Complete API coverage in visual format
@@ -73,9 +74,32 @@ The node requires MsgCore API credentials:
 3. Choose operation (Create, List, Update, Delete)
 4. Configure platform-specific credentials
 
+## AI Agent Integration
+
+MsgCore is fully compatible with n8n's AI Agent workflows. Enable your AI agents to:
+
+- **Send messages** - AI can send messages across any platform
+- **Manage platforms** - Configure and manage platform integrations
+- **Query messages** - Search and analyze message history
+- **Automate workflows** - Combine AI reasoning with messaging actions
+
+### Using MsgCore as an AI Agent Tool
+
+1. Add an **AI Agent** node (Tools Agent or Conversational Agent)
+2. Connect **MsgCore** node as a tool
+3. The AI will automatically understand available operations
+4. Set `N8N_COMMUNITY_PACKAGES_ALLOW_TOOL_USAGE=true` for community packages
+
+Example use cases:
+
+- "Send a Discord message to the team channel about deployment status"
+- "Configure WhatsApp integration for project X"
+- "Check if there are any failed messages and retry them"
+
 ## Why n8n + MsgCore?
 
 - **No-code automation** - Build workflows without programming
+- **AI-powered** - Let AI agents handle messaging logic automatically
 - **Multi-platform messaging** - Discord, Telegram, WhatsApp in one node
 - **Event-driven** - Trigger messages from any n8n event
 - **Scale easily** - Handle thousands of messages with queues
