@@ -8,6 +8,10 @@ export class SupportedPlatformsResponse {
       supportsPolling: boolean;
       supportsWebSocket: boolean;
     };
+    capabilities: Array<{
+      capability: string;
+      limitations?: string;
+    }>;
     credentials: {
       required: string[];
       optional: string[];

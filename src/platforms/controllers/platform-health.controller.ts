@@ -78,6 +78,7 @@ export class PlatformHealthController {
             supportsPolling: provider.connectionType === 'polling',
             supportsWebSocket: provider.connectionType === 'websocket',
           },
+          capabilities: this.platformRegistry.getProviderCapabilities(provider),
           credentials: credentialSchema
             ? {
                 required: credentialSchema.required,
