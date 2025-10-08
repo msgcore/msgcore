@@ -14,7 +14,7 @@ This directory contains automated workflows for the contract-driven SDK, CLI, an
 
 **Usage:**
 
-1. Bump version locally: `npm run version:patch`
+1. Bump version locally: `npm version patch`
 2. Push to main: `git push origin main --tags`
 3. Go to GitHub Actions → "Multi-Repo Package Publishing"
 4. Click "Run workflow"
@@ -85,9 +85,9 @@ Backend v1.2.1 → @msgcore/sdk@1.2.1
 **Commands:**
 
 ```bash
-npm run version:patch   # 1.2.1 → 1.2.2
-npm run version:minor   # 1.2.1 → 1.3.0
-npm run version:major   # 1.2.1 → 2.0.0
+npm version patch   # 1.2.1 → 1.2.2
+npm version minor   # 1.2.1 → 1.3.0
+npm version major   # 1.2.1 → 2.0.0
 npm run version:check   # Verify coordination
 ```
 

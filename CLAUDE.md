@@ -715,10 +715,10 @@ MsgCore uses **synchronized versioning** across all packages. Backend `package.j
 **Version Bump Workflow:**
 
 ```bash
-# Bump version (auto-generates all packages)
-npm run version:patch  # 1.2.1 → 1.2.2
-npm run version:minor  # 1.2.1 → 1.3.0
-npm run version:major  # 1.2.1 → 2.0.0
+# Bump version using standard npm commands
+npm version patch  # 1.2.1 → 1.2.2
+npm version minor  # 1.2.1 → 1.3.0
+npm version major  # 1.2.1 → 2.0.0
 
 # Verify all packages have same version
 npm run version:check
