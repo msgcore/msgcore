@@ -689,6 +689,7 @@ Backend Controllers (@SdkContract decorators)
 - ✅ Quintuple-generation pipeline: SDK + CLI + n8n + OpenAPI + Docs
 - ✅ Self-documenting API with live OpenAPI endpoints (/docs/openapi.json)
 - ✅ n8n community node for visual automation (300k+ potential users)
+- ✅ AI Agent compatible - MsgCore node usable as tool in n8n AI workflows
 - ✅ Production tested: All generated packages compile and deploy successfully
 
 ### **Contract-Driven Development**
