@@ -29,11 +29,6 @@ trap shutdown SIGTERM SIGINT
 
 # Get backend port from environment (default 3000)
 BACKEND_PORT=${PORT:-3000}
-export BACKEND_PORT
-
-# Generate nginx config with environment variables
-echo "Generating nginx configuration..."
-envsubst '${BACKEND_PORT}' < /etc/nginx/nginx.conf.template > /etc/nginx/nginx.conf
 
 # Start backend
 echo "Starting backend API on port $BACKEND_PORT..."
