@@ -128,10 +128,7 @@ export class McpToolRegistryService {
     contract: SdkContractMetadata,
     path: string,
   ): McpTool {
-    const inputSchema: McpToolInputSchema = {
-      type: 'object',
-      properties: {},
-    };
+    const properties: Record<string, any> = {};
     const requiredSet = new Set<string>();
 
     // Extract route parameters from path (e.g., :project, :id, :keyId)
@@ -145,7 +142,7 @@ export class McpToolRegistryService {
         }
 
         // Add other route parameters as required
-        inputSchema.properties[paramName] = {
+        properties[paramName] = {
           type: 'string',
           description: `${paramName.charAt(0).toUpperCase() + paramName.slice(1)} identifier`,
         };
@@ -175,9 +172,13 @@ export class McpToolRegistryService {
             break;
           case 'array':
             property.type = 'array';
+            // Add items constraint for arrays (required in JSON Schema 2020-12)
+            property.items = { type: 'string' };
             break;
           case 'object':
             property.type = 'object';
+            // Add additionalProperties for objects (good practice in JSON Schema 2020-12)
+            property.additionalProperties = true;
             break;
           default:
             property.type = 'string';
@@ -193,7 +194,7 @@ export class McpToolRegistryService {
           property.default = option.default;
         }
 
-        inputSchema.properties[key] = property;
+        properties[key] = property;
 
         // Mark as required (Set automatically handles duplicates)
         if (option.required) {
@@ -202,9 +203,16 @@ export class McpToolRegistryService {
       }
     }
 
-    // Only add required field if there are required properties
-    if (requiredSet.size > 0) {
-      inputSchema.required = Array.from(requiredSet);
+    // Build JSON Schema 2020-12 compliant schema
+    const inputSchema: McpToolInputSchema = {
+      type: 'object',
+      properties,
+      ...(requiredSet.size > 0 && { required: Array.from(requiredSet) }),
+    };
+
+    // If no properties, set additionalProperties to allow any input
+    if (Object.keys(properties).length === 0) {
+      (inputSchema as any).additionalProperties = true;
     }
 
     return {
