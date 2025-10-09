@@ -200,7 +200,7 @@ export class MessagesService {
       messageText: true,
       messageType: true,
       receivedAt: true,
-      rawData: query.raw || false,
+      ...(query.raw === true && { rawData: true }),
     };
 
     // Get messages

@@ -89,6 +89,7 @@ COPY --from=backend-deps /app/node_modules ./backend/node_modules
 # Copy built backend
 COPY --from=backend-builder /app/backend/dist ./backend/dist
 COPY --from=backend-builder /app/backend/prisma ./backend/prisma
+COPY --from=backend-builder /app/backend/generated ./backend/generated
 COPY --from=backend-builder /app/backend/package*.json ./backend/
 
 # Copy built frontend to nginx html directory

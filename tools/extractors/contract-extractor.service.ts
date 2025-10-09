@@ -7,6 +7,8 @@ import {
 } from '../../src/common/decorators/sdk-contract.decorator';
 import { TypeExtractorService } from './type-extractor.service';
 import { PlatformRegistry } from '../../src/platforms/services/platform-registry.service';
+import * as fs from 'fs';
+import * as path from 'path';
 
 export interface ExtractedContract {
   controller: string;
@@ -27,6 +29,29 @@ export class ContractExtractorService {
   ) {}
 
   async extractContracts(): Promise<ExtractedContract[]> {
+    // In production, load pre-generated contracts from JSON
+    const contractsPath = path.join(
+      process.cwd(),
+      'generated',
+      'contracts',
+      'contracts.json',
+    );
+
+    if (fs.existsSync(contractsPath)) {
+      try {
+        const contractsJson = fs.readFileSync(contractsPath, 'utf-8');
+        return JSON.parse(contractsJson) as ExtractedContract[];
+      } catch (error) {
+        const errorMessage =
+          error instanceof Error ? error.message : String(error);
+        console.warn(
+          `Failed to load pre-generated contracts from ${contractsPath}: ${errorMessage}`,
+        );
+        // Fall through to runtime extraction
+      }
+    }
+
+    // Development: Extract contracts at runtime (requires TypeScript source)
     const contracts = this.extractContractsBasic();
 
     // Extract all type definitions and include them in contracts
@@ -115,7 +140,7 @@ export class ContractExtractorService {
     return contracts;
   }
 
-  private getHttpMethod(methodRef: Function): string {
+  private getHttpMethod(methodRef: (...args: any[]) => any): string {
     // Check for NestJS HTTP method decorators using the correct metadata keys
     const httpMethods = [
       { method: 'GET', keys: ['method', '__routeArguments__'] },
@@ -179,7 +204,7 @@ export class ContractExtractorService {
 
   private getPath(
     controllerWrapper: InstanceWrapper,
-    methodRef: Function,
+    methodRef: (...args: any[]) => any,
   ): string {
     const { metatype } = controllerWrapper;
 
