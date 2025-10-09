@@ -8,7 +8,7 @@ import {
   IsEnum,
   IsBoolean,
 } from 'class-validator';
-import { Type } from 'class-transformer';
+import { Type, Transform } from 'class-transformer';
 
 export class QueryMessagesDto {
   @IsOptional()
@@ -53,7 +53,11 @@ export class QueryMessagesDto {
   order?: 'asc' | 'desc' = 'desc';
 
   @IsOptional()
-  @Type(() => Boolean)
+  @Transform(({ value }) => {
+    if (value === 'true' || value === true) return true;
+    if (value === 'false' || value === false) return false;
+    return undefined;
+  })
   @IsBoolean()
   raw?: boolean = false;
 

@@ -124,7 +124,6 @@ describe('MessagesService', () => {
           messageText: true,
           messageType: true,
           receivedAt: true,
-          rawData: false, // Should not include raw data by default
         },
       });
     });
@@ -164,7 +163,6 @@ describe('MessagesService', () => {
           messageText: true,
           messageType: true,
           receivedAt: true,
-          rawData: false,
         },
       });
     });
@@ -204,7 +202,6 @@ describe('MessagesService', () => {
           messageText: true,
           messageType: true,
           receivedAt: true,
-          rawData: false,
         },
       });
     });
@@ -265,7 +262,6 @@ describe('MessagesService', () => {
           messageText: true,
           messageType: true,
           receivedAt: true,
-          rawData: false,
         },
       });
     });
@@ -302,7 +298,6 @@ describe('MessagesService', () => {
           messageText: true,
           messageType: true,
           receivedAt: true,
-          rawData: false,
         },
       });
     });
@@ -347,7 +342,6 @@ describe('MessagesService', () => {
           messageText: true,
           messageType: true,
           receivedAt: true,
-          rawData: false,
         },
       });
     });
@@ -415,7 +409,6 @@ describe('MessagesService', () => {
           messageText: true,
           messageType: true,
           receivedAt: true,
-          rawData: false,
         },
       });
     });
