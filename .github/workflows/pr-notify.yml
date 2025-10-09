@@ -1,0 +1,129 @@
+# PR Notifications via MsgCore
+#
+# Setup:
+# 1. Add GitHub secrets:
+#    - MSGCORE_API_KEY: Your MsgCore API key
+# 2. Add GitHub variables:
+#    - MSGCORE_API_URL: Your MsgCore API URL (e.g., "https://api.msgcore.dev" or "http://localhost:7890")
+#    - MSGCORE_DEFAULT_PROJECT: Your MsgCore project ID (e.g., "filipe" or "default")
+#    - MSGCORE_PR_TARGETS: Comma-separated targets (e.g., "platform-id:channel:123456,platform-id:user:987654")
+#
+# Example MSGCORE_PR_TARGETS:
+#   "abc123:channel:1234567890,def456:user:9876543210,ghi789:group:-1001234567890"
+
+name: PR Notifications
+
+on:
+  pull_request:
+    types: [opened, ready_for_review, reopened]
+
+permissions:
+  contents: read
+  pull-requests: write
+  issues: write
+
+jobs:
+  notify:
+    name: Send PR Notification
+    runs-on: ubuntu-latest
+
+    # Skip if PR is still in draft
+    if: github.event.pull_request.draft == false
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0  # Needed for file analysis
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+
+    - name: Analyze PR and Determine Routing
+      id: analyze
+      run: |
+        # Get list of changed files
+        FILES=$(gh pr view ${{ github.event.pull_request.number }} --json files -q '.files[].path' | tr '\n' ' ')
+        echo "Changed files: $FILES"
+
+        # Determine target channel and suggested reviewers based on file patterns
+        if echo "$FILES" | grep -q "src/platforms/"; then
+          echo "category=Platform Integration" >> $GITHUB_OUTPUT
+          echo "reviewers=@platform-team" >> $GITHUB_OUTPUT
+          echo "channel=platform-reviews" >> $GITHUB_OUTPUT
+          echo "emoji=🔌" >> $GITHUB_OUTPUT
+        elif echo "$FILES" | grep -q "test/"; then
+          echo "category=Testing" >> $GITHUB_OUTPUT
+          echo "reviewers=@qa-team" >> $GITHUB_OUTPUT
+          echo "channel=test-reviews" >> $GITHUB_OUTPUT
+          echo "emoji=🧪" >> $GITHUB_OUTPUT
+        elif echo "$FILES" | grep -q "tools/generators/"; then
+          echo "category=Code Generation" >> $GITHUB_OUTPUT
+          echo "reviewers=@core-team" >> $GITHUB_OUTPUT
+          echo "channel=core-reviews" >> $GITHUB_OUTPUT
+          echo "emoji=⚙️" >> $GITHUB_OUTPUT
+        elif echo "$FILES" | grep -q "src/auth/"; then
+          echo "category=Authentication & Security" >> $GITHUB_OUTPUT
+          echo "reviewers=@security-team" >> $GITHUB_OUTPUT
+          echo "channel=security-reviews" >> $GITHUB_OUTPUT
+          echo "emoji=🔐" >> $GITHUB_OUTPUT
+        elif echo "$FILES" | grep -q "docs/\|CLAUDE.md\|README.md"; then
+          echo "category=Documentation" >> $GITHUB_OUTPUT
+          echo "reviewers=@docs-team" >> $GITHUB_OUTPUT
+          echo "channel=docs-reviews" >> $GITHUB_OUTPUT
+          echo "emoji=📚" >> $GITHUB_OUTPUT
+        else
+          echo "category=General Development" >> $GITHUB_OUTPUT
+          echo "reviewers=@dev-team" >> $GITHUB_OUTPUT
+          echo "channel=code-reviews" >> $GITHUB_OUTPUT
+          echo "emoji=💻" >> $GITHUB_OUTPUT
+        fi
+
+        # Determine PR size and complexity
+        ADDITIONS=${{ github.event.pull_request.additions }}
+        DELETIONS=${{ github.event.pull_request.deletions }}
+        FILES_COUNT=$(echo "$FILES" | wc -w)
+        TOTAL=$((ADDITIONS + DELETIONS))
+
+        if [ "$TOTAL" -gt 500 ] || [ "$FILES_COUNT" -gt 20 ]; then
+          echo "size=🔴 Large" >> $GITHUB_OUTPUT
+          echo "size_warning=⚠️ This is a large PR - consider breaking into smaller chunks for easier review" >> $GITHUB_OUTPUT
+        elif [ "$TOTAL" -gt 200 ] || [ "$FILES_COUNT" -gt 10 ]; then
+          echo "size=🟡 Medium" >> $GITHUB_OUTPUT
+          echo "size_warning=" >> $GITHUB_OUTPUT
+        else
+          echo "size=🟢 Small" >> $GITHUB_OUTPUT
+          echo "size_warning=" >> $GITHUB_OUTPUT
+        fi
+
+        echo "files_count=$FILES_COUNT" >> $GITHUB_OUTPUT
+      env:
+        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Send PR Notification
+      if: vars.MSGCORE_PR_TARGETS != ''
+      run: |
+        npx @msgcore/cli messages send \
+          --targets "${{ vars.MSGCORE_PR_TARGETS }}" \
+          --text "${{ steps.analyze.outputs.emoji }} **New PR Ready for Review**
+
+        **${{ github.event.pull_request.title }}** (#${{ github.event.pull_request.number }})
+
+        👤 Author: @${{ github.event.pull_request.user.login }}
+        📂 Category: ${{ steps.analyze.outputs.category }}
+        📊 Size: ${{ steps.analyze.outputs.size }} (+${{ github.event.pull_request.additions }} / -${{ github.event.pull_request.deletions }} lines, ${{ steps.analyze.outputs.files_count }} files)
+
+        ${{ steps.analyze.outputs.size_warning }}
+
+        🔍 Suggested Reviewers: ${{ steps.analyze.outputs.reviewers }}
+
+        🔗 ${{ github.event.pull_request.html_url }}
+
+        React with 👀 if you're reviewing!"
+      env:
+        MSGCORE_API_KEY: ${{ secrets.MSGCORE_API_KEY }}
+        MSGCORE_API_URL: ${{ vars.MSGCORE_API_URL }}
+        MSGCORE_DEFAULT_PROJECT: ${{ vars.MSGCORE_DEFAULT_PROJECT }}
+      continue-on-error: true
