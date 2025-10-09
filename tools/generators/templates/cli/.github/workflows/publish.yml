@@ -24,11 +24,18 @@ jobs:
         id: pkg_version
         run: echo "VERSION=$(node -p 'require("./package.json").version')" >> $GITHUB_OUTPUT
 
+      - name: Get latest SDK version from npm
+        id: sdk_version
+        run: |
+          SDK_VERSION=$(npm view @msgcore/sdk version)
+          echo "SDK_VERSION=$SDK_VERSION" >> $GITHUB_OUTPUT
+          echo "📦 Latest @msgcore/sdk version on npm: $SDK_VERSION"
+
       - name: Replace SDK file reference with npm version
         run: |
-          # Replace "file:../sdk" with actual version for publishing
-          sed -i 's|"@msgcore/sdk": "file:../sdk"|"@msgcore/sdk": "^${{ steps.pkg_version.outputs.VERSION }}"|g' package.json
-          echo "✅ Updated SDK dependency to version ^${{ steps.pkg_version.outputs.VERSION }}"
+          # Replace "file:../sdk" with latest npm version
+          sed -i 's|"@msgcore/sdk": "file:../sdk"|"@msgcore/sdk": "^${{ steps.sdk_version.outputs.SDK_VERSION }}"|g' package.json
+          echo "✅ Updated SDK dependency to version ^${{ steps.sdk_version.outputs.SDK_VERSION }}"
 
       - name: Install dependencies
         run: npm install
