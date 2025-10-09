@@ -7,7 +7,6 @@ import {
   Res,
   Req,
   HttpStatus,
-  UseGuards,
   Logger,
 } from '@nestjs/common';
 import type { Response, Request } from 'express';
@@ -18,7 +17,6 @@ import {
   JsonRpcResponse,
   JsonRpcNotification,
 } from './interfaces/jsonrpc.interface';
-import { AppAuthGuard } from '../common/guards/app-auth.guard';
 import { randomUUID } from 'crypto';
 import { PrismaService } from '../prisma/prisma.service';
 import { createHash } from 'crypto';
@@ -26,9 +24,12 @@ import { createHash } from 'crypto';
 /**
  * MCP HTTP Streamable Transport Controller
  * Implements MCP specification 2025-03-26
+ *
+ * Note: AppAuthGuard is NOT used here because MCP has its own
+ * session-based authentication flow (initialize → session ID → tools).
+ * The guard would block the initialize call and return non-JSON-RPC errors.
  */
 @Controller('mcp')
-@UseGuards(AppAuthGuard)
 export class McpController {
   private readonly logger = new Logger(McpController.name);
 
@@ -79,9 +80,9 @@ export class McpController {
       return this.handleInitialize(message as JsonRpcRequest, req, res);
     }
 
-    // Validate session for other methods
-    if (sessionId && !this.sessions.has(sessionId)) {
-      return res.status(401).json({
+    // Validate session for other methods (session required for all non-initialize requests)
+    if (!sessionId || !this.sessions.has(sessionId)) {
+      return res.status(200).json({
         jsonrpc: '2.0',
         id: 'id' in message ? message.id : null,
         error: {
@@ -125,9 +126,8 @@ export class McpController {
   ) {
     // Validate session
     if (!sessionId || !this.sessions.has(sessionId)) {
-      return res.status(401).json({
-        error: 'Invalid session. Please initialize first.',
-      });
+      res.status(401).send('Invalid session. Please initialize first.');
+      return;
     }
 
     // Set SSE headers

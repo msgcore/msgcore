@@ -924,13 +924,38 @@ interface CLIConfig {
   outputFormat?: string;
 }
 
-interface McpMessage {
+// JSON-RPC 2.0 message types (properly typed as union)
+type McpMessage = McpRequest | McpResponse | McpNotification;
+
+interface McpRequest {
   jsonrpc: '2.0';
-  id?: string | number;
-  method?: string;
+  id: string | number;
+  method: string;
   params?: any;
-  result?: any;
-  error?: any;
+}
+
+interface McpNotification {
+  jsonrpc: '2.0';
+  method: string;
+  params?: any;
+}
+
+type McpResponse = McpSuccessResponse | McpErrorResponse;
+
+interface McpSuccessResponse {
+  jsonrpc: '2.0';
+  id: string | number;
+  result: any;
+}
+
+interface McpErrorResponse {
+  jsonrpc: '2.0';
+  id: string | number;
+  error: {
+    code: number;
+    message: string;
+    data?: any;
+  };
 }
 
 interface McpTool {
@@ -1117,19 +1142,19 @@ class McpStdioServer {
     this.rl.on('line', async (line: string) => {
       this.pendingWork++;
       try {
-        const message: McpMessage = JSON.parse(line);
+        const message = JSON.parse(line) as McpRequest | McpNotification;
         const response = await this.handleMessage(message);
         this.writeMessage(response);
       } catch (error) {
         this.writeMessage({
           jsonrpc: '2.0',
-          id: undefined,
+          id: 0,
           error: {
             code: -32700,
             message: 'Parse error',
             data: error instanceof Error ? error.message : String(error),
           },
-        });
+        } as McpErrorResponse);
       } finally {
         this.pendingWork--;
         this.maybeExit();
@@ -1148,38 +1173,40 @@ class McpStdioServer {
     }
   }
 
-  private async handleMessage(message: McpMessage): Promise<McpMessage> {
-    const { method, params, id } = message;
+  private async handleMessage(message: McpRequest | McpNotification): Promise<McpResponse> {
+    const method = message.method;
+    const params = 'params' in message ? message.params : undefined;
+    const id = 'id' in message ? message.id : undefined;
 
     try {
       switch (method) {
         case 'initialize':
-          return this.handleInitialize(id);
+          return this.handleInitialize(id!);
         case 'tools/list':
-          return await this.handleToolsList(id);
+          return await this.handleToolsList(id!);
         case 'tools/call':
-          return await this.handleToolCall(id, params);
+          return await this.handleToolCall(id!, params);
         default:
           return {
             jsonrpc: '2.0',
-            id,
+            id: id!,
             error: { code: -32601, message: \`Method not found: \${method}\` },
-          };
+          } as McpErrorResponse;
       }
     } catch (error) {
       return {
         jsonrpc: '2.0',
-        id,
+        id: id || 0,
         error: {
           code: -32603,
           message: 'Internal error',
           data: error instanceof Error ? error.message : String(error),
         },
-      };
+      } as McpErrorResponse;
     }
   }
 
-  private handleInitialize(id: string | number | undefined): McpMessage {
+  private handleInitialize(id: string | number): McpSuccessResponse {
     return {
       jsonrpc: '2.0',
       id,
@@ -1191,13 +1218,13 @@ class McpStdioServer {
     };
   }
 
-  private async handleToolsList(id: string | number | undefined): Promise<McpMessage> {
+  private async handleToolsList(id: string | number): Promise<McpSuccessResponse> {
     await this.fetchUserPermissions();
     const filteredTools = this.getFilteredTools();
     return { jsonrpc: '2.0', id, result: { tools: filteredTools } };
   }
 
-  private async handleToolCall(id: string | number | undefined, params: any): Promise<McpMessage> {
+  private async handleToolCall(id: string | number, params: any): Promise<McpResponse> {
     try {
       const { name, arguments: args } = params || {};
       if (!name) throw new Error('Missing tool name');
@@ -1254,7 +1281,7 @@ class McpStdioServer {
           content: [{ type: 'text', text: JSON.stringify(response.data, null, 2) }],
           isError: false,
         },
-      };
+      } as McpSuccessResponse;
     } catch (error) {
       let errorMessage: string;
       if (axios.isAxiosError(error) && error.response?.data?.message) {
@@ -1263,6 +1290,7 @@ class McpStdioServer {
         errorMessage = error instanceof Error ? error.message : String(error);
       }
 
+      // Return error as result with isError flag (MCP convention for tool errors)
       return {
         jsonrpc: '2.0',
         id,
@@ -1270,7 +1298,7 @@ class McpStdioServer {
           content: [{ type: 'text', text: \`Error: \${errorMessage}\` }],
           isError: true,
         },
-      };
+      } as McpSuccessResponse;
     }
   }
 
@@ -1315,7 +1343,7 @@ class McpStdioServer {
     return converted;
   }
 
-  private writeMessage(message: McpMessage): void {
+  private writeMessage(message: McpResponse): void {
     console.log(JSON.stringify(message));
   }
 }
