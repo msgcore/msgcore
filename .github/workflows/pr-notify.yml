@@ -5,7 +5,7 @@
 #    - MSGCORE_API_KEY: Your MsgCore API key
 # 2. Add GitHub variables:
 #    - MSGCORE_API_URL: Your MsgCore API URL (e.g., "https://api.msgcore.dev" or "http://localhost:7890")
-#    - MSGCORE_PROJECT_ID: Your MsgCore project ID (or "default")
+#    - MSGCORE_DEFAULT_PROJECT: Your MsgCore project ID (e.g., "filipe" or "default")
 #    - MSGCORE_PR_TARGETS: Comma-separated targets (e.g., "platform-id:channel:123456,platform-id:user:987654")
 #
 # Example MSGCORE_PR_TARGETS:
@@ -16,6 +16,11 @@ name: PR Notifications
 on:
   pull_request:
     types: [opened, ready_for_review, reopened]
+
+permissions:
+  contents: read
+  pull-requests: write
+  issues: write
 
 jobs:
   notify:
@@ -120,27 +125,5 @@ jobs:
       env:
         MSGCORE_API_KEY: ${{ secrets.MSGCORE_API_KEY }}
         MSGCORE_API_URL: ${{ vars.MSGCORE_API_URL }}
-        MSGCORE_PROJECT_ID: ${{ vars.MSGCORE_PROJECT_ID }}
+        MSGCORE_DEFAULT_PROJECT: ${{ vars.MSGCORE_DEFAULT_PROJECT }}
       continue-on-error: true
-
-    - name: Comment on PR (Summary)
-      if: vars.MSGCORE_PR_TARGETS != ''
-      uses: actions/github-script@v7
-      with:
-        script: |
-          github.rest.issues.createComment({
-            issue_number: context.issue.number,
-            owner: context.repo.owner,
-            repo: context.repo.repo,
-            body: `## 🔔 PR Notifications Sent
-
-            ✅ Team has been notified via MsgCore
-
-            **Category**: ${{ steps.analyze.outputs.category }}
-            **Suggested Reviewers**: ${{ steps.analyze.outputs.reviewers }}
-
-            ${{ steps.analyze.outputs.size_warning }}
-
-            ---
-            *Automated by [MsgCore](https://msgcore.dev) PR Notifications*`
-          })
