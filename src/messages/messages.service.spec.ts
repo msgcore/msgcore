@@ -123,6 +123,7 @@ describe('MessagesService', () => {
           userDisplay: true,
           messageText: true,
           messageType: true,
+          attachments: true,
           receivedAt: true,
         },
       });
@@ -162,6 +163,7 @@ describe('MessagesService', () => {
           userDisplay: true,
           messageText: true,
           messageType: true,
+          attachments: true,
           receivedAt: true,
         },
       });
@@ -201,6 +203,7 @@ describe('MessagesService', () => {
           userDisplay: true,
           messageText: true,
           messageType: true,
+          attachments: true,
           receivedAt: true,
         },
       });
@@ -261,6 +264,7 @@ describe('MessagesService', () => {
           userDisplay: true,
           messageText: true,
           messageType: true,
+          attachments: true,
           receivedAt: true,
         },
       });
@@ -297,6 +301,7 @@ describe('MessagesService', () => {
           userDisplay: true,
           messageText: true,
           messageType: true,
+          attachments: true,
           receivedAt: true,
         },
       });
@@ -341,6 +346,7 @@ describe('MessagesService', () => {
           userDisplay: true,
           messageText: true,
           messageType: true,
+          attachments: true,
           receivedAt: true,
         },
       });
@@ -408,6 +414,7 @@ describe('MessagesService', () => {
           userDisplay: true,
           messageText: true,
           messageType: true,
+          attachments: true,
           receivedAt: true,
         },
       });
@@ -725,6 +732,7 @@ describe('MessagesService', () => {
                 testMode: true,
               },
             },
+            attachments: true,
           },
         },
       );

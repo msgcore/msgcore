@@ -15,7 +15,9 @@ import { CryptoUtil } from '../../common/utils/crypto.util';
 import { PlatformLogsService } from '../services/platform-logs.service';
 import { PlatformLogger } from '../utils/platform-logger';
 import { AttachmentUtil } from '../../common/utils/attachment.util';
+import { FileTypeUtil } from '../../common/utils/file-type.util';
 import { AttachmentDto, EmbedDto } from '../dto/send-message.dto';
+import { PlatformAttachment } from '../../messages/interfaces/message-attachment.interface';
 import { PlatformCapability } from '../enums/platform-capability.enum';
 import { PlatformType } from '../../common/enums/platform-type.enum';
 import { UrlValidationUtil } from '../../common/utils/url-validation.util';
@@ -734,6 +736,9 @@ export class WhatsAppProvider implements PlatformProvider, PlatformAdapter {
             }
           }
 
+          // Extract and normalize attachments
+          const normalizedAttachments = this.normalizeAttachments(msg);
+
           await this.messagesService.storeIncomingMessage({
             projectId: connection.projectId,
             platformId,
@@ -745,6 +750,10 @@ export class WhatsAppProvider implements PlatformProvider, PlatformAdapter {
             userDisplay: msg.pushName || msg.senderName || 'WhatsApp User',
             messageText,
             messageType,
+            attachments:
+              normalizedAttachments.length > 0
+                ? normalizedAttachments
+                : undefined,
             rawData: {
               ...msg,
               transcription: transcription || undefined,
@@ -1430,5 +1439,73 @@ export class WhatsAppProvider implements PlatformProvider, PlatformAdapter {
       );
       return null;
     }
+  }
+
+  /**
+   * Normalize WhatsApp (Evolution API) attachments to universal PlatformAttachment format
+   */
+  private normalizeAttachments(message: any): PlatformAttachment[] {
+    const attachments: PlatformAttachment[] = [];
+
+    // Check for mediaType and mediaUrl (Evolution API format)
+    if (message.mediaType && message.mediaUrl) {
+      attachments.push({
+        type: FileTypeUtil.detectFileType(message.mimetype, message.fileName),
+        url: message.mediaUrl,
+        filename: message.fileName,
+        size: message.filesize,
+        mimeType: message.mimetype,
+      });
+    }
+
+    // Alternative: check message.message structure
+    if (message.message) {
+      const msg = message.message;
+
+      if (msg.imageMessage) {
+        attachments.push({
+          type: 'image',
+          url: msg.imageMessage.url || '',
+          filename: msg.imageMessage.fileName,
+          size: msg.imageMessage.fileLength,
+          mimeType: msg.imageMessage.mimetype || 'image/jpeg',
+        });
+      }
+
+      if (msg.videoMessage) {
+        attachments.push({
+          type: 'video',
+          url: msg.videoMessage.url || '',
+          filename: msg.videoMessage.fileName,
+          size: msg.videoMessage.fileLength,
+          mimeType: msg.videoMessage.mimetype || 'video/mp4',
+        });
+      }
+
+      if (msg.audioMessage) {
+        attachments.push({
+          type: 'audio',
+          url: msg.audioMessage.url || '',
+          filename: 'audio.ogg',
+          size: msg.audioMessage.fileLength,
+          mimeType: msg.audioMessage.mimetype || 'audio/ogg',
+        });
+      }
+
+      if (msg.documentMessage) {
+        attachments.push({
+          type: FileTypeUtil.detectFileType(
+            msg.documentMessage.mimetype,
+            msg.documentMessage.fileName,
+          ),
+          url: msg.documentMessage.url || '',
+          filename: msg.documentMessage.fileName,
+          size: msg.documentMessage.fileLength,
+          mimeType: msg.documentMessage.mimetype,
+        });
+      }
+    }
+
+    return attachments;
   }
 }

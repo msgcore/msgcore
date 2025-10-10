@@ -200,6 +200,7 @@ export class MessagesService {
       messageText: true,
       messageType: true,
       receivedAt: true,
+      attachments: true,
       ...(query.raw === true && { rawData: true }),
     };
 
@@ -344,6 +345,7 @@ export class MessagesService {
             testMode: true,
           },
         },
+        attachments: true,
       },
     });
 
