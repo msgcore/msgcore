@@ -26,7 +26,9 @@ import { makeEnvelope } from '../utils/envelope.factory';
 import { PrismaService } from '../../prisma/prisma.service';
 import { CryptoUtil } from '../../common/utils/crypto.util';
 import { AttachmentUtil } from '../../common/utils/attachment.util';
+import { FileTypeUtil } from '../../common/utils/file-type.util';
 import { PlatformCapability } from '../enums/platform-capability.enum';
+import { PlatformAttachment } from '../../messages/interfaces/message-attachment.interface';
 import { PlatformType } from '../../common/enums/platform-type.enum';
 import { UrlValidationUtil } from '../../common/utils/url-validation.util';
 import { ProviderUtil } from './provider.util';
@@ -709,6 +711,9 @@ export class DiscordProvider
     }
 
     try {
+      // Extract and normalize attachments
+      const normalizedAttachments = this.normalizeAttachments(msg.attachments);
+
       // Store message in database using centralized service
       await this.messagesService.storeIncomingMessage({
         projectId,
@@ -720,6 +725,8 @@ export class DiscordProvider
         userDisplay: msg.author.displayName || msg.author.username,
         messageText,
         messageType,
+        attachments:
+          normalizedAttachments.length > 0 ? normalizedAttachments : undefined,
         rawData: {
           id: msg.id,
           channelId: msg.channelId,
@@ -1189,5 +1196,20 @@ export class DiscordProvider
       );
       throw error;
     }
+  }
+
+  /**
+   * Normalize Discord attachments to universal PlatformAttachment format
+   */
+  private normalizeAttachments(
+    attachments: Message['attachments'],
+  ): PlatformAttachment[] {
+    return Array.from(attachments.values()).map((att) => ({
+      type: FileTypeUtil.detectFileType(att.contentType, att.name),
+      url: att.url,
+      filename: att.name || undefined,
+      size: att.size || undefined,
+      mimeType: att.contentType || undefined,
+    }));
   }
 }

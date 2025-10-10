@@ -16,7 +16,9 @@ import { CryptoUtil } from '../../common/utils/crypto.util';
 import { PlatformLogsService } from '../services/platform-logs.service';
 import { PlatformLogger } from '../utils/platform-logger';
 import { AttachmentUtil } from '../../common/utils/attachment.util';
+import { FileTypeUtil } from '../../common/utils/file-type.util';
 import { AttachmentDto, ButtonDto } from '../dto/send-message.dto';
+import { PlatformAttachment } from '../../messages/interfaces/message-attachment.interface';
 import { WebhookDeliveryService } from '../../webhooks/services/webhook-delivery.service';
 import { WebhookEventType } from '../../webhooks/types/webhook-event.types';
 import { PlatformCapability } from '../enums/platform-capability.enum';
@@ -525,6 +527,9 @@ export class TelegramProvider implements PlatformProvider, PlatformAdapter {
     // Store the message in database using centralized service
     if (platformId) {
       try {
+        // Extract and normalize attachments
+        const normalizedAttachments = this.normalizeAttachments(msg);
+
         await this.messagesService.storeIncomingMessage({
           projectId,
           platformId,
@@ -535,6 +540,10 @@ export class TelegramProvider implements PlatformProvider, PlatformAdapter {
           userDisplay: msg.from?.username || msg.from?.first_name || 'Unknown',
           messageText,
           messageType,
+          attachments:
+            normalizedAttachments.length > 0
+              ? normalizedAttachments
+              : undefined,
           rawData: {
             ...msg,
             transcription: transcription || undefined,
@@ -1404,5 +1413,75 @@ export class TelegramProvider implements PlatformProvider, PlatformAdapter {
     } catch (error) {
       this.logger.error(`Failed to handle message reaction: ${error.message}`);
     }
+  }
+
+  /**
+   * Normalize Telegram attachments to universal PlatformAttachment format
+   */
+  private normalizeAttachments(
+    message: TelegramBot.Message,
+  ): PlatformAttachment[] {
+    const attachments: PlatformAttachment[] = [];
+
+    // Photo
+    if (message.photo && message.photo.length > 0) {
+      const largestPhoto = message.photo[message.photo.length - 1];
+      attachments.push({
+        type: 'image',
+        url: largestPhoto.file_id, // Telegram uses file_id, needs to be resolved to URL
+        filename: undefined,
+        size: largestPhoto.file_size,
+        mimeType: 'image/jpeg',
+      });
+    }
+
+    // Document
+    if (message.document) {
+      attachments.push({
+        type: FileTypeUtil.detectFileType(
+          message.document.mime_type,
+          message.document.file_name,
+        ),
+        url: message.document.file_id,
+        filename: message.document.file_name,
+        size: message.document.file_size,
+        mimeType: message.document.mime_type,
+      });
+    }
+
+    // Video
+    if (message.video) {
+      attachments.push({
+        type: 'video',
+        url: message.video.file_id,
+        filename: (message.video as any).file_name,
+        size: message.video.file_size,
+        mimeType: message.video.mime_type || 'video/mp4',
+      });
+    }
+
+    // Audio
+    if (message.audio) {
+      attachments.push({
+        type: 'audio',
+        url: message.audio.file_id,
+        filename: (message.audio as any).file_name,
+        size: message.audio.file_size,
+        mimeType: message.audio.mime_type || 'audio/mpeg',
+      });
+    }
+
+    // Voice
+    if (message.voice) {
+      attachments.push({
+        type: 'audio',
+        url: message.voice.file_id,
+        filename: 'voice.ogg',
+        size: message.voice.file_size,
+        mimeType: message.voice.mime_type || 'audio/ogg',
+      });
+    }
+
+    return attachments;
   }
 }

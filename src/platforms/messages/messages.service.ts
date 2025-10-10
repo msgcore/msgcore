@@ -14,6 +14,7 @@ import { SecurityUtil, AuthContext } from '../../common/utils/security.util';
 import { ReactionType, Prisma } from '@prisma/client';
 import { WebhookDeliveryService } from '../../webhooks/services/webhook-delivery.service';
 import { WebhookEventType } from '../../webhooks/types/webhook-event.types';
+import { PlatformAttachment } from '../../messages/interfaces/message-attachment.interface';
 
 @Injectable()
 export class MessagesService {
@@ -246,6 +247,7 @@ export class MessagesService {
     messageText: string | null;
     messageType: string;
     rawData: any;
+    attachments?: PlatformAttachment[];
   }): Promise<boolean> {
     try {
       const storedMessage = await this.prisma.receivedMessage.create({
@@ -260,6 +262,13 @@ export class MessagesService {
           messageText: data.messageText,
           messageType: data.messageType,
           rawData: data.rawData,
+          ...(data.attachments && data.attachments.length > 0
+            ? {
+                attachments: {
+                  create: data.attachments,
+                },
+              }
+            : {}),
         },
       });
 
