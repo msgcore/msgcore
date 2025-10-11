@@ -1016,13 +1016,13 @@ class McpStdioServer {
   private shouldExit = false;
   private userPermissions: string[] = [];
   private permissionsFetched = false;
+  private authError?: string;
 
   constructor(client: AxiosInstance, config: CLIConfig) {
     this.client = client;
     this.config = config;
     this.rl = readline.createInterface({
       input: process.stdin,
-      output: process.stdout,
       terminal: false,
     });
     this.loadContracts();
@@ -1050,8 +1050,9 @@ class McpStdioServer {
       this.permissionsFetched = true;
     } catch (error) {
       this.permissionsFetched = true;
-      // Log to stderr so it doesn't interfere with JSON-RPC stdout
-      console.error('Warning: Failed to fetch permissions. Some tools may be unavailable.', error instanceof Error ? error.message : String(error));
+      // Don't log to stderr during MCP session as it breaks JSON-RPC protocol
+      // Store error for later use if needed
+      this.authError = error instanceof Error ? error.message : 'Authentication failed';
       this.userPermissions = [];
     }
   }
@@ -1144,7 +1145,10 @@ class McpStdioServer {
       try {
         const message = JSON.parse(line) as McpRequest | McpNotification;
         const response = await this.handleMessage(message);
-        this.writeMessage(response);
+        // Only write response if it's not null (notifications don't get responses)
+        if (response !== null) {
+          this.writeMessage(response);
+        }
       } catch (error) {
         this.writeMessage({
           jsonrpc: '2.0',
@@ -1173,23 +1177,37 @@ class McpStdioServer {
     }
   }
 
-  private async handleMessage(message: McpRequest | McpNotification): Promise<McpResponse> {
+  private async handleMessage(message: McpRequest | McpNotification): Promise<McpResponse | null> {
     const method = message.method;
     const params = 'params' in message ? message.params : undefined;
     const id = 'id' in message ? message.id : undefined;
 
+    // If it's a notification (no id), handle it but don't respond
+    if (id === undefined) {
+      // Handle known notifications silently
+      switch (method) {
+        case 'notifications/initialized':
+        case 'notifications/cancelled':
+          // These are valid notifications, just ignore them
+          return null;
+        default:
+          // Unknown notification, ignore it
+          return null;
+      }
+    }
+
     try {
       switch (method) {
         case 'initialize':
-          return this.handleInitialize(id!);
+          return this.handleInitialize(id);
         case 'tools/list':
-          return await this.handleToolsList(id!);
+          return await this.handleToolsList(id);
         case 'tools/call':
-          return await this.handleToolCall(id!, params);
+          return await this.handleToolCall(id, params);
         default:
           return {
             jsonrpc: '2.0',
-            id: id!,
+            id: id,
             error: { code: -32601, message: \`Method not found: \${method}\` },
           } as McpErrorResponse;
       }
