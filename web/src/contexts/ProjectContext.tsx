@@ -43,21 +43,30 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  // Validate and restore saved project or auto-select first project
+  // Validate saved project exists when projects load
   useEffect(() => {
     if (!projects || projects.length === 0) return;
 
-    // Check if we have a saved project and if it still exists
-    const currentProjectId = selectedProjectId;
-    const savedProjectExists = currentProjectId &&
-      projects.some(p => p.id === currentProjectId);
+    // Only validate on initial load when we have a saved project
+    // This avoids re-validating every time selectedProjectId changes
+    setSelectedProjectIdState(prevId => {
+      const savedProjectExists = prevId && projects.some(p => p.id === prevId);
 
-    if (!savedProjectExists) {
-      // Saved project doesn't exist anymore or no saved project, select first
-      setSelectedProjectId(projects[0].id);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [projects]); // Only re-run when projects change
+      if (!savedProjectExists) {
+        // Saved project doesn't exist or no saved project, select first
+        const firstProjectId = projects[0].id;
+        // Also update localStorage with the new selection
+        try {
+          localStorage.setItem(STORAGE_KEY, firstProjectId);
+        } catch (error) {
+          console.error('Failed to save selected project to localStorage:', error);
+        }
+        return firstProjectId;
+      }
+
+      return prevId; // Keep the current selection
+    });
+  }, [projects]); // Now we can safely only depend on projects
 
   return (
     <ProjectContext.Provider
