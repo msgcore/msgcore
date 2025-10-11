@@ -38,7 +38,7 @@ export function AppShell({ children }: AppShellProps) {
   const location = useLocation();
   const navigate = useNavigate();
   const { user, signOut } = useAuth();
-  const { selectedProjectId, setSelectedProjectId } = useProjectContext();
+  const { selectedProjectId, setSelectedProjectId, clearSelectedProject } = useProjectContext();
   const { data: projects = [] } = useProjects();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
@@ -90,6 +90,7 @@ export function AppShell({ children }: AppShellProps) {
   ];
 
   const handleSignOut = () => {
+    clearSelectedProject(); // Clear the selected project from localStorage
     signOut();
     navigate('/login');
   };
