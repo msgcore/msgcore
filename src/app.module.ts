@@ -107,8 +107,9 @@ import { sentryConfig } from './config/sentry.config';
 
     // Serve static frontend files (registered last so API routes take precedence)
     ServeStaticModule.forRoot({
-      rootPath: join(__dirname, '..', 'web', 'dist'),
-      exclude: ['/api/v1/*', '/mcp/*'], // Exclude API routes from static file serving
+      rootPath: join(__dirname, '..', '..', 'web', 'dist'),
+      exclude: ['/api/v1/*', '/mcp/*', '/docs/*'], // Exclude API routes from static file serving
+      serveRoot: '/',
     }),
   ],
   controllers: [AppController],
