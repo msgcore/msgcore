@@ -5,6 +5,8 @@ import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
 import { SentryModule } from '@sentry/nestjs/setup';
 import { SentryGlobalFilter } from '@sentry/nestjs/setup';
 import { BullModule } from '@nestjs/bullmq';
+import { ServeStaticModule } from '@nestjs/serve-static';
+import { join } from 'path';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { HealthModule } from './health/health.module';
@@ -102,6 +104,13 @@ import { sentryConfig } from './config/sentry.config';
     WebhooksModule,
     IdentitiesModule,
     McpModule,
+
+    // Serve static frontend files (registered last so API routes take precedence)
+    // Commented out for now - uncomment when frontend is ready
+    // ServeStaticModule.forRoot({
+    //   rootPath: join(__dirname, '..', 'web', 'dist'),
+    //   exclude: ['/api/v1/*', '/mcp/*'], // Exclude API routes from static file serving
+    // }),
   ],
   controllers: [AppController],
   providers: [
