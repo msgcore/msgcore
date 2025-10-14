@@ -100,15 +100,25 @@ export function IdentityResolver({
     );
   }
 
-  // No identity found - show unlinked user card
+  // No identity found - show username with hover popup
   if (!identity) {
     return (
-      <UnlinkedUserCard
-        platformId={platformId}
-        providerUserId={providerUserId}
-        providerUserDisplay={providerUserDisplay}
-        onLinked={() => refetch()}
-      />
+      <div className="relative inline-block group">
+        {/* Username display - always visible */}
+        <span className="text-sm font-medium text-gray-700 cursor-pointer border-b border-dashed border-gray-400">
+          {providerUserDisplay || providerUserId}
+        </span>
+
+        {/* Floating UnlinkedUserCard - shows on hover */}
+        <div className="absolute z-50 left-0 top-full mt-2 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200">
+          <UnlinkedUserCard
+            platformId={platformId}
+            providerUserId={providerUserId}
+            providerUserDisplay={providerUserDisplay}
+            onLinked={() => refetch()}
+          />
+        </div>
+      </div>
     );
   }
 

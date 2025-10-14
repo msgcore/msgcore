@@ -191,7 +191,7 @@ export function UnlinkedUserCard({
 
           <div>
             <label className="block text-xs font-medium text-gray-700 mb-1">
-              {t('quickLink.emailLabel')}
+              {t('quickLink.emailLabel')} <span className="text-gray-400 font-normal">({t('common.optional')})</span>
             </label>
             <Input
               type="email"

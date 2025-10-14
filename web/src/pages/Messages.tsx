@@ -321,7 +321,6 @@ export function Messages() {
                                       providerUserId={message.providerUserId}
                                       providerUserDisplay={message.userDisplay}
                                       showDetails
-                                      showToolbox
                                     />
                                   </div>
                                 )}

@@ -32,22 +32,18 @@ export function IdentityBadge({ identity, showDetails = false, className = '' }:
 
         {showDetails && (
           <div className="flex items-center gap-2 text-xs text-gray-500">
-            {identity.email ? (
+            {identity.email && (
               <span className="flex items-center gap-1 truncate">
                 <Mail className="w-3 h-3" />
                 {identity.email}
               </span>
-            ) : (
-              <span className="italic">{t('badge.noEmail')}</span>
             )}
+            {identity.email && aliasCount > 0 && <span>•</span>}
             {aliasCount > 0 && (
-              <>
-                <span>•</span>
-                <span className="flex items-center gap-1">
-                  <Link2 className="w-3 h-3" />
-                  {t('badge.aliasesCount', { count: aliasCount })}
-                </span>
-              </>
+              <span className="flex items-center gap-1">
+                <Link2 className="w-3 h-3" />
+                {t('badge.aliasesCount', { count: aliasCount })}
+              </span>
             )}
           </div>
         )}
