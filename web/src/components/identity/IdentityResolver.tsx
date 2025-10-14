@@ -1,10 +1,9 @@
+import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Loader2, AlertCircle } from 'lucide-react';
+import { Loader2, AlertCircle, User, Mail, Link2 } from 'lucide-react';
 import { useProjectContext } from '../../contexts/ProjectContext';
 import { useLookupIdentity } from '../../hooks/useIdentities';
-import { IdentityBadge } from './IdentityBadge';
 import { UnlinkedUserCard } from './UnlinkedUserCard';
-import { IdentityToolbox } from './IdentityToolbox';
 
 interface IdentityResolverProps {
   platformId: string;
@@ -56,13 +55,13 @@ export function IdentityResolver({
 }: IdentityResolverProps) {
   const { t } = useTranslation('identities');
   const { selectedProjectId } = useProjectContext();
+  const [isOpen, setIsOpen] = useState(false);
 
   // Guard: Don't render if required parameters are missing
   if (!platformId || !providerUserId || !selectedProjectId) {
     if (fallback) {
       return <>{fallback}</>;
     }
-    // Fallback to showing just the display name if available
     if (providerUserDisplay) {
       return <span className="text-sm font-medium text-gray-700">{providerUserDisplay}</span>;
     }
@@ -83,9 +82,9 @@ export function IdentityResolver({
   // Loading state
   if (isLoading) {
     return (
-      <div className="inline-flex items-center gap-2 text-gray-500">
-        <Loader2 className="w-4 h-4 animate-spin" />
-        <span className="text-sm">{t('resolver.loading')}</span>
+      <div className="inline-flex items-center gap-1 text-gray-500">
+        <Loader2 className="w-3 h-3 animate-spin" />
+        <span className="text-xs">{t('resolver.loading')}</span>
       </div>
     );
   }
@@ -93,52 +92,82 @@ export function IdentityResolver({
   // Error state
   if (error) {
     return (
-      <div className="inline-flex items-center gap-2 text-red-600">
-        <AlertCircle className="w-4 h-4" />
-        <span className="text-sm">{t('resolver.error')}</span>
+      <div className="inline-flex items-center gap-1 text-red-600">
+        <AlertCircle className="w-3 h-3" />
+        <span className="text-xs">{t('resolver.error')}</span>
       </div>
     );
   }
 
-  // No identity found - show username with hover popup
-  if (!identity) {
-    return (
-      <div className="relative inline-block group">
-        {/* Username display - always visible */}
-        <span className="text-sm font-medium text-gray-700 cursor-pointer border-b border-dashed border-gray-400">
-          {providerUserDisplay || providerUserId}
-        </span>
+  const displayName = identity?.displayName || providerUserDisplay || providerUserId;
+  const aliasCount = identity?.aliases?.length || 0;
 
-        {/* Floating UnlinkedUserCard - shows on hover */}
-        <div className="absolute z-50 left-0 top-full mt-2 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200">
-          <UnlinkedUserCard
-            platformId={platformId}
-            providerUserId={providerUserId}
-            providerUserDisplay={providerUserDisplay}
-            onLinked={() => refetch()}
-          />
-        </div>
-      </div>
-    );
-  }
-
-  // Identity found - show badge and optional toolbox
   return (
-    <div className="inline-flex items-center gap-2">
-      <IdentityBadge
-        identity={identity}
-        showDetails={showDetails}
-      />
+    <div className="relative inline-block">
+      {/* Username Button - Click to open popover */}
+      <button
+        onClick={() => setIsOpen(!isOpen)}
+        className="text-xs font-medium text-blue-600 hover:text-blue-700 hover:underline transition-colors"
+      >
+        {displayName}
+      </button>
 
-      {showToolbox && (
-        <IdentityToolbox
-          identity={identity}
-          onViewIdentity={onViewIdentity ? () => onViewIdentity(identity.id) : undefined}
-          onEditIdentity={onEditIdentity ? () => onEditIdentity(identity.id) : undefined}
-          onManageAliases={onManageAliases ? () => onManageAliases(identity.id) : undefined}
-          onViewHistory={onViewHistory ? () => onViewHistory(identity.id) : undefined}
-          onDeleteIdentity={onDeleteIdentity ? () => onDeleteIdentity(identity.id) : undefined}
-        />
+      {/* Popover - Shows on click */}
+      {isOpen && (
+        <>
+          {/* Backdrop */}
+          <div
+            className="fixed inset-0 z-10"
+            onClick={() => setIsOpen(false)}
+          />
+
+          {/* Popover Content */}
+          <div className="absolute left-0 top-full mt-1 z-20 min-w-[280px]">
+            {identity ? (
+              // Linked user - show identity details
+              <div className="bg-white rounded-lg shadow-lg border border-gray-200 p-4">
+                <div className="space-y-3">
+                  {/* Header */}
+                  <div className="flex items-start gap-3">
+                    <div className="flex-shrink-0 w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center">
+                      <User className="w-5 h-5 text-blue-600" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <h3 className="text-sm font-semibold text-gray-900 truncate">
+                        {identity.displayName || t('list.identityWithoutName')}
+                      </h3>
+                      {identity.email && (
+                        <div className="flex items-center gap-1 mt-1 text-xs text-gray-500">
+                          <Mail className="w-3 h-3" />
+                          <span className="truncate">{identity.email}</span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Aliases Count */}
+                  {aliasCount > 0 && (
+                    <div className="flex items-center gap-1 text-xs text-gray-500 pt-2 border-t">
+                      <Link2 className="w-3 h-3" />
+                      <span>{t('badge.aliasesCount', { count: aliasCount })}</span>
+                    </div>
+                  )}
+                </div>
+              </div>
+            ) : (
+              // Unlinked user - show linking options
+              <UnlinkedUserCard
+                platformId={platformId}
+                providerUserId={providerUserId}
+                providerUserDisplay={providerUserDisplay}
+                onLinked={() => {
+                  refetch();
+                  setIsOpen(false);
+                }}
+              />
+            )}
+          </div>
+        </>
       )}
     </div>
   );
