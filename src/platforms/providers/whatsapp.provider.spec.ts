@@ -54,6 +54,7 @@ describe('WhatsAppProvider', () => {
     evolutionApiUrl: 'https://evolution.example.com',
     evolutionApiKey: 'test-api-key',
     webhookToken: '12345678-1234-4321-8765-123456789abc',
+    instanceName: 'test-instance',
   };
 
   beforeEach(async () => {
@@ -638,6 +639,7 @@ describe('WhatsAppProvider', () => {
         credentials: {
           evolutionApiUrl: 'https://evo.example.com',
           evolutionApiKey: 'test-key',
+          instanceName: 'msgcore',
         },
         webhookToken: 'webhook-token-123',
       };
@@ -666,6 +668,7 @@ describe('WhatsAppProvider', () => {
         credentials: {
           evolutionApiUrl: 'https://evo.example.com',
           evolutionApiKey: 'test-key',
+          instanceName: 'msgcore',
         },
         webhookToken: 'webhook-token-123',
       };
@@ -693,6 +696,7 @@ describe('WhatsAppProvider', () => {
         credentials: {
           evolutionApiUrl: 'https://evo-new.example.com',
           evolutionApiKey: 'new-test-key',
+          instanceName: 'msgcore',
         },
         webhookToken: 'new-webhook-token',
       };
@@ -768,6 +772,7 @@ describe('WhatsAppProvider', () => {
         credentials: {
           evolutionApiUrl: 'https://evo.example.com',
           evolutionApiKey: 'test-key',
+          instanceName: 'msgcore',
         },
         webhookToken: 'webhook-token-123',
       };
@@ -785,6 +790,7 @@ describe('WhatsAppProvider', () => {
         credentials: {
           evolutionApiUrl: 'https://evo.example.com',
           evolutionApiKey: 'test-key',
+          instanceName: 'msgcore',
         },
         // No webhookToken
       };
@@ -809,6 +815,7 @@ describe('WhatsAppProvider', () => {
         credentials: {
           evolutionApiUrl: 'https://evo.example.com',
           evolutionApiKey: 'test-key',
+          instanceName: 'msgcore',
         },
         webhookToken: 'webhook-token-123',
       };
