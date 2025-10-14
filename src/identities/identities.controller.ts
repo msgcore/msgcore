@@ -190,10 +190,10 @@ export class IdentitiesController {
   @RequireScopes(ApiScope.IDENTITIES_READ)
   @SdkContract({
     command: 'identities lookup',
-    description: 'Lookup identity by platform user ID',
+    description: 'Lookup identity by platform user ID (returns null if not found)',
     category: 'Identities',
     requiredScopes: [ApiScope.IDENTITIES_READ],
-    outputType: 'IdentityResponse',
+    outputType: 'IdentityResponse | null',
     options: {
       platformId: {
         required: true,

@@ -252,10 +252,10 @@ export class IdentitiesService {
       },
     });
 
+    // Return null if no identity found (this is expected for unlinked users)
+    // Frontend will show UnlinkedUserCard instead of error
     if (!alias || alias.projectId !== project.id) {
-      throw new NotFoundException(
-        `No identity found for platform user ${providerUserId} on platform ${platformId}`,
-      );
+      return null;
     }
 
     return alias.identity;
