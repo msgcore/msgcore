@@ -193,7 +193,7 @@ export class IdentitiesController {
     description: 'Lookup identity by platform user ID (returns null if not found)',
     category: 'Identities',
     requiredScopes: [ApiScope.IDENTITIES_READ],
-    outputType: 'IdentityResponse | null',
+    outputType: 'IdentityResponse',
     options: {
       platformId: {
         required: true,
