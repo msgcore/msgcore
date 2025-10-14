@@ -261,7 +261,7 @@ export class WhatsAppProvider implements PlatformProvider, PlatformAdapter {
         `WhatsApp connection created for ${connectionKey}`,
         {
           connectionKey,
-          instanceName,
+          instanceName: connection.instanceName,
           evolutionApiUrl: credentials.evolutionApiUrl,
         },
       );
@@ -275,7 +275,7 @@ export class WhatsAppProvider implements PlatformProvider, PlatformAdapter {
         error,
         {
           connectionKey,
-          instanceName,
+          instanceName: connection.instanceName,
         },
       );
 
