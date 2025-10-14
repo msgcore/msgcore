@@ -9,6 +9,7 @@ import { ServeStaticModule } from '@nestjs/serve-static';
 import { join } from 'path';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
+import { SpaFallbackFilter } from './common/filters/spa-fallback.filter';
 import { HealthModule } from './health/health.module';
 import { ProjectsModule } from './projects/projects.module';
 import { PrismaModule } from './prisma/prisma.module';
@@ -148,6 +149,11 @@ import { sentryConfig } from './config/sentry.config';
     {
       provide: APP_FILTER,
       useClass: SentryGlobalFilter,
+    },
+    // SPA Fallback Filter - serves index.html for client-side routing
+    {
+      provide: APP_FILTER,
+      useClass: SpaFallbackFilter,
     },
   ],
 })
