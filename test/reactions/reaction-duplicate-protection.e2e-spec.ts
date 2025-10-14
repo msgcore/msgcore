@@ -354,6 +354,7 @@ describe('Reaction Duplicate Protection (e2e)', () => {
       // Create second platform
       const platform2 = await prisma.projectPlatform.create({
         data: {
+          id: 'test-telegram-platform',
           projectId: testProject.id,
           platform: 'telegram',
           name: 'Test Telegram',

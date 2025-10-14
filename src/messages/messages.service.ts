@@ -157,39 +157,56 @@ export class MessagesService {
       'message retrieval',
     );
 
-    // Build where clause
-    const where: any = {
+    // Build where clause for received messages
+    const receivedWhere: any = {
       projectId: project.id,
     };
 
-    if (query.platform) {
-      where.platform = query.platform;
-    }
+    // Build where clause for sent messages
+    const sentWhere: any = {
+      projectId: project.id,
+    };
 
     if (query.platformId) {
-      where.platformId = query.platformId;
+      receivedWhere.platformId = query.platformId;
+      sentWhere.platformId = query.platformId;
     }
 
     if (query.chatId) {
-      where.providerChatId = query.chatId;
+      receivedWhere.providerChatId = query.chatId;
+      sentWhere.targetChatId = query.chatId;
     }
 
     if (query.userId) {
-      where.providerUserId = query.userId;
+      receivedWhere.providerUserId = query.userId;
+      sentWhere.targetUserId = query.userId;
     }
 
     if (query.startDate || query.endDate) {
-      where.receivedAt = {};
+      receivedWhere.receivedAt = {};
+      sentWhere.OR = [];
       if (query.startDate) {
-        where.receivedAt.gte = new Date(query.startDate);
+        receivedWhere.receivedAt.gte = new Date(query.startDate);
+        sentWhere.OR.push(
+          { sentAt: { gte: new Date(query.startDate) } },
+          { AND: [{ sentAt: null }, { createdAt: { gte: new Date(query.startDate) } }] },
+        );
       }
       if (query.endDate) {
-        where.receivedAt.lte = new Date(query.endDate);
+        receivedWhere.receivedAt.lte = new Date(query.endDate);
+        sentWhere.OR.push(
+          { sentAt: { lte: new Date(query.endDate) } },
+          { AND: [{ sentAt: null }, { createdAt: { lte: new Date(query.endDate) } }] },
+        );
+      }
+      // If we have both filters, combine them properly
+      if (!sentWhere.OR.length) {
+        delete sentWhere.OR;
       }
     }
 
-    // Build select clause based on raw data requirement
-    const select = {
+    // Build select clause for received messages
+    const receivedSelect = {
       id: true,
       platform: true,
       platformId: true,
@@ -201,49 +218,133 @@ export class MessagesService {
       messageType: true,
       receivedAt: true,
       attachments: true,
+      platformConfig: {
+        select: {
+          name: true,
+        },
+      },
       ...(query.raw === true && { rawData: true }),
     };
 
-    // Get messages
-    const [messages, total] = await Promise.all([
+    // Build select clause for sent messages
+    const sentSelect = {
+      id: true,
+      platform: true,
+      platformId: true,
+      providerMessageId: true,
+      targetChatId: true,
+      targetUserId: true,
+      targetType: true,
+      messageText: true,
+      messageContent: true,
+      status: true,
+      errorMessage: true,
+      sentAt: true,
+      createdAt: true,
+      platformConfig: {
+        select: {
+          name: true,
+        },
+      },
+    };
+
+    // For efficient pagination, we need to fetch enough records from each table
+    // to ensure we have enough after merging and sorting
+    const fetchLimit = query.offset! + query.limit!;
+
+    // Get both received and sent messages
+    const [receivedMessages, sentMessages, receivedTotal, sentTotal] = await Promise.all([
       this.prisma.receivedMessage.findMany({
-        where,
+        where: receivedWhere,
+        select: receivedSelect,
         orderBy: { receivedAt: query.order },
-        take: query.limit,
-        skip: query.offset,
-        select,
+        take: fetchLimit,
       }),
-      this.prisma.receivedMessage.count({ where }),
+      this.prisma.sentMessage.findMany({
+        where: sentWhere,
+        select: sentSelect,
+        orderBy: [
+          { sentAt: query.order },
+          { createdAt: query.order },
+        ],
+        take: fetchLimit,
+      }),
+      this.prisma.receivedMessage.count({ where: receivedWhere }),
+      this.prisma.sentMessage.count({ where: sentWhere }),
     ]);
 
-    // Resolve identities for message senders
+    // Transform received messages to unified format
+    const unifiedReceived = receivedMessages.map((msg) => ({
+      ...msg,
+      platformName: msg.platformConfig?.name,
+      direction: 'received' as const,
+      timestamp: msg.receivedAt,
+      chatId: msg.providerChatId,
+      userId: msg.providerUserId,
+    }));
+
+    // Transform sent messages to unified format
+    const unifiedSent = sentMessages.map((msg) => ({
+      ...msg,
+      platformName: msg.platformConfig?.name,
+      direction: 'sent' as const,
+      timestamp: msg.sentAt || msg.createdAt,
+      chatId: msg.targetChatId,
+      userId: msg.targetUserId,
+    }));
+
+    // Merge and sort all messages
+    const allMessages = [...unifiedReceived, ...unifiedSent].sort((a, b) => {
+      const timeA = a.timestamp.getTime();
+      const timeB = b.timestamp.getTime();
+      return query.order === 'asc' ? timeA - timeB : timeB - timeA;
+    });
+
+    // Apply pagination after sorting
+    const total = receivedTotal + sentTotal;
+    const messages = allMessages.slice(query.offset, query.offset! + query.limit!);
+
+    // Resolve identities for message users (senders for received, recipients for sent)
     if (messages.length > 0) {
+      const usersToResolve = messages
+        .filter((m) => m.userId) // Filter out messages without userId
+        .map((m) => ({
+          platformId: m.platformId,
+          providerUserId: m.userId!,
+        }));
+
       const identityMap = await this.batchResolveIdentities(
         project.id,
-        messages.map((m) => ({
-          platformId: m.platformId,
-          providerUserId: m.providerUserId,
-        })),
+        usersToResolve,
       );
 
       // Attach identity to each message
       messages.forEach((message) => {
-        const userKey = `${encodeURIComponent(message.platformId)}:${encodeURIComponent(message.providerUserId)}`;
-        (message as any).identity = identityMap.get(userKey) || null;
+        if (message.userId) {
+          const userKey = `${encodeURIComponent(message.platformId)}:${encodeURIComponent(message.userId)}`;
+          (message as any).identity = identityMap.get(userKey) || null;
+        } else {
+          (message as any).identity = null;
+        }
       });
     }
 
-    // If reactions requested, fetch them for all messages
+    // If reactions requested, fetch them for received messages only
     if (query.reactions && messages.length > 0) {
-      const messageIds = messages.map((m) => m.providerMessageId);
+      const receivedMessagesOnly = messages.filter((m) => m.direction === 'received');
 
-      // Get all reactions (both added and removed) to determine current state
-      const allReactions = await this.prisma.receivedReaction.findMany({
-        where: {
-          projectId: project.id,
-          platformId: { in: messages.map((m) => m.platformId) },
-          providerMessageId: { in: messageIds },
-        },
+      if (receivedMessagesOnly.length > 0) {
+        const messageIds = receivedMessagesOnly
+          .map((m) => m.providerMessageId)
+          .filter((id) => id); // Filter out null/undefined
+
+        // Get all reactions (both added and removed) to determine current state
+        const allReactions = await this.prisma.receivedReaction.findMany({
+          where: {
+            projectId: project.id,
+            platformId: { in: receivedMessagesOnly.map((m) => m.platformId) },
+            providerMessageId: { in: messageIds },
+          },
         select: {
           platformId: true,
           providerMessageId: true,
@@ -307,9 +408,11 @@ export class MessagesService {
 
       // Attach reactions to messages in clean format: { "👍": [{ id: "123", name: "John", identity: {...} }], "❤️": [...] }
       messages.forEach((message) => {
-        (message as any).reactions =
-          reactionsByMessage[message.providerMessageId] || {};
+        (message as any).reactions = message.providerMessageId
+          ? reactionsByMessage[message.providerMessageId] || {}
+          : {};
       });
+      }
     }
 
     return {

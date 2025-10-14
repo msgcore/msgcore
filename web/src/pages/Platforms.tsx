@@ -1,5 +1,5 @@
 import React from 'react';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Plus, Settings, Trash2, CheckCircle, XCircle, Loader2, AlertCircle, RefreshCw, Wifi, Radio, Globe, Copy, CheckCheck } from 'lucide-react';
 import { FaWhatsapp, FaDiscord, FaTelegram, FaSlack, FaEnvelope, FaSms } from 'react-icons/fa';
@@ -9,6 +9,7 @@ import { Badge } from '../components/ui/Badge';
 import { Alert } from '../components/ui/Alert';
 import { Input } from '../components/ui/Input';
 import { formatDateTime } from '../lib/utils';
+import { generateSlug, getSlugValidationError } from '../lib/slug';
 import { useProjectContext } from '../contexts/ProjectContext';
 import { usePlatforms, useDeletePlatform, useConfigurePlatform, useUpdatePlatform, useSupportedPlatforms } from '../hooks/usePlatforms';
 import { useConfirm } from '../hooks/useConfirm';
@@ -40,11 +41,26 @@ export function Platforms() {
     }
   };
   const [configureFormData, setConfigureFormData] = useState<any>({
+    id: '',
     name: '',
     description: '',
     credentials: {},
     isActive: true
   });
+  const [customIdManuallyEdited, setCustomIdManuallyEdited] = useState(false);
+  const [idValidationError, setIdValidationError] = useState<string | null>(null);
+
+  // Auto-generate ID from name when creating new platform (not editing)
+  useEffect(() => {
+    if (!editingPlatform && !customIdManuallyEdited && configureFormData.name) {
+      const generatedId = generateSlug(configureFormData.name);
+      setConfigureFormData((prev: any) => ({ ...prev, id: generatedId }));
+
+      // Validate the generated ID
+      const error = getSlugValidationError(generatedId);
+      setIdValidationError(error);
+    }
+  }, [configureFormData.name, editingPlatform, customIdManuallyEdited]);
 
   // Get supported platforms from API or fallback to empty array
   const supportedPlatforms = supportedPlatformsData?.platforms || [];
@@ -128,6 +144,9 @@ export function Platforms() {
   const handleConfigurePlatform = (platform: any) => {
     setSelectedPlatform(platform);
     setEditingPlatform(null);
+    setCustomIdManuallyEdited(false);
+    setIdValidationError(null);
+
     // Initialize credentials with empty values for required fields
     const initialCredentials: any = {};
     if (platform.credentials?.required) {
@@ -142,6 +161,7 @@ export function Platforms() {
     }
 
     setConfigureFormData({
+      id: '',
       name: '',
       description: '',
       credentials: initialCredentials,
@@ -170,11 +190,14 @@ export function Platforms() {
     }
 
     setConfigureFormData({
+      id: '', // ID is immutable, don't show it when editing
       name: platform.name || '',
       description: platform.description || '',
       credentials: initialCredentials,
       isActive: platform.isActive || false
     });
+    setCustomIdManuallyEdited(false);
+    setIdValidationError(null);
     setShowConfigureModal(true);
   };
 
@@ -210,6 +233,12 @@ export function Platforms() {
         // Create new platform
         if (!selectedPlatform) return;
 
+        // Validate custom ID
+        if (idValidationError) {
+          toast.error(idValidationError);
+          return;
+        }
+
         // Check if all required fields are filled for new platform
         const requiredFields = selectedPlatform.credentials?.required || [];
         for (const field of requiredFields) {
@@ -221,6 +250,7 @@ export function Platforms() {
 
         await configurePlatform.mutateAsync({
           platform: selectedPlatform.name as any,
+          id: configureFormData.id || undefined, // Send ID if provided
           name: configureFormData.name,
           description: configureFormData.description,
           credentials: configureFormData.credentials,
@@ -231,7 +261,10 @@ export function Platforms() {
       setShowConfigureModal(false);
       setSelectedPlatform(null);
       setEditingPlatform(null);
+      setCustomIdManuallyEdited(false);
+      setIdValidationError(null);
       setConfigureFormData({
+        id: '',
         name: '',
         description: '',
         credentials: {},
@@ -492,6 +525,27 @@ export function Platforms() {
                   required
                 />
 
+                {/* Custom ID field - only show when creating, not editing */}
+                {!editingPlatform && (
+                  <div>
+                    <Input
+                      label="Platform ID"
+                      value={configureFormData.id}
+                      onChange={(e) => {
+                        setConfigureFormData({ ...configureFormData, id: e.target.value });
+                        setCustomIdManuallyEdited(true);
+                        const error = getSlugValidationError(e.target.value);
+                        setIdValidationError(error);
+                      }}
+                      placeholder="filipe-labs"
+                      error={idValidationError || undefined}
+                    />
+                    <p className="text-xs text-gray-500 mt-1.5">
+                      Unique identifier for this platform. Auto-generated from name, or customize it. Must start with a letter and contain only lowercase letters, numbers, and hyphens.
+                    </p>
+                  </div>
+                )}
+
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1.5">
                     {t('configurationModal.descriptionLabel')}
@@ -593,7 +647,10 @@ export function Platforms() {
                     setShowConfigureModal(false);
                     setSelectedPlatform(null);
                     setEditingPlatform(null);
+                    setCustomIdManuallyEdited(false);
+                    setIdValidationError(null);
                     setConfigureFormData({
+                      id: '',
                       name: '',
                       description: '',
                       credentials: {},

@@ -151,7 +151,7 @@ model ApiKeyScope {
 }
 
 model ProjectPlatform {
-  id                   String   @id @default(uuid())
+  id                   String   @id // Custom platform ID (e.g., "filipe-labs")
   projectId            String   @map("project_id")
   platform             String
   name                 String   // Required friendly name for the platform

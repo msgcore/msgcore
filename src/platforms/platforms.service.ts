@@ -86,6 +86,17 @@ export class PlatformsService {
       createPlatformDto.credentials,
     );
 
+    // Generate unique ID from name if not provided
+    const id = await CryptoUtil.generateUniqueSlug(
+      createPlatformDto.id || createPlatformDto.name,
+      async (candidateId) => {
+        const existing = await this.prisma.projectPlatform.findUnique({
+          where: { id: candidateId },
+        });
+        return !!existing;
+      },
+    );
+
     // Encrypt credentials
     const encryptedCredentials = CryptoUtil.encrypt(
       JSON.stringify(createPlatformDto.credentials),
@@ -93,6 +104,7 @@ export class PlatformsService {
 
     const platform = await this.prisma.projectPlatform.create({
       data: {
+        id,
         projectId: project.id,
         platform: createPlatformDto.platform,
         name: createPlatformDto.name,

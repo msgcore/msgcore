@@ -10,6 +10,26 @@ jest.mock('../common/utils/crypto.util', () => ({
   CryptoUtil: {
     encrypt: jest.fn((data) => `encrypted_${data}`),
     decrypt: jest.fn((data) => data.replace('encrypted_', '')),
+    generateSlug: jest.fn((name) =>
+      name
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/-+/g, '-')
+        .replace(/^-|-$/g, '')
+        .replace(/^[0-9]+/, ''),
+    ),
+    validateSlug: jest.fn((slug) => /^[a-z][a-z0-9]*(-[a-z0-9]+)*$/.test(slug)),
+    generateUniqueSlug: jest.fn(async (baseName, checkExists) => {
+      const slug = baseName
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/-+/g, '-')
+        .replace(/^-|-$/g, '')
+        .replace(/^[0-9]+/, '');
+
+      const exists = await checkExists(slug);
+      return exists ? `${slug}-2` : slug;
+    }),
   },
 }));
 
@@ -604,6 +624,7 @@ describe('PlatformsService', () => {
       const projectId = 'test-project';
       const createDto = {
         platform: 'whatsapp-evo',
+        name: 'Test WhatsApp Platform',
         credentials: {
           evolutionApiUrl: 'https://evo.example.com',
           evolutionApiKey: 'test-key',
@@ -639,6 +660,7 @@ describe('PlatformsService', () => {
       const projectId = 'test-project';
       const createDto = {
         platform: 'whatsapp-evo',
+        name: 'Test WhatsApp Platform',
         credentials: {
           evolutionApiUrl: 'https://evo.example.com',
           evolutionApiKey: 'test-key',
@@ -777,6 +799,7 @@ describe('PlatformsService', () => {
       const projectId = 'test-project';
       const createDto = {
         platform: 'unknown-platform',
+        name: 'Test Unknown Platform',
         credentials: {},
         isActive: true,
       };
@@ -806,6 +829,7 @@ describe('PlatformsService', () => {
       const projectId = 'test-project';
       const createDto = {
         platform: 'simple-platform',
+        name: 'Test Simple Platform',
         credentials: {},
         isActive: true,
       };
