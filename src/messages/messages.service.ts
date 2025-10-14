@@ -396,8 +396,9 @@ export class MessagesService {
 
       // Attach reactions to messages in clean format: { "👍": [{ id: "123", name: "John", identity: {...} }], "❤️": [...] }
       messages.forEach((message) => {
-        (message as any).reactions =
-          reactionsByMessage[message.providerMessageId] || {};
+        (message as any).reactions = message.providerMessageId
+          ? reactionsByMessage[message.providerMessageId] || {}
+          : {};
       });
       }
     }
