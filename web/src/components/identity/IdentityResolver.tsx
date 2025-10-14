@@ -103,91 +103,92 @@ export function IdentityResolver({
   const aliasCount = identity?.aliases?.length || 0;
 
   return (
-    <>
-      {/* Username Button - Click to open modal */}
+    <div className="relative inline-block">
+      {/* Username Button */}
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="text-xs font-medium text-blue-600 hover:text-blue-700 hover:underline transition-colors"
+        className="text-xs font-semibold text-gray-700 hover:text-gray-900 transition-colors"
       >
         {displayName}
       </button>
 
-      {/* Modal - Shows on click */}
+      {/* Popover */}
       {isOpen && (
-        <div className="fixed inset-0 z-50 flex items-start justify-center pt-20 px-4">
+        <>
           {/* Backdrop */}
           <div
-            className="absolute inset-0 bg-black/20 backdrop-blur-sm"
+            className="fixed inset-0 z-40"
             onClick={() => setIsOpen(false)}
           />
 
-          {/* Modal Content */}
-          <div className="relative bg-white rounded-xl shadow-2xl w-full max-w-md animate-in fade-in slide-in-from-top-4 duration-200">
+          {/* Popover Content */}
+          <div className="absolute left-0 top-full mt-2 z-50 w-80 bg-white rounded-lg shadow-xl border border-gray-100">
             {identity ? (
-              // Linked user - show identity card
-              <div className="p-6">
-                {/* Close button */}
-                <button
-                  onClick={() => setIsOpen(false)}
-                  className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition-colors"
-                >
-                  <X className="w-5 h-5" />
-                </button>
-
-                <div className="space-y-4">
-                  {/* Header with avatar */}
-                  <div className="flex items-start gap-4">
-                    <div className="flex-shrink-0 w-12 h-12 rounded-full bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center shadow-md">
-                      <User className="w-6 h-6 text-white" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <h3 className="text-lg font-bold text-gray-900 truncate">
-                        {identity.displayName || t('list.identityWithoutName')}
-                      </h3>
-                      {identity.email && (
-                        <div className="flex items-center gap-1.5 mt-1 text-sm text-gray-600">
-                          <Mail className="w-4 h-4" />
-                          <span className="truncate">{identity.email}</span>
-                        </div>
-                      )}
-                    </div>
+              // Linked user - clean card
+              <div className="p-4">
+                <div className="flex items-start gap-3">
+                  <div className="w-10 h-10 rounded-full bg-gray-900 flex items-center justify-center flex-shrink-0">
+                    <User className="w-5 h-5 text-white" />
                   </div>
-
-                  {/* Stats */}
-                  {aliasCount > 0 && (
-                    <div className="flex items-center gap-2 pt-3 border-t">
-                      <div className="flex items-center gap-1.5 text-sm text-gray-600">
-                        <Link2 className="w-4 h-4 text-blue-600" />
-                        <span className="font-medium">{aliasCount}</span>
-                        <span>{t('badge.aliasesCount', { count: aliasCount }).toLowerCase()}</span>
-                      </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="font-semibold text-sm text-gray-900 truncate">
+                      {identity.displayName || t('list.identityWithoutName')}
                     </div>
-                  )}
+                    {identity.email && (
+                      <div className="text-xs text-gray-500 truncate mt-0.5">
+                        {identity.email}
+                      </div>
+                    )}
+                    {aliasCount > 0 && (
+                      <div className="flex items-center gap-1 mt-1.5 text-xs text-gray-500">
+                        <Link2 className="w-3 h-3" />
+                        <span>{aliasCount} linked account{aliasCount !== 1 ? 's' : ''}</span>
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
             ) : (
-              // Unlinked user - show linking options
-              <div className="relative">
-                <button
-                  onClick={() => setIsOpen(false)}
-                  className="absolute top-4 right-4 z-10 text-gray-400 hover:text-gray-600 transition-colors"
-                >
-                  <X className="w-5 h-5" />
-                </button>
-                <UnlinkedUserCard
-                  platformId={platformId}
-                  providerUserId={providerUserId}
-                  providerUserDisplay={providerUserDisplay}
-                  onLinked={() => {
-                    refetch();
-                    setIsOpen(false);
-                  }}
-                />
+              // Unlinked user - simple actions
+              <div className="p-4">
+                <div className="flex items-start gap-3 mb-3">
+                  <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center flex-shrink-0">
+                    <User className="w-5 h-5 text-gray-500" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="font-semibold text-sm text-gray-900 truncate">
+                      {providerUserDisplay || providerUserId}
+                    </div>
+                    <div className="text-xs text-gray-500 mt-0.5">
+                      Unlinked account
+                    </div>
+                  </div>
+                </div>
+                <div className="flex gap-2 pt-3 border-t border-gray-100">
+                  <button
+                    onClick={() => {
+                      // TODO: Open link modal
+                      setIsOpen(false);
+                    }}
+                    className="flex-1 px-3 py-1.5 text-xs font-medium text-gray-700 bg-white border border-gray-200 rounded hover:bg-gray-50 transition-colors"
+                  >
+                    Link to existing
+                  </button>
+                  <button
+                    onClick={() => {
+                      // TODO: Open create modal
+                      setIsOpen(false);
+                    }}
+                    className="flex-1 px-3 py-1.5 text-xs font-medium text-white bg-gray-900 rounded hover:bg-gray-800 transition-colors"
+                  >
+                    Create identity
+                  </button>
+                </div>
               </div>
             )}
           </div>
-        </div>
+        </>
       )}
-    </>
+    </div>
   );
 }
