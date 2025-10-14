@@ -57,7 +57,7 @@ export function IdentityResolver({
   const { t } = useTranslation('identities');
   const { selectedProjectId } = useProjectContext();
   const [isHovered, setIsHovered] = useState(false);
-  const buttonRef = useRef<HTMLButtonElement>(null);
+  const buttonRef = useRef<HTMLSpanElement>(null);
   const [position, setPosition] = useState({ top: 0, left: 0 });
   const hoverTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
@@ -199,36 +199,16 @@ export function IdentityResolver({
                 </div>
               </div>
             ) : (
-              // Unlinked user - simple actions
-              <div className="p-4">
-                <div className="flex items-start gap-3 mb-3">
-                  <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center flex-shrink-0">
-                    <User className="w-5 h-5 text-gray-500" />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="font-semibold text-sm text-gray-900 truncate">
-                      {providerUserDisplay || providerUserId}
-                    </div>
-                    <div className="text-xs text-gray-500 mt-0.5">
-                      Unlinked account
-                    </div>
-                  </div>
-                </div>
-                <div className="flex gap-2 pt-3 border-t border-gray-100">
-                  <button
-                    onClick={handleClose}
-                    className="flex-1 px-3 py-1.5 text-xs font-medium text-gray-700 bg-white border border-gray-200 rounded hover:bg-gray-50 transition-colors"
-                  >
-                    Link to existing
-                  </button>
-                  <button
-                    onClick={handleClose}
-                    className="flex-1 px-3 py-1.5 text-xs font-medium text-white bg-gray-900 rounded hover:bg-gray-800 transition-colors"
-                  >
-                    Create identity
-                  </button>
-                </div>
-              </div>
+              // Unlinked user - show full UnlinkedUserCard with actions
+              <UnlinkedUserCard
+                platformId={platformId}
+                providerUserId={providerUserId}
+                providerUserDisplay={providerUserDisplay}
+                onLinked={() => {
+                  refetch();
+                  handleClose();
+                }}
+              />
             )}
           </div>
         </div>,
