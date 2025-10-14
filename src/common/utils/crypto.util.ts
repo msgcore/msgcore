@@ -111,7 +111,37 @@ export class CryptoUtil {
   static generateSlug(name: string): string {
     return name
       .toLowerCase()
-      .replace(/[^a-z0-9]+/g, '-')
-      .replace(/^-|-$/g, '');
+      .replace(/[^a-z0-9]+/g, '-') // Replace invalid chars with hyphens
+      .replace(/-+/g, '-')          // Remove consecutive hyphens
+      .replace(/^-|-$/g, '')        // Remove leading/trailing hyphens
+      .replace(/^[0-9]+/, '');      // Remove leading numbers
+  }
+
+  static validateSlug(slug: string): boolean {
+    // Must start with letter, contain only lowercase letters, numbers, and single hyphens
+    return /^[a-z][a-z0-9]*(-[a-z0-9]+)*$/.test(slug);
+  }
+
+  static async generateUniqueSlug(
+    baseName: string,
+    checkExists: (slug: string) => Promise<boolean>
+  ): Promise<string> {
+    let slug = this.generateSlug(baseName);
+
+    // If slug is empty or invalid after generation, use a fallback
+    if (!slug || !this.validateSlug(slug)) {
+      slug = 'platform-' + randomBytes(4).toString('hex');
+    }
+
+    // Check uniqueness and append number if needed
+    let finalSlug = slug;
+    let counter = 1;
+
+    while (await checkExists(finalSlug)) {
+      counter++;
+      finalSlug = `${slug}-${counter}`;
+    }
+
+    return finalSlug;
   }
 }

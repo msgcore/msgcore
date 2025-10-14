@@ -19,6 +19,10 @@ describe('MessagesService - Identity Resolution', () => {
       findMany: jest.fn(),
       count: jest.fn(),
     },
+    sentMessage: {
+      findMany: jest.fn(),
+      count: jest.fn(),
+    },
     identityAlias: {
       findUnique: jest.fn(),
       findMany: jest.fn(),
@@ -81,6 +85,8 @@ describe('MessagesService - Identity Resolution', () => {
         mockMessages,
       );
       mockPrismaService.receivedMessage.count.mockResolvedValue(2);
+      mockPrismaService.sentMessage.findMany.mockResolvedValue([]);
+      mockPrismaService.sentMessage.count.mockResolvedValue(0);
 
       // Mock identity resolution - first user has identity, second doesn't
       mockPrismaService.identityAlias.findMany.mockResolvedValue([
@@ -104,48 +110,46 @@ describe('MessagesService - Identity Resolution', () => {
 
       // Verify identity resolution was called once with all users
       expect(mockPrismaService.identityAlias.findMany).toHaveBeenCalledTimes(1);
-      expect(mockPrismaService.identityAlias.findMany).toHaveBeenCalledWith({
-        where: {
-          AND: [
-            { projectId: 'project-id' },
-            {
-              OR: [
-                {
-                  AND: [
-                    { platformId: 'platform-1' },
-                    { providerUserId: 'user-456' },
-                  ],
-                },
-                {
-                  AND: [
-                    { platformId: 'platform-2' },
-                    { providerUserId: 'user-123' },
-                  ],
-                },
-              ],
-            },
-          ],
-        },
-        select: {
-          platformId: true,
-          providerUserId: true,
-          identity: {
-            select: {
-              id: true,
-              displayName: true,
-              email: true,
-            },
+      const callArgs = mockPrismaService.identityAlias.findMany.mock.calls[0][0];
+      expect(callArgs.where.AND[0]).toEqual({ projectId: 'project-id' });
+      expect(callArgs.where.AND[1].OR).toHaveLength(2);
+      expect(callArgs.where.AND[1].OR).toEqual(
+        expect.arrayContaining([
+          {
+            AND: [
+              { platformId: 'platform-1' },
+              { providerUserId: 'user-456' },
+            ],
+          },
+          {
+            AND: [
+              { platformId: 'platform-2' },
+              { providerUserId: 'user-123' },
+            ],
+          },
+        ]),
+      );
+      expect(callArgs.select).toEqual({
+        platformId: true,
+        providerUserId: true,
+        identity: {
+          select: {
+            id: true,
+            displayName: true,
+            email: true,
           },
         },
       });
 
       // Verify identities are attached to messages
-      expect(result.messages[0].identity).toEqual({
+      // Messages are sorted by receivedAt DESC, so Telegram message (11:00) comes first
+      expect(result.messages[0].identity).toBeNull(); // Telegram message, no identity
+      expect(result.messages[1].identity).toEqual({
+        // Discord message, has identity
         id: 'identity-1',
         displayName: 'John Doe',
         email: 'john@example.com',
       });
-      expect(result.messages[1].identity).toBeNull();
     });
 
     it('should handle duplicate users by resolving only once', async () => {
@@ -186,6 +190,8 @@ describe('MessagesService - Identity Resolution', () => {
         mockMessages,
       );
       mockPrismaService.receivedMessage.count.mockResolvedValue(2);
+      mockPrismaService.sentMessage.findMany.mockResolvedValue([]);
+      mockPrismaService.sentMessage.count.mockResolvedValue(0);
       mockPrismaService.identityAlias.findMany.mockResolvedValue([
         {
           platformId: 'platform-1',
@@ -245,6 +251,8 @@ describe('MessagesService - Identity Resolution', () => {
         mockMessages,
       );
       mockPrismaService.receivedMessage.count.mockResolvedValue(1);
+      mockPrismaService.sentMessage.findMany.mockResolvedValue([]);
+      mockPrismaService.sentMessage.count.mockResolvedValue(0);
       mockPrismaService.identityAlias.findMany.mockResolvedValue([]);
 
       // Should not throw even if identity resolution returns null
@@ -279,6 +287,8 @@ describe('MessagesService - Identity Resolution', () => {
         mockMessages,
       );
       mockPrismaService.receivedMessage.count.mockResolvedValue(5);
+      mockPrismaService.sentMessage.findMany.mockResolvedValue([]);
+      mockPrismaService.sentMessage.count.mockResolvedValue(0);
 
       // Mock single query response with all identities
       mockPrismaService.identityAlias.findMany.mockResolvedValue(
@@ -330,6 +340,8 @@ describe('MessagesService - Identity Resolution', () => {
         mockMessages,
       );
       mockPrismaService.receivedMessage.count.mockResolvedValue(1);
+      mockPrismaService.sentMessage.findMany.mockResolvedValue([]);
+      mockPrismaService.sentMessage.count.mockResolvedValue(0);
       mockPrismaService.identityAlias.findMany.mockResolvedValue([
         {
           platformId: 'platform-1',
@@ -383,6 +395,8 @@ describe('MessagesService - Identity Resolution', () => {
         mockMessages,
       );
       mockPrismaService.receivedMessage.count.mockResolvedValue(1);
+      mockPrismaService.sentMessage.findMany.mockResolvedValue([]);
+      mockPrismaService.sentMessage.count.mockResolvedValue(0);
       mockPrismaService.identityAlias.findMany.mockResolvedValue([
         {
           platformId: 'platform-1',

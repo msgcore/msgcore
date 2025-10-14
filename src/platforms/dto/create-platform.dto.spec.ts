@@ -29,13 +29,13 @@ describe('CreatePlatformDto', () => {
   it('should reject platform name that is too long', async () => {
     const dto = new CreatePlatformDto();
     dto.platform = PlatformType.DISCORD;
-    dto.name = 'this-name-is-way-too-long-for-validation';
+    dto.name = 'this-name-is-way-too-long-for-validation-and-exceeds-the-fifty-character-limit';
     dto.credentials = { token: 'test' };
 
     const errors = await validate(dto);
     expect(errors).toHaveLength(1);
     expect(errors[0].constraints?.isLength).toContain(
-      'between 1 and 20 characters',
+      'between 1 and 50 characters',
     );
   });
 
@@ -48,7 +48,7 @@ describe('CreatePlatformDto', () => {
     const errors = await validate(dto);
     expect(errors).toHaveLength(1);
     expect(errors[0].constraints?.isLength).toContain(
-      'between 1 and 20 characters',
+      'between 1 and 50 characters',
     );
   });
 
