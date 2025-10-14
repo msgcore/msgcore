@@ -1,5 +1,5 @@
 import { Controller, Get, Res } from '@nestjs/common';
-import { Response } from 'express';
+import type { Response } from 'express';
 import { AppService } from './app.service';
 import { join } from 'path';
 
