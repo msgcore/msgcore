@@ -14,6 +14,7 @@ import { IdentitiesService } from './identities.service';
 import { CreateIdentityDto } from './dto/create-identity.dto';
 import { UpdateIdentityDto } from './dto/update-identity.dto';
 import { AddAliasDto } from './dto/add-alias.dto';
+import { QuickLinkDto } from './dto/quick-link.dto';
 import { AppAuthGuard } from '../common/guards/app-auth.guard';
 import { ProjectAccessGuard } from '../common/guards/project-access.guard';
 import { AuthContextParam } from '../common/decorators/auth-context.decorator';
@@ -95,6 +96,94 @@ export class IdentitiesController {
     @AuthContextParam() authContext: AuthContext,
   ) {
     return this.identitiesService.findAll(project, authContext);
+  }
+
+  @Get('search')
+  @RequireScopes(ApiScope.IDENTITIES_READ)
+  @SdkContract({
+    command: 'identities search',
+    description: 'Search identities by display name or email',
+    category: 'Identities',
+    requiredScopes: [ApiScope.IDENTITIES_READ],
+    outputType: 'IdentityResponse[]',
+    options: {
+      q: {
+        required: true,
+        description: 'Search query (min 2 characters)',
+        type: 'string',
+      },
+    },
+    examples: [
+      {
+        description: 'Search identities by name',
+        command: 'msgcore identities search --q "john"',
+      },
+      {
+        description: 'Search identities by email',
+        command: 'msgcore identities search --q "example.com"',
+      },
+    ],
+  })
+  search(
+    @Param('project') project: string,
+    @Query('q') query: string,
+    @AuthContextParam() authContext: AuthContext,
+  ) {
+    return this.identitiesService.search(project, query, authContext);
+  }
+
+  @Post('quick-link')
+  @RequireScopes(ApiScope.IDENTITIES_WRITE)
+  @SdkContract({
+    command: 'identities quick-link',
+    description: 'Create identity and link platform user in one operation',
+    category: 'Identities',
+    requiredScopes: [ApiScope.IDENTITIES_WRITE],
+    inputType: 'QuickLinkDto',
+    outputType: 'IdentityResponse',
+    options: {
+      platformId: {
+        required: true,
+        description: 'Platform configuration ID',
+        type: 'string',
+      },
+      providerUserId: {
+        required: true,
+        description: 'Provider-specific user ID',
+        type: 'string',
+      },
+      providerUserDisplay: {
+        description: 'Display name on the platform',
+        type: 'string',
+      },
+      displayName: {
+        description: 'Display name for the new identity',
+        type: 'string',
+      },
+      email: {
+        description: 'Email address for the new identity',
+        type: 'string',
+      },
+    },
+    examples: [
+      {
+        description: 'Quick-link Discord user to new identity',
+        command:
+          'msgcore identities quick-link --platformId platform-123 --providerUserId "discord-456" --displayName "John Doe" --email "john@example.com"',
+      },
+      {
+        description: 'Quick-link with minimal info',
+        command:
+          'msgcore identities quick-link --platformId platform-123 --providerUserId "discord-456" --providerUserDisplay "JohnD#1234"',
+      },
+    ],
+  })
+  quickLink(
+    @Param('project') project: string,
+    @Body() quickLinkDto: QuickLinkDto,
+    @AuthContextParam() authContext: AuthContext,
+  ) {
+    return this.identitiesService.quickLink(project, quickLinkDto, authContext);
   }
 
   @Get('lookup')
