@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { useTranslation } from 'react-i18next';
-import { Loader2, AlertCircle, User, Mail, Link2, X } from 'lucide-react';
+import { Loader2, AlertCircle, User, Mail, Link2, CheckCircle } from 'lucide-react';
 import { useProjectContext } from '../../contexts/ProjectContext';
 import { useLookupIdentity } from '../../hooks/useIdentities';
 import { UnlinkedUserCard } from './UnlinkedUserCard';
@@ -55,7 +56,19 @@ export function IdentityResolver({
 }: IdentityResolverProps) {
   const { t } = useTranslation('identities');
   const { selectedProjectId } = useProjectContext();
-  const [isOpen, setIsOpen] = useState(false);
+  const [isHovered, setIsHovered] = useState(false);
+  const buttonRef = useRef<HTMLButtonElement>(null);
+  const [position, setPosition] = useState({ top: 0, left: 0 });
+
+  useEffect(() => {
+    if (isHovered && buttonRef.current) {
+      const rect = buttonRef.current.getBoundingClientRect();
+      setPosition({
+        top: rect.bottom + window.scrollY + 8,
+        left: rect.left + window.scrollX,
+      });
+    }
+  }, [isHovered]);
 
   // Guard: Don't render if required parameters are missing
   if (!platformId || !providerUserId || !selectedProjectId) {
@@ -103,26 +116,32 @@ export function IdentityResolver({
   const aliasCount = identity?.aliases?.length || 0;
 
   return (
-    <div className="relative inline-block">
-      {/* Username Button */}
-      <button
-        onClick={() => setIsOpen(!isOpen)}
-        className="text-xs font-semibold text-gray-700 hover:text-gray-900 transition-colors"
+    <>
+      {/* Username - shows verified icon if linked */}
+      <span
+        ref={buttonRef}
+        onMouseEnter={() => setIsHovered(true)}
+        onMouseLeave={() => setIsHovered(false)}
+        className="inline-flex items-center gap-1 text-xs font-semibold text-gray-700 hover:text-gray-900 transition-colors cursor-pointer"
       >
         {displayName}
-      </button>
+        {identity && <CheckCircle className="w-3 h-3 text-green-600" />}
+      </span>
 
-      {/* Popover */}
-      {isOpen && (
-        <>
-          {/* Backdrop */}
-          <div
-            className="fixed inset-0 z-40"
-            onClick={() => setIsOpen(false)}
-          />
-
-          {/* Popover Content */}
-          <div className="absolute left-0 top-full mt-2 z-50 w-80 bg-white rounded-lg shadow-xl border border-gray-100">
+      {/* Fixed position popover - NEVER gets cropped */}
+      {isHovered && createPortal(
+        <div
+          style={{
+            position: 'fixed',
+            top: `${position.top}px`,
+            left: `${position.left}px`,
+            zIndex: 9999,
+          }}
+          className="w-80"
+          onMouseEnter={() => setIsHovered(true)}
+          onMouseLeave={() => setIsHovered(false)}
+        >
+          <div className="bg-white rounded-lg shadow-xl border border-gray-100">
             {identity ? (
               // Linked user - clean card
               <div className="p-4">
@@ -166,19 +185,13 @@ export function IdentityResolver({
                 </div>
                 <div className="flex gap-2 pt-3 border-t border-gray-100">
                   <button
-                    onClick={() => {
-                      // TODO: Open link modal
-                      setIsOpen(false);
-                    }}
+                    onClick={() => setIsHovered(false)}
                     className="flex-1 px-3 py-1.5 text-xs font-medium text-gray-700 bg-white border border-gray-200 rounded hover:bg-gray-50 transition-colors"
                   >
                     Link to existing
                   </button>
                   <button
-                    onClick={() => {
-                      // TODO: Open create modal
-                      setIsOpen(false);
-                    }}
+                    onClick={() => setIsHovered(false)}
                     className="flex-1 px-3 py-1.5 text-xs font-medium text-white bg-gray-900 rounded hover:bg-gray-800 transition-colors"
                   >
                     Create identity
@@ -187,8 +200,9 @@ export function IdentityResolver({
               </div>
             )}
           </div>
-        </>
+        </div>,
+        document.body
       )}
-    </div>
+    </>
   );
 }
