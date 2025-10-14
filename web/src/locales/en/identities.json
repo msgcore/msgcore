@@ -68,5 +68,50 @@
   "info": {
     "title": "About Identities",
     "description": "Identities unify the same user across multiple platforms. When you create an identity, you link different accounts (Discord, WhatsApp, Telegram, etc.) to the same person, allowing you to track conversations and interactions in a consolidated way."
+  },
+
+  "badge": {
+    "viewProfile": "View Profile",
+    "noEmail": "No email",
+    "aliasesCount_one": "{{count}} linked account",
+    "aliasesCount_other": "{{count}} linked accounts"
+  },
+
+  "toolbox": {
+    "viewIdentity": "View Identity",
+    "editIdentity": "Edit Identity",
+    "manageAliases": "Manage Aliases",
+    "viewHistory": "View Message History",
+    "deleteIdentity": "Delete Identity"
+  },
+
+  "unlinked": {
+    "title": "Unlinked User",
+    "description": "This user is not linked to any identity",
+    "linkToExisting": "Link to Existing Identity",
+    "createNew": "Create New Identity",
+    "quickLink": "Quick Link",
+    "searchPlaceholder": "Search identities by name or email...",
+    "searching": "Searching...",
+    "noResults": "No identities found",
+    "linkSuccess": "User linked successfully!",
+    "createSuccess": "Identity created and linked!"
+  },
+
+  "resolver": {
+    "loading": "Resolving identity...",
+    "error": "Failed to resolve identity"
+  },
+
+  "quickLink": {
+    "title": "Quick Link User",
+    "description": "Create a new identity and link this user in one step",
+    "displayNameLabel": "Display Name",
+    "displayNamePlaceholder": "Enter name",
+    "emailLabel": "Email (optional)",
+    "emailPlaceholder": "Enter email",
+    "creating": "Creating...",
+    "cancel": "Cancel",
+    "create": "Create & Link"
   }
 }

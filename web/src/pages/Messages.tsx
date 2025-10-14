@@ -19,6 +19,7 @@ import { Alert } from '../components/ui/Alert';
 import { formatDateTime } from '../lib/utils';
 import { useProjectContext } from '../contexts/ProjectContext';
 import { useMessages, useMessageStats } from '../hooks/useMessages';
+import { IdentityResolver } from '../components/identity';
 
 type DirectionFilter = 'all' | 'received' | 'sent';
 
@@ -311,11 +312,18 @@ export function Messages() {
                                   </div>
                                 )}
 
-                                {/* User/Target Info */}
-                                {isReceived && (
-                                  <span className="text-xs text-gray-500">
-                                    {t('messages.from')} <span className="font-medium text-gray-700">{message.userDisplay || message.providerUserId}</span>
-                                  </span>
+                                {/* User/Target Info with Identity Resolution */}
+                                {isReceived && message.platformId && message.providerUserId && (
+                                  <div className="flex items-center gap-1.5">
+                                    <span className="text-xs text-gray-500">{t('messages.from')}</span>
+                                    <IdentityResolver
+                                      platformId={message.platformId}
+                                      providerUserId={message.providerUserId}
+                                      providerUserDisplay={message.userDisplay}
+                                      showDetails
+                                      showToolbox
+                                    />
+                                  </div>
                                 )}
                                 {isSent && (
                                   <span className="text-xs text-gray-500">
