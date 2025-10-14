@@ -18,12 +18,21 @@
     "uniqueChats": "Chats Únicos",
     "recent24h": "Recentes (24h)"
   },
+  "filters": {
+    "all": "Todas",
+    "received": "Recebidas",
+    "sent": "Enviadas"
+  },
+  "direction": {
+    "received": "Recebida",
+    "sent": "Enviada"
+  },
   "tabs": {
     "received": "Recebidas",
     "sent": "Enviadas"
   },
   "search": {
-    "placeholder": "Buscar mensagens...",
+    "placeholder": "Buscar mensagens, usuários ou IDs de plataforma...",
     "allPlatforms": "Todas plataformas"
   },
   "status": {
@@ -40,12 +49,13 @@
     "chat": "Chat",
     "type": "Tipo",
     "error": "Erro",
-    "noText": "Sem texto",
+    "noText": "Sem conteúdo de texto",
+    "noMessages": "Nenhuma mensagem encontrada",
     "noReceived": "Nenhuma mensagem recebida",
     "noSent": "Nenhuma mensagem enviada"
   },
   "pagination": {
-    "showing": "Mostrando",
+    "showing": "Mostrando {{count}} de {{total}} mensagens",
     "of": "de",
     "messages": "mensagens",
     "sentMessages": "mensagens enviadas"

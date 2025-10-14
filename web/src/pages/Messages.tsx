@@ -184,7 +184,7 @@ export function Messages() {
               >
                 <div className="flex items-center gap-2">
                   <MessageSquare className="w-4 h-4" />
-                  <span>All ({messages.length})</span>
+                  <span>{t('filters.all')} ({messages.length})</span>
                 </div>
               </button>
               <button
@@ -197,7 +197,7 @@ export function Messages() {
               >
                 <div className="flex items-center gap-2">
                   <Inbox className="w-4 h-4" />
-                  <span>Received ({receivedCount})</span>
+                  <span>{t('filters.received')} ({receivedCount})</span>
                 </div>
               </button>
               <button
@@ -210,7 +210,7 @@ export function Messages() {
               >
                 <div className="flex items-center gap-2">
                   <Send className="w-4 h-4" />
-                  <span>Sent ({sentCount})</span>
+                  <span>{t('filters.sent')} ({sentCount})</span>
                 </div>
               </button>
             </div>
@@ -221,7 +221,7 @@ export function Messages() {
                 <div className="relative">
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
                   <Input
-                    placeholder="Search messages, users, or platform IDs..."
+                    placeholder={t('search.placeholder')}
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                     className="pl-10"
@@ -231,7 +231,7 @@ export function Messages() {
               <div className="flex gap-2">
                 <Button variant="outline" size="sm">
                   <Download className="w-4 h-4" />
-                  Export
+                  {t('actions.export')}
                 </Button>
                 {(directionFilter !== 'all' || searchQuery) && (
                   <Button
@@ -242,7 +242,7 @@ export function Messages() {
                       setSearchQuery('');
                     }}
                   >
-                    Clear Filters
+                    {t('actions.clearFilters')}
                   </Button>
                 )}
               </div>
@@ -261,7 +261,7 @@ export function Messages() {
                 {filteredMessages.length === 0 ? (
                   <div className="text-center py-12">
                     <MessageSquare className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-                    <p className="text-gray-500">No messages found</p>
+                    <p className="text-gray-500">{t('messages.noMessages')}</p>
                   </div>
                 ) : (
                   filteredMessages.map((message: any) => {
@@ -287,13 +287,13 @@ export function Messages() {
                                 {isReceived && (
                                   <div className="inline-flex items-center gap-1 px-2 py-0.5 bg-blue-50 text-blue-700 rounded text-xs font-medium">
                                     <ArrowDownLeft className="w-3 h-3" />
-                                    Received
+                                    {t('direction.received')}
                                   </div>
                                 )}
                                 {isSent && (
                                   <div className="inline-flex items-center gap-1 px-2 py-0.5 bg-green-50 text-green-700 rounded text-xs font-medium">
                                     <ArrowUpRight className="w-3 h-3" />
-                                    Sent
+                                    {t('direction.sent')}
                                   </div>
                                 )}
 
@@ -314,32 +314,32 @@ export function Messages() {
                                 {/* User/Target Info */}
                                 {isReceived && (
                                   <span className="text-xs text-gray-500">
-                                    from <span className="font-medium text-gray-700">{message.userDisplay || message.providerUserId}</span>
+                                    {t('messages.from')} <span className="font-medium text-gray-700">{message.userDisplay || message.providerUserId}</span>
                                   </span>
                                 )}
                                 {isSent && (
                                   <span className="text-xs text-gray-500">
-                                    to <span className="font-medium text-gray-700">{message.targetUserId || message.targetChatId}</span>
+                                    {t('messages.to')} <span className="font-medium text-gray-700">{message.targetUserId || message.targetChatId}</span>
                                   </span>
                                 )}
                               </div>
 
                               {/* Message Text */}
                               <p className="text-sm text-gray-900 leading-relaxed">
-                                {message.messageText || <span className="text-gray-400 italic">No text content</span>}
+                                {message.messageText || <span className="text-gray-400 italic">{t('messages.noText')}</span>}
                               </p>
 
                               {/* Message Metadata */}
                               <div className="flex items-center gap-3 text-xs text-gray-500">
                                 {isReceived && message.providerChatId && (
                                   <>
-                                    <span>Chat: {message.providerChatId}</span>
+                                    <span>{t('messages.chat')}: {message.providerChatId}</span>
                                     <span>•</span>
                                   </>
                                 )}
                                 {isSent && message.targetType && (
                                   <>
-                                    <span>Type: {message.targetType}</span>
+                                    <span>{t('messages.type')}: {message.targetType}</span>
                                     <span>•</span>
                                   </>
                                 )}
@@ -353,7 +353,7 @@ export function Messages() {
                                 {message.errorMessage && (
                                   <>
                                     <span>•</span>
-                                    <span className="text-red-600 font-medium">Error: {message.errorMessage}</span>
+                                    <span className="text-red-600 font-medium">{t('messages.error')}: {message.errorMessage}</span>
                                   </>
                                 )}
                               </div>
@@ -377,11 +377,14 @@ export function Messages() {
               {messagesData?.pagination && (
                 <div className="mt-6 flex items-center justify-between border-t pt-4">
                   <p className="text-sm text-gray-600">
-                    Showing {filteredMessages.length} of {messagesData.pagination.total.toLocaleString()} messages
+                    {t('pagination.showing', {
+                      count: filteredMessages.length,
+                      total: messagesData.pagination.total.toLocaleString()
+                    })}
                   </p>
                   {messagesData.pagination.hasMore && (
                     <Button variant="outline" size="sm">
-                      Load More
+                      {t('actions.loadMore')}
                     </Button>
                   )}
                 </div>

@@ -119,6 +119,7 @@ describe('Platforms (e2e)', () => {
         // First create a platform
         await prisma.projectPlatform.create({
           data: {
+            id: 'first-discord-bot',
             projectId: testProjectId,
             platform: 'discord',
             name: 'first-discord',
@@ -183,6 +184,7 @@ describe('Platforms (e2e)', () => {
         await prisma.projectPlatform.createMany({
           data: [
             {
+              id: 'test-discord-bot',
               projectId: testProjectId,
               platform: 'discord',
               name: 'discord-bot',
@@ -191,6 +193,7 @@ describe('Platforms (e2e)', () => {
               testMode: false,
             },
             {
+              id: 'test-telegram-bot',
               projectId: testProjectId,
               platform: 'telegram',
               name: 'telegram-bot',
@@ -240,6 +243,7 @@ describe('Platforms (e2e)', () => {
 
         const platform = await prisma.projectPlatform.create({
           data: {
+            id: 'test-discord-platform',
             projectId: testProjectId,
             platform: 'discord',
             name: 'Test Discord Platform',
@@ -282,6 +286,7 @@ describe('Platforms (e2e)', () => {
 
         const platform = await prisma.projectPlatform.create({
           data: {
+            id: 'update-test-platform',
             projectId: testProjectId,
             platform: 'discord',
             name: 'Update Test Platform',
@@ -335,6 +340,7 @@ describe('Platforms (e2e)', () => {
 
         const platform = await prisma.projectPlatform.create({
           data: {
+            id: 'delete-test-platform',
             projectId: testProjectId,
             platform: 'discord',
             name: 'Delete Test Platform',
@@ -379,6 +385,7 @@ describe('Platforms (e2e)', () => {
       CryptoUtil.initializeEncryptionKey();
       await prisma.projectPlatform.create({
         data: {
+          id: 'message-test-platform',
           projectId: testProjectId,
           platform: 'discord',
           name: 'Message Test Platform',
