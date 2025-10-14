@@ -478,8 +478,10 @@ ${Object.keys(groups)
     const inputType = contractMetadata.inputType;
     const outputType = contractMetadata.outputType || 'any';
 
-    // Determine if method needs input data based on inputType presence
-    const needsInput = !!(inputType && inputType !== 'any');
+    // Determine if method needs input data based on inputType OR options (for GET with query params)
+    const hasOptions = !!(contractMetadata.options && Object.keys(contractMetadata.options).length > 0);
+    const isGetWithOptions = httpMethod.toLowerCase() === 'get' && hasOptions;
+    const needsInput = !!(inputType && inputType !== 'any') || isGetWithOptions;
 
     // Separate project params from other path params
     const projectParams = pathParams.filter((p) => p === 'project');
@@ -551,9 +553,12 @@ ${Object.keys(groups)
 
     // Build options type for input data + optional project
     if (needsInput && hasProject) {
-      params.push(`options: ${inputType} & { project?: string }`);
+      // For GET with options (no inputType), use generic Record type
+      const optionsType = inputType || 'Record<string, any>';
+      params.push(`options: ${optionsType} & { project?: string }`);
     } else if (needsInput) {
-      params.push(`options: ${inputType}`);
+      const optionsType = inputType || 'Record<string, any>';
+      params.push(`options: ${optionsType}`);
     } else if (hasProject) {
       params.push(`options?: { project?: string }`);
     }
