@@ -657,6 +657,7 @@ export const CONTRACTS_COUNT = ${contracts.length};
         version: packageJson.version,
         description:
           'Official TypeScript SDK for MsgCore universal messaging gateway',
+        type: 'module',
         main: 'dist/index.js',
         types: 'dist/index.d.ts',
         files: ['dist'],
