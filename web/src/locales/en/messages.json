@@ -18,12 +18,21 @@
     "uniqueChats": "Unique Chats",
     "recent24h": "Recent (24h)"
   },
+  "filters": {
+    "all": "All",
+    "received": "Received",
+    "sent": "Sent"
+  },
+  "direction": {
+    "received": "Received",
+    "sent": "Sent"
+  },
   "tabs": {
     "received": "Received",
     "sent": "Sent"
   },
   "search": {
-    "placeholder": "Search messages...",
+    "placeholder": "Search messages, users, or platform IDs...",
     "allPlatforms": "All platforms"
   },
   "status": {
@@ -40,12 +49,13 @@
     "chat": "Chat",
     "type": "Type",
     "error": "Error",
-    "noText": "No text",
+    "noText": "No text content",
+    "noMessages": "No messages found",
     "noReceived": "No messages received",
     "noSent": "No messages sent"
   },
   "pagination": {
-    "showing": "Showing",
+    "showing": "Showing {{count}} of {{total}} messages",
     "of": "of",
     "messages": "messages",
     "sentMessages": "sent messages"
