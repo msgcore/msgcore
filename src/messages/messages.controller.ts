@@ -43,12 +43,6 @@ export class MessagesController {
         description: 'Filter by platform ID',
         type: 'string',
       },
-      platform: {
-        description:
-          'Filter by platform type (telegram, discord, whatsapp-evo)',
-        type: 'string',
-        choices: ['telegram', 'discord', 'whatsapp-evo'],
-      },
       chatId: {
         description: 'Filter by chat/channel ID',
         type: 'string',
@@ -101,11 +95,6 @@ export class MessagesController {
         description: 'Get messages from specific platform instance',
         command:
           'msgcore messages list --platformId "platform-abc123" --chatId "123456789"',
-      },
-      {
-        description: 'Get Telegram messages from any instance',
-        command:
-          'msgcore messages list --platform telegram --chatId "123456789"',
       },
       {
         description: 'Get messages from last 24 hours',
