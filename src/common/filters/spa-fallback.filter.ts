@@ -30,7 +30,8 @@ export class SpaFallbackFilter implements ExceptionFilter {
     }
 
     // Serve index.html for all other routes (SPA fallback)
-    const indexPath = join(__dirname, '..', '..', '..', 'web', 'dist', 'index.html');
+    // Path is relative to dist/src/common/filters -> ../../../../web/dist
+    const indexPath = join(__dirname, '..', '..', '..', '..', 'web', 'dist', 'index.html');
     response.sendFile(indexPath);
   }
 }
