@@ -130,6 +130,7 @@ dokku config:set --no-restart "$APP_NAME" \
     PORT=5000 \
     JWT_SECRET="$JWT_SECRET" \
     ENCRYPTION_KEY="$ENCRYPTION_KEY" \
+    MSGCORE_API_URL="https://$DOMAIN" \
     LOG_LEVEL=info
 
 # Step 8: Enable SSL (Let's Encrypt)
