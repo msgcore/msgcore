@@ -9,9 +9,7 @@ import {
   ArrowDownLeft,
   MessageSquare,
   Send,
-  Inbox,
-  Copy,
-  Check
+  Inbox
 } from 'lucide-react';
 import { Card, CardContent, CardHeader } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
@@ -29,7 +27,6 @@ export function Messages() {
   const { selectedProjectId } = useProjectContext();
   const [searchQuery, setSearchQuery] = useState('');
   const [directionFilter, setDirectionFilter] = useState<DirectionFilter>('all');
-  const [copiedId, setCopiedId] = useState<string | null>(null);
 
   // Fetch unified messages list (both received and sent)
   const { data: messagesData, isLoading, error } = useMessages(
@@ -39,17 +36,6 @@ export function Messages() {
   const { data: stats, isLoading: loadingStats } = useMessageStats(selectedProjectId || undefined);
 
   const messages = messagesData?.messages || [];
-
-  // Copy platform ID to clipboard
-  const copyPlatformId = async (platformId: string) => {
-    try {
-      await navigator.clipboard.writeText(platformId);
-      setCopiedId(platformId);
-      setTimeout(() => setCopiedId(null), 2000);
-    } catch (err) {
-      console.error('Failed to copy:', err);
-    }
-  };
 
   // Get status badge
   const getStatusBadge = (status: string) => {
@@ -311,20 +297,11 @@ export function Messages() {
                                   </div>
                                 )}
 
-                                {/* Platform ID - Clickable to copy */}
+                                {/* Platform ID */}
                                 {message.platformId && (
-                                  <button
-                                    onClick={() => copyPlatformId(message.platformId)}
-                                    className="inline-flex items-center gap-1.5 px-2 py-0.5 bg-gray-900 text-white hover:bg-gray-800 rounded text-xs font-mono font-bold transition-colors group/btn"
-                                    title="Click to copy"
-                                  >
-                                    <span>{message.platformId}</span>
-                                    {copiedId === message.platformId ? (
-                                      <Check className="w-3 h-3 text-green-400" />
-                                    ) : (
-                                      <Copy className="w-3 h-3 opacity-0 group-hover/btn:opacity-100 transition-opacity" />
-                                    )}
-                                  </button>
+                                  <span className="px-2 py-0.5 bg-gray-900 text-white rounded text-xs font-mono font-bold">
+                                    {message.platformId}
+                                  </span>
                                 )}
 
                                 {/* Platform Name (user-defined name) */}
