@@ -13,10 +13,6 @@ import { Type, Transform } from 'class-transformer';
 export class QueryMessagesDto {
   @IsOptional()
   @IsString()
-  platform?: string;
-
-  @IsOptional()
-  @IsString()
   platformId?: string;
 
   @IsOptional()
