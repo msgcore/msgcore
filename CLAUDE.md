@@ -738,6 +738,35 @@ git push origin main --tags
 
 ## Deployment
 
+### Multi-Tenant Dokku Deployment (Recommended)
+
+MsgCore supports **multi-tenant deployments** using Dokku. Each tenant gets:
+- Dedicated app instance
+- Isolated PostgreSQL database
+- Isolated Redis instance
+- Custom subdomain (`tenant.msgcore.dev`)
+- SSL certificates (Let's Encrypt)
+
+**Quick Start:**
+
+```bash
+# SSH into your Dokku server
+ssh root@your-server
+
+# Provision a new tenant
+cd /root/msgcore
+./scripts/provision-tenant.sh <tenant-name>
+
+# Deploy from git
+git push dokku@your-server:<tenant-name> main
+```
+
+**Complete documentation:** See [DEPLOYMENT.md](./DEPLOYMENT.md)
+
+### Single-Instance Fly.io Deployment
+
+For single-instance deployments (not multi-tenant):
+
 ```bash
 # Deploy to Fly.io (migrations run automatically)
 fly deploy

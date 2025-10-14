@@ -138,11 +138,15 @@ export class WhatsAppProvider implements PlatformProvider, PlatformAdapter {
       const connectionKey = `${event.projectId}:${event.platformId}`;
 
       // Create a temporary connection object for webhook setup
+      if (!event.credentials.instanceName) {
+        throw new Error('instanceName is required in WhatsApp credentials');
+      }
+
       const tempConnection: WhatsAppConnection = {
         connectionKey,
         projectId: event.projectId,
         platformId: event.platformId,
-        instanceName: 'msgcore', // Use shared instance
+        instanceName: event.credentials.instanceName,
         evolutionApiUrl: event.credentials.evolutionApiUrl,
         evolutionApiKey: event.credentials.evolutionApiKey,
         isConnected: false,
@@ -225,13 +229,16 @@ export class WhatsAppProvider implements PlatformProvider, PlatformAdapter {
 
     // Parse connectionKey to get projectId and platformId
     const [projectId, platformId] = connectionKey.split(':');
-    const instanceName = `msgcore-${projectId}-${platformId}`;
+
+    if (!credentials.instanceName) {
+      throw new Error('instanceName is required in WhatsApp credentials');
+    }
 
     const connection: WhatsAppConnection = {
       connectionKey,
       projectId,
       platformId,
-      instanceName,
+      instanceName: credentials.instanceName,
       evolutionApiUrl: credentials.evolutionApiUrl,
       evolutionApiKey: credentials.evolutionApiKey,
       isConnected: false,
@@ -254,7 +261,7 @@ export class WhatsAppProvider implements PlatformProvider, PlatformAdapter {
         `WhatsApp connection created for ${connectionKey}`,
         {
           connectionKey,
-          instanceName,
+          instanceName: connection.instanceName,
           evolutionApiUrl: credentials.evolutionApiUrl,
         },
       );
@@ -268,7 +275,7 @@ export class WhatsAppProvider implements PlatformProvider, PlatformAdapter {
         error,
         {
           connectionKey,
-          instanceName,
+          instanceName: connection.instanceName,
         },
       );
 
@@ -442,9 +449,6 @@ export class WhatsAppProvider implements PlatformProvider, PlatformAdapter {
     connection: WhatsAppConnection,
     webhookToken: string,
   ): Promise<void> {
-    // Use existing "msgcore" instance instead of creating new ones
-    connection.instanceName = 'msgcore';
-
     const baseUrl = process.env.MSGCORE_API_URL || 'https://api.msgcore.dev';
     const webhookUrl = `${baseUrl}/api/v1/webhooks/whatsapp-evo/${webhookToken}`;
 

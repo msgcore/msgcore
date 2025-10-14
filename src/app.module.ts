@@ -5,8 +5,11 @@ import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
 import { SentryModule } from '@sentry/nestjs/setup';
 import { SentryGlobalFilter } from '@sentry/nestjs/setup';
 import { BullModule } from '@nestjs/bullmq';
+import { ServeStaticModule } from '@nestjs/serve-static';
+import { join } from 'path';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
+import { SpaFallbackFilter } from './common/filters/spa-fallback.filter';
 import { HealthModule } from './health/health.module';
 import { ProjectsModule } from './projects/projects.module';
 import { PrismaModule } from './prisma/prisma.module';
@@ -52,19 +55,38 @@ import { sentryConfig } from './config/sentry.config';
       imports: [ConfigModule],
       inject: [ConfigService],
       useFactory: (config: ConfigService) => {
-        const redisConfig = {
-          host: config.get<string>('REDIS_HOST', 'localhost'),
-          port: config.get<number>('REDIS_PORT', 6379),
-          password: config.get<string>('REDIS_PASSWORD'),
-          db: config.get<number>('REDIS_DB', 0),
-          // Add TLS for Upstash Redis
-          tls: config.get<string>('REDIS_HOST', '').includes('upstash.io')
-            ? {}
-            : undefined,
-          maxRetriesPerRequest: null, // Required by BullMQ
-          retryDelayOnFailover: 100,
-          lazyConnect: true,
-        };
+        // Parse REDIS_URL if present (Dokku/Heroku format)
+        const redisUrl = config.get<string>('REDIS_URL');
+        let redisConfig: any;
+
+        if (redisUrl) {
+          // Parse redis://[password@]host:port format
+          const url = new URL(redisUrl);
+          redisConfig = {
+            host: url.hostname,
+            port: parseInt(url.port) || 6379,
+            password: url.password || undefined,
+            db: config.get<number>('REDIS_DB', 0),
+            tls: url.hostname.includes('upstash.io') ? {} : undefined,
+            maxRetriesPerRequest: null, // Required by BullMQ
+            retryDelayOnFailover: 100,
+            lazyConnect: true,
+          };
+        } else {
+          // Fallback to individual env vars
+          redisConfig = {
+            host: config.get<string>('REDIS_HOST', 'localhost'),
+            port: config.get<number>('REDIS_PORT', 6379),
+            password: config.get<string>('REDIS_PASSWORD'),
+            db: config.get<number>('REDIS_DB', 0),
+            tls: config.get<string>('REDIS_HOST', '').includes('upstash.io')
+              ? {}
+              : undefined,
+            maxRetriesPerRequest: null, // Required by BullMQ
+            retryDelayOnFailover: 100,
+            lazyConnect: true,
+          };
+        }
 
         console.log('🔗 Redis Bull Queue Configuration:', {
           host: redisConfig.host,
@@ -102,6 +124,13 @@ import { sentryConfig } from './config/sentry.config';
     WebhooksModule,
     IdentitiesModule,
     McpModule,
+
+    // Serve static frontend files (registered last so API routes take precedence)
+    ServeStaticModule.forRoot({
+      rootPath: join(__dirname, '..', '..', 'web', 'dist'),
+      exclude: ['/api/v1/*', '/mcp/*', '/docs/*'], // Exclude API routes from static file serving
+      serveRoot: '/',
+    }),
   ],
   controllers: [AppController],
   providers: [
@@ -120,6 +149,11 @@ import { sentryConfig } from './config/sentry.config';
     {
       provide: APP_FILTER,
       useClass: SentryGlobalFilter,
+    },
+    // SPA Fallback Filter - serves index.html for client-side routing
+    {
+      provide: APP_FILTER,
+      useClass: SpaFallbackFilter,
     },
   ],
 })
