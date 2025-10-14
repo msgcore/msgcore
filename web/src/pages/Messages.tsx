@@ -9,7 +9,9 @@ import {
   ArrowDownLeft,
   MessageSquare,
   Send,
-  Inbox
+  Inbox,
+  Copy,
+  Check
 } from 'lucide-react';
 import { Card, CardContent, CardHeader } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
@@ -27,7 +29,7 @@ export function Messages() {
   const { selectedProjectId } = useProjectContext();
   const [searchQuery, setSearchQuery] = useState('');
   const [directionFilter, setDirectionFilter] = useState<DirectionFilter>('all');
-  const [platformFilter, setPlatformFilter] = useState<string>('all');
+  const [copiedId, setCopiedId] = useState<string | null>(null);
 
   // Fetch unified messages list (both received and sent)
   const { data: messagesData, isLoading, error } = useMessages(
@@ -38,15 +40,15 @@ export function Messages() {
 
   const messages = messagesData?.messages || [];
 
-  // Get platform badge color
-  const getPlatformColor = (platform: string) => {
-    const colors: Record<string, string> = {
-      discord: 'bg-indigo-100 text-indigo-700',
-      telegram: 'bg-blue-100 text-blue-700',
-      'whatsapp-evo': 'bg-green-100 text-green-700',
-      email: 'bg-purple-100 text-purple-700',
-    };
-    return colors[platform.toLowerCase()] || 'bg-gray-100 text-gray-700';
+  // Copy platform ID to clipboard
+  const copyPlatformId = async (platformId: string) => {
+    try {
+      await navigator.clipboard.writeText(platformId);
+      setCopiedId(platformId);
+      setTimeout(() => setCopiedId(null), 2000);
+    } catch (err) {
+      console.error('Failed to copy:', err);
+    }
   };
 
   // Get status badge
@@ -73,16 +75,12 @@ export function Messages() {
       msg.messageText?.toLowerCase().includes(searchQuery.toLowerCase()) ||
       msg.userDisplay?.toLowerCase().includes(searchQuery.toLowerCase()) ||
       msg.platformId?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      msg.platform?.toLowerCase().includes(searchQuery.toLowerCase());
+      msg.platformName?.toLowerCase().includes(searchQuery.toLowerCase());
 
-    const matchesPlatform = platformFilter === 'all' || msg.platform === platformFilter;
     const matchesDirection = directionFilter === 'all' || msg.direction === directionFilter;
 
-    return matchesSearch && matchesPlatform && matchesDirection;
+    return matchesSearch && matchesDirection;
   });
-
-  // Get unique platforms from messages
-  const platforms = Array.from(new Set(messages.map((m: any) => m.platform).filter(Boolean)));
 
   // Count messages by direction
   const receivedCount = messages.filter((m: any) => m.direction === 'received').length;
@@ -192,88 +190,73 @@ export function Messages() {
             <div className="flex items-center gap-2 flex-wrap">
               <button
                 onClick={() => setDirectionFilter('all')}
-                className={`px-3 py-1.5 text-sm font-medium rounded-lg transition-colors ${
+                className={`px-4 py-2 text-sm font-medium rounded-lg transition-all ${
                   directionFilter === 'all'
-                    ? 'bg-blue-100 text-blue-700 border-2 border-blue-300'
-                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200 border-2 border-transparent'
+                    ? 'bg-blue-600 text-white shadow-md'
+                    : 'bg-white text-gray-600 hover:bg-gray-50 border border-gray-200'
                 }`}
               >
-                <div className="flex items-center gap-1.5">
+                <div className="flex items-center gap-2">
                   <MessageSquare className="w-4 h-4" />
-                  <span>All Messages ({messages.length})</span>
+                  <span>All ({messages.length})</span>
                 </div>
               </button>
               <button
                 onClick={() => setDirectionFilter('received')}
-                className={`px-3 py-1.5 text-sm font-medium rounded-lg transition-colors ${
+                className={`px-4 py-2 text-sm font-medium rounded-lg transition-all ${
                   directionFilter === 'received'
-                    ? 'bg-blue-100 text-blue-700 border-2 border-blue-300'
-                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200 border-2 border-transparent'
+                    ? 'bg-blue-600 text-white shadow-md'
+                    : 'bg-white text-gray-600 hover:bg-gray-50 border border-gray-200'
                 }`}
               >
-                <div className="flex items-center gap-1.5">
+                <div className="flex items-center gap-2">
                   <Inbox className="w-4 h-4" />
                   <span>Received ({receivedCount})</span>
                 </div>
               </button>
               <button
                 onClick={() => setDirectionFilter('sent')}
-                className={`px-3 py-1.5 text-sm font-medium rounded-lg transition-colors ${
+                className={`px-4 py-2 text-sm font-medium rounded-lg transition-all ${
                   directionFilter === 'sent'
-                    ? 'bg-green-100 text-green-700 border-2 border-green-300'
-                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200 border-2 border-transparent'
+                    ? 'bg-green-600 text-white shadow-md'
+                    : 'bg-white text-gray-600 hover:bg-gray-50 border border-gray-200'
                 }`}
               >
-                <div className="flex items-center gap-1.5">
+                <div className="flex items-center gap-2">
                   <Send className="w-4 h-4" />
                   <span>Sent ({sentCount})</span>
                 </div>
               </button>
             </div>
 
-            {/* Search and Platform Filter */}
+            {/* Search */}
             <div className="flex flex-col md:flex-row gap-4 md:items-center md:justify-between">
-              <div className="flex-1 flex gap-3">
-                <div className="relative flex-1 max-w-md">
+              <div className="flex-1 max-w-md">
+                <div className="relative">
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
                   <Input
-                    placeholder={t('search.placeholder')}
+                    placeholder="Search messages, users, or platform IDs..."
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                     className="pl-10"
                   />
                 </div>
-                {platforms.length > 0 && (
-                  <select
-                    value={platformFilter}
-                    onChange={(e) => setPlatformFilter(e.target.value)}
-                    className="px-3 py-2 border border-gray-300 rounded-lg text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  >
-                    <option value="all">{t('search.allPlatforms')}</option>
-                    {platforms.map((platform) => (
-                      <option key={platform} value={platform}>
-                        {platform.charAt(0).toUpperCase() + platform.slice(1)}
-                      </option>
-                    ))}
-                  </select>
-                )}
               </div>
               <div className="flex gap-2">
                 <Button variant="outline" size="sm">
                   <Download className="w-4 h-4" />
-                  {t('actions.export')}
+                  Export
                 </Button>
-                {(platformFilter !== 'all' || directionFilter !== 'all' || searchQuery) && (
+                {(directionFilter !== 'all' || searchQuery) && (
                   <Button
                     variant="ghost"
                     size="sm"
                     onClick={() => {
-                      setPlatformFilter('all');
                       setDirectionFilter('all');
                       setSearchQuery('');
                     }}
                   >
-                    {t('actions.clearFilters')}
+                    Clear Filters
                   </Button>
                 )}
               </div>
@@ -288,11 +271,11 @@ export function Messages() {
           ) : (
             <>
               {/* Unified Messages List */}
-              <div className="space-y-3">
+              <div className="space-y-2">
                 {filteredMessages.length === 0 ? (
                   <div className="text-center py-12">
                     <MessageSquare className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-                    <p className="text-gray-500">{t('messages.noMessages')}</p>
+                    <p className="text-gray-500">No messages found</p>
                   </div>
                 ) : (
                   filteredMessages.map((message: any) => {
@@ -302,98 +285,110 @@ export function Messages() {
                     return (
                       <div
                         key={message.id}
-                        className={`p-4 rounded-lg border-l-4 transition-all hover:shadow-md cursor-pointer ${
-                          isReceived
-                            ? 'bg-blue-50 border-blue-500 hover:bg-blue-100'
-                            : isSent
-                            ? 'bg-green-50 border-green-500 hover:bg-green-100'
-                            : 'bg-gray-50 border-gray-300 hover:bg-gray-100'
-                        }`}
+                        className="group relative bg-white border border-gray-200 rounded-lg hover:shadow-md transition-all overflow-hidden"
                       >
-                        <div className="flex items-start justify-between gap-4">
-                          <div className="flex-1 min-w-0">
-                            {/* Header with Direction, Platform ID, and Platform Type */}
-                            <div className="flex items-center gap-2 mb-2 flex-wrap">
-                              {/* Direction Badge */}
-                              {isReceived && (
-                                <div className="flex items-center gap-1 px-2 py-1 bg-blue-100 text-blue-700 rounded-md text-xs font-medium">
-                                  <ArrowDownLeft className="w-3 h-3" />
-                                  <span>Received</span>
-                                </div>
-                              )}
-                              {isSent && (
-                                <div className="flex items-center gap-1 px-2 py-1 bg-green-100 text-green-700 rounded-md text-xs font-medium">
-                                  <ArrowUpRight className="w-3 h-3" />
-                                  <span>Sent</span>
-                                </div>
-                              )}
+                        {/* Left colored stripe */}
+                        <div className={`absolute left-0 top-0 bottom-0 w-1 ${
+                          isReceived ? 'bg-blue-500' : isSent ? 'bg-green-500' : 'bg-gray-300'
+                        }`} />
 
-                              {/* Platform ID (Primary) */}
-                              {message.platformId && (
-                                <span className="px-2 py-1 bg-gray-900 text-white rounded-md text-xs font-mono font-bold">
-                                  {message.platformId}
-                                </span>
-                              )}
+                        <div className="pl-4 pr-4 py-3">
+                          <div className="flex items-start justify-between gap-4">
+                            <div className="flex-1 min-w-0 space-y-2">
+                              {/* Header: Direction + Platform Info */}
+                              <div className="flex items-center gap-2 flex-wrap">
+                                {/* Direction indicator */}
+                                {isReceived && (
+                                  <div className="inline-flex items-center gap-1 px-2 py-0.5 bg-blue-50 text-blue-700 rounded text-xs font-medium">
+                                    <ArrowDownLeft className="w-3 h-3" />
+                                    Received
+                                  </div>
+                                )}
+                                {isSent && (
+                                  <div className="inline-flex items-center gap-1 px-2 py-0.5 bg-green-50 text-green-700 rounded text-xs font-medium">
+                                    <ArrowUpRight className="w-3 h-3" />
+                                    Sent
+                                  </div>
+                                )}
 
-                              {/* Platform Type (Secondary) */}
-                              <span className={`text-xs px-2 py-1 rounded-md font-medium ${getPlatformColor(message.platform)}`}>
-                                {message.platform}
-                              </span>
+                                {/* Platform ID - Clickable to copy */}
+                                {message.platformId && (
+                                  <button
+                                    onClick={() => copyPlatformId(message.platformId)}
+                                    className="inline-flex items-center gap-1.5 px-2 py-0.5 bg-gray-900 text-white hover:bg-gray-800 rounded text-xs font-mono font-bold transition-colors group/btn"
+                                    title="Click to copy"
+                                  >
+                                    <span>{message.platformId}</span>
+                                    {copiedId === message.platformId ? (
+                                      <Check className="w-3 h-3 text-green-400" />
+                                    ) : (
+                                      <Copy className="w-3 h-3 opacity-0 group-hover/btn:opacity-100 transition-opacity" />
+                                    )}
+                                  </button>
+                                )}
 
-                              {/* User/Target Info */}
-                              {isReceived && (
-                                <span className="text-xs text-gray-600">
-                                  from <span className="font-medium">{message.userDisplay || message.providerUserId}</span>
+                                {/* Platform Name (user-defined name) */}
+                                {message.platformName && (
+                                  <span className="text-xs text-gray-600 font-medium">
+                                    via {message.platformName}
+                                  </span>
+                                )}
+
+                                {/* User/Target Info */}
+                                {isReceived && (
+                                  <span className="text-xs text-gray-500">
+                                    from <span className="font-medium text-gray-700">{message.userDisplay || message.providerUserId}</span>
+                                  </span>
+                                )}
+                                {isSent && (
+                                  <span className="text-xs text-gray-500">
+                                    to <span className="font-medium text-gray-700">{message.targetUserId || message.targetChatId}</span>
+                                  </span>
+                                )}
+                              </div>
+
+                              {/* Message Text */}
+                              <p className="text-sm text-gray-900 leading-relaxed">
+                                {message.messageText || <span className="text-gray-400 italic">No text content</span>}
+                              </p>
+
+                              {/* Message Metadata */}
+                              <div className="flex items-center gap-3 text-xs text-gray-500">
+                                {isReceived && message.providerChatId && (
+                                  <>
+                                    <span>Chat: {message.providerChatId}</span>
+                                    <span>•</span>
+                                  </>
+                                )}
+                                {isSent && message.targetType && (
+                                  <>
+                                    <span>Type: {message.targetType}</span>
+                                    <span>•</span>
+                                  </>
+                                )}
+                                <span>
+                                  {isReceived && message.receivedAt
+                                    ? formatDateTime(message.receivedAt)
+                                    : isSent && message.sentAt
+                                    ? formatDateTime(message.sentAt)
+                                    : formatDateTime(message.createdAt)}
                                 </span>
-                              )}
-                              {isSent && (
-                                <span className="text-xs text-gray-600">
-                                  to <span className="font-medium">{message.targetUserId || message.targetChatId}</span>
-                                </span>
-                              )}
+                                {message.errorMessage && (
+                                  <>
+                                    <span>•</span>
+                                    <span className="text-red-600 font-medium">Error: {message.errorMessage}</span>
+                                  </>
+                                )}
+                              </div>
                             </div>
 
-                            {/* Message Text */}
-                            <p className="text-sm text-gray-900 mb-2 line-clamp-2">
-                              {message.messageText || <span className="text-gray-400 italic">{t('messages.noText')}</span>}
-                            </p>
-
-                            {/* Message Metadata */}
-                            <div className="flex items-center gap-3 text-xs text-gray-500 flex-wrap">
-                              {isReceived && message.providerChatId && (
-                                <>
-                                  <span>Chat: {message.providerChatId}</span>
-                                  <span>•</span>
-                                </>
-                              )}
-                              {isSent && message.targetType && (
-                                <>
-                                  <span>Type: {message.targetType}</span>
-                                  <span>•</span>
-                                </>
-                              )}
-                              <span>
-                                {isReceived && message.receivedAt
-                                  ? formatDateTime(message.receivedAt)
-                                  : isSent && message.sentAt
-                                  ? formatDateTime(message.sentAt)
-                                  : formatDateTime(message.createdAt)}
-                              </span>
-                              {message.errorMessage && (
-                                <>
-                                  <span>•</span>
-                                  <span className="text-red-600 font-medium">Error: {message.errorMessage}</span>
-                                </>
-                              )}
-                            </div>
+                            {/* Status Badge (for sent messages) */}
+                            {isSent && message.status && (
+                              <div className="flex-shrink-0">
+                                {getStatusBadge(message.status)}
+                              </div>
+                            )}
                           </div>
-
-                          {/* Status Badge (for sent messages) */}
-                          {isSent && message.status && (
-                            <div className="flex-shrink-0">
-                              {getStatusBadge(message.status)}
-                            </div>
-                          )}
                         </div>
                       </div>
                     );
@@ -405,11 +400,11 @@ export function Messages() {
               {messagesData?.pagination && (
                 <div className="mt-6 flex items-center justify-between border-t pt-4">
                   <p className="text-sm text-gray-600">
-                    {t('pagination.showing')} {filteredMessages.length} {t('pagination.of')} {messagesData.pagination.total.toLocaleString()} {t('pagination.messages')}
+                    Showing {filteredMessages.length} of {messagesData.pagination.total.toLocaleString()} messages
                   </p>
                   {messagesData.pagination.hasMore && (
                     <Button variant="outline" size="sm">
-                      {t('actions.loadMore')}
+                      Load More
                     </Button>
                   )}
                 </div>
