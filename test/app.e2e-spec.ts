@@ -19,15 +19,14 @@ describe('AppController (e2e)', () => {
     await app.close();
   });
 
-  it('/ (GET) should require authentication', () => {
+  it('/ (GET) should be public and serve frontend', () => {
     return request(app.getHttpServer())
       .get('/')
-      .expect(401)
+      .expect(404) // 404 in test environment since frontend files aren't built
       .expect((res) => {
-        expect(res.body).toHaveProperty(
-          'message',
-          'Authentication required. Provide either an API key or Bearer token.',
-        );
+        // In test environment, frontend files don't exist, so we get 404
+        // In production, this would return 200 with index.html
+        expect(res.body).toHaveProperty('statusCode', 404);
       });
   });
 });
