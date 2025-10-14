@@ -57,6 +57,18 @@ export function IdentityResolver({
   const { t } = useTranslation('identities');
   const { selectedProjectId } = useProjectContext();
 
+  // Guard: Don't render if required parameters are missing
+  if (!platformId || !providerUserId || !selectedProjectId) {
+    if (fallback) {
+      return <>{fallback}</>;
+    }
+    // Fallback to showing just the display name if available
+    if (providerUserDisplay) {
+      return <span className="text-sm font-medium text-gray-700">{providerUserDisplay}</span>;
+    }
+    return null;
+  }
+
   const {
     data: identity,
     isLoading,
@@ -65,7 +77,7 @@ export function IdentityResolver({
   } = useLookupIdentity(
     platformId,
     providerUserId,
-    selectedProjectId || undefined
+    selectedProjectId
   );
 
   // Loading state
