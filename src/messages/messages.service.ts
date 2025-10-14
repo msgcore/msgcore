@@ -218,6 +218,11 @@ export class MessagesService {
       messageType: true,
       receivedAt: true,
       attachments: true,
+      platformConfig: {
+        select: {
+          name: true,
+        },
+      },
       ...(query.raw === true && { rawData: true }),
     };
 
@@ -236,6 +241,11 @@ export class MessagesService {
       errorMessage: true,
       sentAt: true,
       createdAt: true,
+      platformConfig: {
+        select: {
+          name: true,
+        },
+      },
     };
 
     // For efficient pagination, we need to fetch enough records from each table
@@ -266,6 +276,7 @@ export class MessagesService {
     // Transform received messages to unified format
     const unifiedReceived = receivedMessages.map((msg) => ({
       ...msg,
+      platformName: msg.platformConfig?.name,
       direction: 'received' as const,
       timestamp: msg.receivedAt,
       chatId: msg.providerChatId,
@@ -275,6 +286,7 @@ export class MessagesService {
     // Transform sent messages to unified format
     const unifiedSent = sentMessages.map((msg) => ({
       ...msg,
+      platformName: msg.platformConfig?.name,
       direction: 'sent' as const,
       timestamp: msg.sentAt || msg.createdAt,
       chatId: msg.targetChatId,

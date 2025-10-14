@@ -297,18 +297,18 @@ export function Messages() {
                                   </div>
                                 )}
 
-                                {/* Platform ID */}
-                                {message.platformId && (
-                                  <span className="px-2 py-0.5 bg-gray-900 text-white rounded text-xs font-mono font-bold">
-                                    {message.platformId}
-                                  </span>
-                                )}
-
-                                {/* Platform Name (user-defined name) */}
+                                {/* Platform Info: Name (ID) */}
                                 {message.platformName && (
-                                  <span className="text-xs text-gray-600 font-medium">
-                                    via {message.platformName}
-                                  </span>
+                                  <div className="flex items-center gap-1.5">
+                                    <span className="text-xs font-semibold text-gray-700">
+                                      {message.platformName}
+                                    </span>
+                                    {message.platformId && (
+                                      <span className="text-xs font-mono text-gray-500">
+                                        ({message.platformId})
+                                      </span>
+                                    )}
+                                  </div>
                                 )}
 
                                 {/* User/Target Info */}
