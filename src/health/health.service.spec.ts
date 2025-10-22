@@ -1,4 +1,5 @@
 import { Test, TestingModule } from '@nestjs/testing';
+import { getQueueToken } from '@nestjs/bullmq';
 import { HealthService } from './health.service';
 import { PrismaService } from '../prisma/prisma.service';
 
@@ -12,6 +13,12 @@ describe('HealthService', () => {
     },
   };
 
+  const mockQueue = {
+    client: {
+      ping: jest.fn().mockResolvedValue('PONG'),
+    },
+  };
+
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
@@ -19,6 +26,10 @@ describe('HealthService', () => {
         {
           provide: PrismaService,
           useValue: mockPrisma,
+        },
+        {
+          provide: getQueueToken('messages'),
+          useValue: mockQueue,
         },
       ],
     }).compile();
