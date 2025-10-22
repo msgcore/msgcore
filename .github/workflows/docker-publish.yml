@@ -11,7 +11,7 @@ on:
 
 env:
   NODE_VERSION: '20'
-  DOCKER_ORG: 'msgcore'
+  DOCKER_ORG: 'filipeai'
   DOCKER_IMAGE: 'msgcore'
 
 permissions:
@@ -125,7 +125,7 @@ jobs:
         uses: docker/build-push-action@v5
         with:
           context: .
-          file: ./docker/Dockerfile
+          file: ./Dockerfile
           push: ${{ github.event.inputs.publish_to_dockerhub }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}

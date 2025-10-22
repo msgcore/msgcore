@@ -1,0 +1,79 @@
+# ==============================================================================
+# Docker Compose - External Database Configuration
+# ==============================================================================
+# This example shows how to run MsgCore with external PostgreSQL and Redis
+# Ideal for production deployments with managed database services
+# ==============================================================================
+
+version: '3.8'
+
+services:
+  msgcore:
+    image: filipeai/msgcore:latest
+    container_name: msgcore-app
+    restart: unless-stopped
+
+    # Environment variables for external database connections
+    environment:
+      # Node environment
+      NODE_ENV: production
+      PORT: 3000
+
+      # External PostgreSQL connection
+      # Format: postgresql://user:password@host:port/database?schema=public
+      DATABASE_URL: ${DATABASE_URL}
+
+      # External Redis connection (choose one format)
+      REDIS_URL: ${REDIS_URL}                    # Full URL format
+      # OR use individual components:
+      # REDIS_HOST: ${REDIS_HOST}
+      # REDIS_PORT: ${REDIS_PORT:-6379}
+      # REDIS_PASSWORD: ${REDIS_PASSWORD}
+
+      # Security (REQUIRED - generate strong secrets)
+      JWT_SECRET: ${JWT_SECRET}                  # Min 32 characters
+      ENCRYPTION_KEY: ${ENCRYPTION_KEY}          # For encrypting platform credentials
+
+      # API Configuration
+      MSGCORE_API_URL: ${MSGCORE_API_URL:-http://localhost:7890}
+      CORS_ORIGINS: ${CORS_ORIGINS:-*}
+
+      # Optional: Auth0 configuration
+      AUTH0_DOMAIN: ${AUTH0_DOMAIN:-}
+      AUTH0_AUDIENCE: ${AUTH0_AUDIENCE:-}
+
+      # Optional: Platform credentials
+      DISCORD_BOT_TOKEN: ${DISCORD_BOT_TOKEN:-}
+      TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN:-}
+
+    # Port mapping
+    ports:
+      - "${MSGCORE_PORT:-7890}:7890"
+
+    # Health check
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:7890/api/v1/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 40s
+
+    # Resource limits (optional but recommended)
+    deploy:
+      resources:
+        limits:
+          cpus: '2'
+          memory: 2G
+        reservations:
+          cpus: '0.5'
+          memory: 512M
+
+# ==============================================================================
+# Example with Network Configuration
+# ==============================================================================
+# Uncomment if you need custom network configuration
+#
+# networks:
+#   default:
+#     external: true
+#     name: your-existing-network

@@ -34,7 +34,7 @@ export class HealthService {
       // BullMQ queue client is an IORedis instance
       // We're lenient here - as long as the client exists, we consider it healthy
       // The queue will retry connections automatically
-      const queueClient = this.messageQueue.client;
+      const queueClient = await this.messageQueue.client;
       checks.redis = queueClient !== null && queueClient !== undefined;
 
       // Try to ping if possible, but don't fail if it doesn't work
