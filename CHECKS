@@ -1,0 +1,6 @@
+WAIT=5
+TIMEOUT=10
+ATTEMPTS=6
+
+# Health check endpoint - verifies database and core services
+/api/v1/health "status":"healthy"

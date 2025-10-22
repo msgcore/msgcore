@@ -9,6 +9,7 @@ import { PrismaService } from '../prisma/prisma.service';
 import { CreateIdentityDto } from './dto/create-identity.dto';
 import { UpdateIdentityDto } from './dto/update-identity.dto';
 import { AddAliasDto } from './dto/add-alias.dto';
+import { QuickLinkDto } from './dto/quick-link.dto';
 import { SecurityUtil, AuthContext } from '../common/utils/security.util';
 import { IdentityLinkMethod, Prisma } from '@prisma/client';
 
@@ -251,10 +252,10 @@ export class IdentitiesService {
       },
     });
 
+    // Return null if no identity found (this is expected for unlinked users)
+    // Frontend will show UnlinkedUserCard instead of error
     if (!alias || alias.projectId !== project.id) {
-      throw new NotFoundException(
-        `No identity found for platform user ${providerUserId} on platform ${platformId}`,
-      );
+      return null;
     }
 
     return alias.identity;
@@ -597,5 +598,158 @@ export class IdentitiesService {
     });
 
     return reactions;
+  }
+
+  /**
+   * Search identities by display name or email
+   */
+  async search(
+    projectId: string,
+    query: string,
+    authContext: AuthContext,
+  ) {
+    // SECURITY: Get project and validate access
+    const project = await SecurityUtil.getProjectWithAccess(
+      this.prisma,
+      projectId,
+      authContext,
+      'search identities',
+    );
+
+    if (!query || query.trim().length < 2) {
+      throw new BadRequestException('Search query must be at least 2 characters');
+    }
+
+    const identities = await this.prisma.identity.findMany({
+      where: {
+        projectId: project.id,
+        OR: [
+          {
+            displayName: {
+              contains: query,
+              mode: 'insensitive',
+            },
+          },
+          {
+            email: {
+              contains: query,
+              mode: 'insensitive',
+            },
+          },
+        ],
+      },
+      include: {
+        aliases: {
+          include: {
+            platformConfig: {
+              select: {
+                id: true,
+                name: true,
+                platform: true,
+              },
+            },
+          },
+        },
+        _count: {
+          select: {
+            aliases: true,
+          },
+        },
+      },
+      orderBy: { createdAt: 'desc' },
+      take: 20, // Limit results for performance
+    });
+
+    return identities;
+  }
+
+  /**
+   * Quick-link: Create identity and link alias in one operation
+   * Useful for quickly linking a platform user without existing identity
+   */
+  async quickLink(
+    projectId: string,
+    quickLinkDto: QuickLinkDto,
+    authContext: AuthContext,
+  ) {
+    // SECURITY: Get project and validate access
+    const project = await SecurityUtil.getProjectWithAccess(
+      this.prisma,
+      projectId,
+      authContext,
+      'quick-link identity',
+    );
+
+    // Verify platform belongs to project
+    const platform = await this.prisma.projectPlatform.findFirst({
+      where: {
+        id: quickLinkDto.platformId,
+        projectId: project.id,
+      },
+    });
+
+    if (!platform) {
+      throw new BadRequestException(
+        `Platform ${quickLinkDto.platformId} does not belong to project ${projectId}`,
+      );
+    }
+
+    // Check if alias already exists
+    const existing = await this.prisma.identityAlias.findUnique({
+      where: {
+        platformId_providerUserId: {
+          platformId: quickLinkDto.platformId,
+          providerUserId: quickLinkDto.providerUserId,
+        },
+      },
+      include: {
+        identity: true,
+      },
+    });
+
+    if (existing) {
+      throw new ConflictException(
+        `Platform user ${quickLinkDto.providerUserId} on platform ${platform.platform} is already linked to identity ${existing.identity.id}`,
+      );
+    }
+
+    // Create identity with alias in one transaction
+    const identity = await this.prisma.identity.create({
+      data: {
+        projectId: project.id,
+        displayName: quickLinkDto.displayName || quickLinkDto.providerUserDisplay || `User ${quickLinkDto.providerUserId}`,
+        email: quickLinkDto.email,
+        metadata: Prisma.JsonNull,
+        aliases: {
+          create: {
+            projectId: project.id,
+            platformId: quickLinkDto.platformId,
+            platform: platform.platform,
+            providerUserId: quickLinkDto.providerUserId,
+            providerUserDisplay: quickLinkDto.providerUserDisplay,
+            linkMethod: IdentityLinkMethod.manual,
+          },
+        },
+      },
+      include: {
+        aliases: {
+          include: {
+            platformConfig: {
+              select: {
+                id: true,
+                name: true,
+                platform: true,
+              },
+            },
+          },
+        },
+      },
+    });
+
+    this.logger.log(
+      `Quick-linked identity ${identity.id} with alias for ${platform.platform} user ${quickLinkDto.providerUserId} in project ${project.id}`,
+    );
+
+    return identity;
   }
 }

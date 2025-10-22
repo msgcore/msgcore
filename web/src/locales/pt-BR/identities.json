@@ -68,5 +68,50 @@
   "info": {
     "title": "Sobre Identidades",
     "description": "Identidades unificam um mesmo usuário em múltiplas plataformas. Ao criar uma identidade, você vincula diferentes contas (Discord, WhatsApp, Telegram, etc.) à mesma pessoa, permitindo rastrear conversas e interações de forma consolidada."
+  },
+
+  "badge": {
+    "viewProfile": "Ver Perfil",
+    "noEmail": "Sem email",
+    "aliasesCount_one": "{{count}} conta vinculada",
+    "aliasesCount_other": "{{count}} contas vinculadas"
+  },
+
+  "toolbox": {
+    "viewIdentity": "Ver Identidade",
+    "editIdentity": "Editar Identidade",
+    "manageAliases": "Gerenciar Aliases",
+    "viewHistory": "Ver Histórico de Mensagens",
+    "deleteIdentity": "Excluir Identidade"
+  },
+
+  "unlinked": {
+    "title": "Usuário Não Vinculado",
+    "description": "Este usuário não está vinculado a nenhuma identidade",
+    "linkToExisting": "Vincular a Identidade Existente",
+    "createNew": "Criar Nova Identidade",
+    "quickLink": "Vincular Rápido",
+    "searchPlaceholder": "Buscar identidades por nome ou email...",
+    "searching": "Buscando...",
+    "noResults": "Nenhuma identidade encontrada",
+    "linkSuccess": "Usuário vinculado com sucesso!",
+    "createSuccess": "Identidade criada e vinculada!"
+  },
+
+  "resolver": {
+    "loading": "Resolvendo identidade...",
+    "error": "Falha ao resolver identidade"
+  },
+
+  "quickLink": {
+    "title": "Vincular Rápido",
+    "description": "Crie uma nova identidade e vincule este usuário em um passo",
+    "displayNameLabel": "Nome de Exibição",
+    "displayNamePlaceholder": "Digite o nome",
+    "emailLabel": "Email (opcional)",
+    "emailPlaceholder": "Digite o email",
+    "creating": "Criando...",
+    "cancel": "Cancelar",
+    "create": "Criar e Vincular"
   }
 }

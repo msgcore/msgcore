@@ -3,7 +3,8 @@ import { sdk } from '../shared/lib/sdk';
 import type {
   CreateIdentityDto,
   UpdateIdentityDto,
-  AddAliasDto
+  AddAliasDto,
+  QuickLinkDto
 } from '@msgcore/sdk/dist/types';
 
 // List all identities
@@ -34,6 +35,29 @@ export function useLookupIdentity(platformId?: string, providerUserId?: string, 
       project: projectId
     } as any),
     enabled: !!platformId && !!providerUserId && !!projectId,
+  });
+}
+
+// Search identities by display name or email
+export function useSearchIdentities(query: string, projectId?: string) {
+  return useQuery({
+    queryKey: ['identity-search', query, projectId],
+    queryFn: () => sdk.identities.search({ q: query, project: projectId }),
+    enabled: !!query && query.length >= 2 && !!projectId,
+  });
+}
+
+// Quick-link: Create identity and link platform user in one operation
+export function useQuickLinkIdentity(projectId?: string) {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (data: QuickLinkDto) =>
+      sdk.identities.quickLink({ ...data, project: projectId }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['identities', projectId] });
+      queryClient.invalidateQueries({ queryKey: ['identity-lookup'] });
+    },
   });
 }
 

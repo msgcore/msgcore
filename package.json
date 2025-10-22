@@ -6,7 +6,7 @@
   "private": true,
   "license": "Apache-2.0",
   "scripts": {
-    "build": "npm run build:frontend && npm run build:backend",
+    "build": "npm run extract:contracts && npm run generate:sdk && cd generated/sdk && npm install && npm run build && cd ../.. && npm run build:frontend && npm run build:backend",
     "build:frontend": "cd web && NODE_ENV=development npm install && npm run build",
     "build:backend": "nest build",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
