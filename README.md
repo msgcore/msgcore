@@ -33,6 +33,77 @@ npm run start:dev
 
 Server runs on `http://localhost:7890`
 
+## Docker Deployment
+
+### Quick Start with Docker Hub
+
+Pull and run the official Docker image:
+
+```bash
+# Pull the latest image
+docker pull filipeai/msgcore:latest
+
+# Run with external databases
+docker run -d \
+  --name msgcore \
+  -p 7890:7890 \
+  -e DATABASE_URL="postgresql://user:pass@host:5432/msgcore?schema=public" \
+  -e REDIS_URL="redis://:password@host:6379" \
+  -e JWT_SECRET="your-32-char-secret" \
+  -e ENCRYPTION_KEY="your-32-char-key" \
+  filipeai/msgcore:latest
+```
+
+### Using Docker Compose (External Databases)
+
+For production deployments with managed database services (AWS RDS, DigitalOcean, etc.):
+
+```bash
+# Copy environment template
+cp .env.docker.example .env
+
+# Edit .env with your external database credentials
+nano .env
+
+# Run with external databases
+docker compose -f docker-compose.external-db.yml up -d
+```
+
+**Example `.env` configuration:**
+
+```bash
+DATABASE_URL=postgresql://admin:pass@your-rds.amazonaws.com:5432/msgcore?schema=public
+REDIS_URL=redis://:password@your-redis.cloud:6379
+JWT_SECRET=$(openssl rand -hex 32)
+ENCRYPTION_KEY=$(openssl rand -hex 32)
+MSGCORE_API_URL=https://msgcore.yourdomain.com
+```
+
+### Using Docker Compose (Local Development)
+
+For local development with embedded PostgreSQL and Redis:
+
+```bash
+# Start all services (includes databases)
+docker compose up -d
+
+# View logs
+docker compose logs -f
+
+# Stop services
+docker compose down
+```
+
+Access at `http://localhost:7890`
+
+### Available Docker Images
+
+- `filipeai/msgcore:latest` - Latest stable release
+- `filipeai/msgcore:1.0.4` - Specific version
+- `filipeai/msgcore:dev` - Development builds
+
+See [DOCKER.md](DOCKER.md) for detailed Docker documentation.
+
 ## Installation
 
 ### SDK
