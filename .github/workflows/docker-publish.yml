@@ -135,7 +135,7 @@ jobs:
             MSGCORE_API_URL=http://localhost:7890
             MSGCORE_API_VERSION=v1
             MSGCORE_ENV=production
-          platforms: linux/amd64,linux/arm64
+          platforms: linux/amd64
 
       - name: Create and push git tag
         run: |
