@@ -10,6 +10,7 @@ version: '3.8'
 services:
   msgcore:
     image: filipeai/msgcore:latest
+    platform: linux/amd64
     container_name: msgcore-app
     restart: unless-stopped
 

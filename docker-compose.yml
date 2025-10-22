@@ -41,6 +41,7 @@ services:
       context: .
       dockerfile: docker/Dockerfile
     image: msgcore/msgcore:${MSGCORE_VERSION:-latest}
+    platform: linux/amd64
     container_name: msgcore-app
     restart: unless-stopped
     environment:
