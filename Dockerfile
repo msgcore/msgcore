@@ -82,7 +82,10 @@ COPY package*.json ./
 COPY prisma ./prisma/
 
 # Install production dependencies only
-RUN npm ci --only=production && npm cache clean --force
+# Use --legacy-peer-deps and increase memory for ARM64 compatibility
+RUN npm ci --only=production --legacy-peer-deps --ignore-scripts && \
+    npm rebuild && \
+    npm cache clean --force
 
 # Generate Prisma client for production
 RUN npx prisma generate
