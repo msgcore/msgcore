@@ -62,7 +62,7 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
           build-args: |
-            MSGCORE_API_URL=http://localhost:7890
+            MSGCORE_API_URL=
             MSGCORE_API_VERSION=v1
             MSGCORE_ENV=production
           platforms: linux/amd64,linux/arm64
