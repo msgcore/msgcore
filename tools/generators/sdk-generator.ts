@@ -377,8 +377,8 @@ export interface ApiKeyResult {
 import axios, { AxiosInstance, AxiosResponse } from 'axios';
 import {
   ${typeImports}
-} from './types';
-import { MsgCoreError, AuthenticationError, RateLimitError } from './errors';
+} from './types.js';
+import { MsgCoreError, AuthenticationError, RateLimitError } from './errors.js';
 
 ${apiGroups}
 
@@ -422,7 +422,12 @@ ${Object.keys(groups)
       this.client.interceptors.request.use((axiosConfig) => {
         const token = config.getToken!();
         if (token) {
-          axiosConfig.headers.Authorization = \`Bearer \${token}\`;
+          // Detect API keys (start with msc_) and use correct header
+          if (token.startsWith('msc_')) {
+            axiosConfig.headers['X-API-Key'] = token;
+          } else {
+            axiosConfig.headers.Authorization = \`Bearer \${token}\`;
+          }
         }
         return axiosConfig;
       });
@@ -639,9 +644,9 @@ export class RateLimitError extends MsgCoreError {
     return `// Generated main export for MsgCore SDK
 // DO NOT EDIT - This file is auto-generated from backend contracts
 
-export { MsgCore } from './client';
-export * from './types';
-export * from './errors';
+export { MsgCore } from './client.js';
+export * from './types.js';
+export * from './errors.js';
 
 // Version info
 export const SDK_VERSION = '${packageJson.version}';
