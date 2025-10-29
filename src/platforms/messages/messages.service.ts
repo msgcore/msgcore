@@ -452,6 +452,82 @@ export class MessagesService {
   }
 
   /**
+   * Store phone-sent message (messages sent directly from WhatsApp mobile app)
+   * Returns true if stored successfully, false if duplicate
+   */
+  async storePhoneSentMessage(data: {
+    projectId: string;
+    platformId: string;
+    platform: string;
+    providerMessageId: string;
+    targetChatId: string;
+    targetUserId?: string;
+    targetType: string; // user, channel, group
+    messageText: string | null;
+    messageContent?: any;
+    attachments?: PlatformAttachment[];
+    rawData: any;
+  }): Promise<boolean> {
+    try {
+      const storedMessage = await this.prisma.sentMessage.create({
+        data: {
+          projectId: data.projectId,
+          platformId: data.platformId,
+          platform: data.platform,
+          providerMessageId: data.providerMessageId,
+          targetChatId: data.targetChatId,
+          targetUserId: data.targetUserId,
+          targetType: data.targetType,
+          messageText: data.messageText,
+          messageContent: data.messageContent
+            ? JSON.parse(JSON.stringify(data.messageContent))
+            : undefined,
+          status: 'sent',
+          source: 'phone',
+          sentAt: new Date(),
+        },
+      });
+
+      this.logger.debug(
+        `Stored phone-sent ${data.platform} message ${storedMessage.id} to ${data.targetChatId}`,
+      );
+
+      // Deliver webhook notification for phone-sent message
+      await this.webhookDeliveryService.deliverEvent(
+        data.projectId,
+        WebhookEventType.MESSAGE_SENT,
+        {
+          message_id: storedMessage.id,
+          job_id: null,
+          platform: data.platform,
+          platform_id: data.platformId,
+          target: {
+            type: data.targetType,
+            chat_id: data.targetChatId,
+            user_id: data.targetUserId ?? null,
+          },
+          text: data.messageText,
+          source: 'phone',
+          sent_at: storedMessage.sentAt ? storedMessage.sentAt.toISOString() : new Date().toISOString(),
+        },
+      );
+
+      return true;
+    } catch (error) {
+      if (
+        error instanceof Prisma.PrismaClientKnownRequestError &&
+        error.code === 'P2002'
+      ) {
+        this.logger.debug(
+          `Duplicate phone-sent message ignored: ${data.providerMessageId} on platform ${data.platformId}`,
+        );
+        return false;
+      }
+      throw error;
+    }
+  }
+
+  /**
    * Helper: Prepare reaction context (validates platform, ownership, gets provider)
    */
   private async prepareReactionContext(

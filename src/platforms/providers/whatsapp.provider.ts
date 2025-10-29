@@ -618,8 +618,57 @@ export class WhatsAppProvider implements PlatformProvider, PlatformAdapter {
     );
 
     for (const msg of messages) {
+      // Handle messages sent from phone (fromMe: true)
       if (msg.key?.fromMe) {
-        continue; // Skip own messages
+        if (platformId) {
+          try {
+            // Extract target information
+            const targetChatId = msg.key?.remoteJid || 'unknown';
+            const messageText = this.extractEvolutionMessageText(msg);
+
+            // Determine target type based on JID format
+            let targetType = 'user';
+            if (targetChatId.includes('@g.us')) {
+              targetType = 'group';
+            } else if (targetChatId.includes('@c.us')) {
+              targetType = 'user';
+            } else if (targetChatId.includes('@s.whatsapp.net')) {
+              targetType = 'user';
+            }
+
+            // Extract attachments if any
+            const normalizedAttachments = this.normalizeAttachments(msg);
+
+            // Build message content
+            const messageContent = {
+              text: messageText,
+              attachments: normalizedAttachments.length > 0 ? normalizedAttachments : undefined,
+            };
+
+            await this.messagesService.storePhoneSentMessage({
+              projectId: connection.projectId,
+              platformId,
+              platform: PlatformType.WHATSAPP_EVO,
+              providerMessageId: msg.key?.id || msg.id || `evo-${Date.now()}`,
+              targetChatId,
+              targetUserId: targetType === 'user' ? targetChatId : undefined,
+              targetType,
+              messageText,
+              messageContent,
+              attachments: normalizedAttachments.length > 0 ? normalizedAttachments : undefined,
+              rawData: msg,
+            });
+
+            this.logger.debug(
+              `Stored phone-sent message to ${targetChatId} (${targetType})`,
+            );
+          } catch (error) {
+            this.logger.error(
+              `Failed to store phone-sent message: ${error.message}`,
+            );
+          }
+        }
+        continue; // Skip to next message after storing
       }
 
       // Check if this is a reaction message (Evolution API sends reactions in messages.upsert)

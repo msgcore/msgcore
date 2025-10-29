@@ -60,6 +60,7 @@ export interface MessageSentData {
     user_id: string | null;
   };
   text: string | null;
+  source: 'api' | 'phone'; // Source of the message
   sent_at: string;
 }
 

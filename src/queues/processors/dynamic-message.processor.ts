@@ -264,6 +264,7 @@ export class DynamicMessageProcessor
                 user_id: updatedMessage.targetUserId,
               },
               text: updatedMessage.messageText,
+              source: 'api',
               sent_at: updatedMessage.sentAt!.toISOString(),
             },
           );
