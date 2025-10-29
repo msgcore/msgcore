@@ -30,9 +30,14 @@ trap shutdown SIGTERM SIGINT
 # Get backend port from environment (default 3000)
 BACKEND_PORT=${PORT:-3000}
 
+# Run database migrations
+echo "Running database migrations..."
+cd /app/backend
+npx prisma migrate deploy
+echo "✓ Migrations completed"
+
 # Start backend
 echo "Starting backend API on port $BACKEND_PORT..."
-cd /app/backend
 node dist/src/main &
 BACKEND_PID=$!
 echo "Backend started (PID: $BACKEND_PID)"
