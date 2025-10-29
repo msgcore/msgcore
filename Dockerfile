@@ -91,9 +91,9 @@ RUN npm ci --only=production --legacy-peer-deps --ignore-scripts && \
 RUN npx prisma generate
 
 # ==============================================================================
-# Stage 4: Final Production Image with nginx
+# Stage 4: Final Production Image
 # ==============================================================================
-FROM nginx:alpine
+FROM node:20-alpine
 
 # Metadata labels for Docker Hub
 LABEL org.opencontainers.image.title="MsgCore" \
@@ -106,8 +106,8 @@ LABEL org.opencontainers.image.title="MsgCore" \
 
 WORKDIR /app
 
-# Install Node.js runtime for backend
-RUN apk add --no-cache nodejs npm wget
+# Install wget for health checks
+RUN apk add --no-cache wget
 
 # Copy production node_modules
 COPY --from=backend-deps /app/node_modules ./backend/node_modules
@@ -118,11 +118,8 @@ COPY --from=backend-builder /app/prisma ./backend/prisma
 COPY --from=backend-builder /app/generated ./backend/generated
 COPY --from=backend-builder /app/package*.json ./backend/
 
-# Copy built frontend to nginx html directory
-COPY --from=web-builder /app/web/dist /usr/share/nginx/html
-
-# Copy nginx configuration
-COPY docker/nginx.conf /etc/nginx/nginx.conf
+# Copy built frontend for ServeStaticModule
+COPY --from=web-builder /app/web/dist ./backend/web/dist
 
 # Copy entrypoint script
 COPY docker/docker-entrypoint.sh /docker-entrypoint.sh
@@ -144,8 +141,8 @@ ENV DATABASE_URL="" \
     MSGCORE_API_URL="" \
     CORS_ORIGINS="*"
 
-# Health check to monitor container health
+# Health check to monitor container health (uses PORT env var, defaults to 7890)
 HEALTHCHECK --interval=30s --timeout=3s --start-period=40s --retries=3 \
-  CMD wget --no-verbose --tries=1 --spider http://127.0.0.1:7890/api/v1/health || exit 1
+  CMD wget --no-verbose --tries=1 --spider http://127.0.0.1:${PORT:-7890}/api/v1/health || exit 1
 
 ENTRYPOINT ["/docker-entrypoint.sh"]

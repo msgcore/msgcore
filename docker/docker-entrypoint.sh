@@ -15,11 +15,6 @@ shutdown() {
         kill -TERM $BACKEND_PID 2>/dev/null || true
     fi
 
-    if [ ! -z "$NGINX_PID" ]; then
-        echo "Stopping nginx (PID: $NGINX_PID)..."
-        kill -TERM $NGINX_PID 2>/dev/null || true
-    fi
-
     echo "Shutdown complete"
     exit 0
 }
@@ -27,18 +22,22 @@ shutdown() {
 # Trap SIGTERM and SIGINT
 trap shutdown SIGTERM SIGINT
 
-# Get backend port from environment (default 3000)
-BACKEND_PORT=${PORT:-3000}
+# Backend port from environment (default 7890)
+BACKEND_PORT=${PORT:-7890}
 
 # Run database migrations
 echo "Running database migrations..."
 cd /app/backend
 npx prisma migrate deploy
-echo "✓ Migrations completed"
+if [ $? -ne 0 ]; then
+    echo "✗ Migration failed"
+    exit 1
+fi
+echo "✓ Migrations completed successfully"
 
-# Start backend
-echo "Starting backend API on port $BACKEND_PORT..."
-node dist/src/main &
+# Start backend (serves both API and frontend via ServeStaticModule)
+echo "Starting backend on port $BACKEND_PORT..."
+PORT=$BACKEND_PORT node dist/src/main &
 BACKEND_PID=$!
 echo "Backend started (PID: $BACKEND_PID)"
 
@@ -62,29 +61,23 @@ if [ $attempt -eq $max_attempts ]; then
     exit 1
 fi
 
-# Start nginx
-echo "Starting nginx on port 7890..."
-nginx -g "daemon off;" &
-NGINX_PID=$!
-echo "nginx started (PID: $NGINX_PID)"
-
 echo "=========================================="
 echo "MsgCore is running!"
 echo ""
 echo "🌐 Public URLs (MSGCORE_API_URL):"
-echo "  - API: ${MSGCORE_API_URL:-http://localhost:7890}/api/v1"
-echo "  - Frontend: ${MSGCORE_API_URL:-http://localhost:7890}"
-echo "  - Health: ${MSGCORE_API_URL:-http://localhost:7890}/api/v1/health"
+echo "  - API: ${MSGCORE_API_URL:-http://localhost:$BACKEND_PORT}/api/v1"
+echo "  - Frontend: ${MSGCORE_API_URL:-http://localhost:$BACKEND_PORT}"
+echo "  - Health: ${MSGCORE_API_URL:-http://localhost:$BACKEND_PORT}/api/v1/health"
 echo ""
 echo "🔧 Internal Container URLs:"
-echo "  - Frontend: http://localhost:7890"
-echo "  - API: http://localhost:7890/api/v1"
-echo "  - MCP: http://localhost:7890/mcp"
-echo "  - Docs: http://localhost:7890/docs"
+echo "  - Frontend: http://localhost:$BACKEND_PORT"
+echo "  - API: http://localhost:$BACKEND_PORT/api/v1"
+echo "  - MCP: http://localhost:$BACKEND_PORT/mcp"
+echo "  - Docs: http://localhost:$BACKEND_PORT/docs"
 echo "=========================================="
 
-# Wait for any process to exit
-wait -n $BACKEND_PID $NGINX_PID
+# Wait for backend to exit
+wait $BACKEND_PID
 
 # If we reach here, one of the processes died
 EXIT_CODE=$?
