@@ -792,15 +792,27 @@ export class WhatsAppProvider implements PlatformProvider, PlatformAdapter {
           // Extract and normalize attachments
           const normalizedAttachments = this.normalizeAttachments(msg);
 
+          // Extract chat name - for groups use group subject, for individuals use pushName
+          const chatId = msg.key?.remoteJid || msg.remoteJid || 'unknown';
+          let chatName: string | undefined;
+          if (chatId.includes('@g.us')) {
+            // Group chat - use group subject from message info
+            chatName = msg.message?.conversation?.groupSubject || msg.pushName;
+          } else {
+            // Individual chat - use pushName
+            chatName = msg.pushName || msg.senderName;
+          }
+
           await this.messagesService.storeIncomingMessage({
             projectId: connection.projectId,
             platformId,
             platform: PlatformType.WHATSAPP_EVO,
             providerMessageId: msg.key?.id || msg.id || `evo-${Date.now()}`,
-            providerChatId: msg.key?.remoteJid || msg.remoteJid || 'unknown',
+            providerChatId: chatId,
             providerUserId:
               msg.sender || msg.key?.remoteJid || msg.remoteJid || 'unknown',
             userDisplay: msg.pushName || msg.senderName || 'WhatsApp User',
+            chatName,
             messageText,
             messageType,
             attachments:
@@ -1723,15 +1735,27 @@ export class WhatsAppProvider implements PlatformProvider, PlatformAdapter {
           const messageText = this.extractEvolutionMessageText(msg);
           const normalizedAttachments = this.normalizeAttachments(msg);
 
+          // Extract chat name - for groups use group subject, for individuals use pushName
+          const msgChatId = msg.key?.remoteJid || msg.remoteJid || chatId;
+          let chatName: string | undefined;
+          if (msgChatId.includes('@g.us')) {
+            // Group chat - use group subject from message info
+            chatName = msg.message?.conversation?.groupSubject || msg.pushName;
+          } else {
+            // Individual chat - use pushName
+            chatName = msg.pushName || msg.senderName;
+          }
+
           const success = await this.messagesService.storeIncomingMessage({
             projectId,
             platformId,
             platform: PlatformType.WHATSAPP_EVO,
             providerMessageId: msg.key?.id || msg.id || `evo-${Date.now()}`,
-            providerChatId: msg.key?.remoteJid || msg.remoteJid || chatId,
+            providerChatId: msgChatId,
             providerUserId:
               msg.sender || msg.key?.remoteJid || msg.remoteJid || 'unknown',
             userDisplay: msg.pushName || msg.senderName || 'WhatsApp User',
+            chatName,
             messageText,
             messageType: 'text',
             attachments:

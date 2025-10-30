@@ -244,6 +244,7 @@ export class MessagesService {
     providerChatId: string;
     providerUserId: string;
     userDisplay?: string;
+    chatName?: string;
     messageText: string | null;
     messageType: string;
     rawData: any;
@@ -277,7 +278,7 @@ export class MessagesService {
         chatType = ChatType.channel;
       }
 
-      // Upsert chat first (create or update lastMessageAt)
+      // Upsert chat first (create or update lastMessageAt and name)
       const chat = await this.prisma.chat.upsert({
         where: {
           projectId_platformId_providerChatId: {
@@ -291,10 +292,13 @@ export class MessagesService {
           platformId: data.platformId,
           providerChatId: data.providerChatId,
           chatType,
+          name: data.chatName || null,
           lastMessageAt: new Date(),
         },
         update: {
           lastMessageAt: new Date(),
+          // Update name if provided and current name is null
+          ...(data.chatName ? { name: data.chatName } : {}),
         },
       });
 
