@@ -215,7 +215,13 @@ export class ChatsController {
       },
     });
 
-    const results = [];
+    const results: Array<{
+      platformId: string;
+      platform: string;
+      status: 'success' | 'skipped' | 'failed';
+      reason?: string;
+      error?: string;
+    }> = [];
 
     for (const platformConfig of platforms) {
       // Get provider
