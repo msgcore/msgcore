@@ -1688,11 +1688,24 @@ export class WhatsAppProvider implements PlatformProvider, PlatformAdapter {
       let filteredMessages = messages;
       if (params.startDate || params.endDate) {
         filteredMessages = messages.filter((msg: any) => {
-          const msgTimestamp = new Date(msg.messageTimestamp * 1000);
+          // messageTimestamp can be a number or an object with {low, high}
+          let timestampSeconds: number;
+          if (typeof msg.messageTimestamp === 'number') {
+            timestampSeconds = msg.messageTimestamp;
+          } else if (msg.messageTimestamp?.low !== undefined) {
+            // Handle Long type from Evolution API
+            timestampSeconds = msg.messageTimestamp.low;
+          } else {
+            // No timestamp, skip this message
+            return false;
+          }
+
+          const msgTimestamp = new Date(timestampSeconds * 1000);
           if (params.startDate && msgTimestamp < params.startDate) return false;
           if (params.endDate && msgTimestamp > params.endDate) return false;
           return true;
         });
+        this.logger.log(`After date filtering: ${filteredMessages.length} messages`);
       }
 
       // Store messages with conflict resolution (skip existing)
