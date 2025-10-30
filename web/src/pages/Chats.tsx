@@ -327,88 +327,82 @@ export function Chats() {
               </p>
             </div>
           ) : (
-            <div className="space-y-2">
+            <div className="space-y-3">
               {chats.map((chat: any) => (
                 <div
                   key={chat.id}
-                  className="border border-gray-200 rounded-lg p-4 hover:bg-gray-50 transition-colors cursor-pointer"
-                  onClick={() => setSelectedChatId(chat.id === selectedChatId ? null : chat.id)}
+                  className="border border-gray-200 rounded-xl p-4 hover:shadow-md transition-all bg-white"
                 >
-                  <div className="flex items-start justify-between">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2 mb-1">
-                        <h4 className="font-medium text-gray-900">
-                          {chat.name || chat.providerChatId}
-                        </h4>
-                        {getChatTypeBadge(chat.chatType)}
-                        <Badge variant="info">{chat.platform.name}</Badge>
+                  <div className="flex items-start gap-4">
+                    {/* Avatar */}
+                    <div className="w-12 h-12 rounded-full bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center flex-shrink-0 text-white font-semibold text-lg shadow-sm">
+                      {chat.name?.charAt(0)?.toUpperCase() || chat.providerChatId?.charAt(0)?.toUpperCase() || '?'}
+                    </div>
+
+                    {/* Content */}
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-start justify-between mb-2">
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 mb-1">
+                            <h4 className="font-semibold text-gray-900 text-base truncate">
+                              {chat.name || chat.providerChatId}
+                            </h4>
+                            {getChatTypeBadge(chat.chatType)}
+                          </div>
+                          <div className="flex items-center gap-2 mb-1">
+                            <Badge variant="info" className="text-xs">{chat.platform.name}</Badge>
+                            <span className="text-sm text-gray-600">
+                              {chat.messageCount} {chat.messageCount === 1 ? 'message' : 'messages'}
+                            </span>
+                          </div>
+                        </div>
                       </div>
-                      <p className="text-sm text-gray-600 mb-2">
-                        {chat.messageCount} messages
-                      </p>
-                      <div className="flex items-center gap-4 text-xs text-gray-500">
+
+                      {/* Metadata */}
+                      <div className="flex items-center gap-4 text-xs text-gray-500 mb-3">
                         {chat.lastMessageAt && (
                           <span className="flex items-center gap-1">
                             <Calendar className="h-3 w-3" />
-                            Last message: {formatDateTime(chat.lastMessageAt)}
+                            {formatDateTime(chat.lastMessageAt)}
                           </span>
                         )}
                         {chat.lastSyncedAt && (
                           <span className="flex items-center gap-1">
                             <RefreshCw className="h-3 w-3" />
-                            Last synced: {formatDateTime(chat.lastSyncedAt)}
+                            Synced {formatDateTime(chat.lastSyncedAt)}
                           </span>
                         )}
                       </div>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleOpenMessagesModal(chat);
-                        }}
-                      >
-                        <Eye className="h-4 w-4 mr-2" />
-                        View Messages
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleOpenSyncModal(chat);
-                        }}
-                      >
-                        <RefreshCw className="h-4 w-4 mr-2" />
-                        Sync History
-                      </Button>
-                    </div>
-                  </div>
 
-                  {selectedChatId === chat.id && (
-                    <div className="mt-4 pt-4 border-t border-gray-200">
-                      <div className="grid grid-cols-2 gap-4 text-sm">
-                        <div>
-                          <span className="font-medium text-gray-700">Provider Chat ID:</span>
-                          <p className="text-gray-600 font-mono text-xs mt-1">{chat.providerChatId}</p>
-                        </div>
-                        <div>
-                          <span className="font-medium text-gray-700">Chat ID:</span>
-                          <p className="text-gray-600 font-mono text-xs mt-1">{chat.id}</p>
-                        </div>
-                        <div>
-                          <span className="font-medium text-gray-700">Created:</span>
-                          <p className="text-gray-600 mt-1">{formatDateTime(chat.createdAt)}</p>
-                        </div>
-                        <div>
-                          <span className="font-medium text-gray-700">Updated:</span>
-                          <p className="text-gray-600 mt-1">{formatDateTime(chat.updatedAt)}</p>
-                        </div>
+                      {/* Action Buttons */}
+                      <div className="flex items-center gap-2">
+                        <Button
+                          variant="primary"
+                          size="sm"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleOpenMessagesModal(chat);
+                          }}
+                          className="flex-1"
+                        >
+                          <Eye className="h-4 w-4 mr-2" />
+                          View Messages
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleOpenSyncModal(chat);
+                          }}
+                          className="flex-1"
+                        >
+                          <RefreshCw className="h-4 w-4 mr-2" />
+                          Sync
+                        </Button>
                       </div>
                     </div>
-                  )}
+                  </div>
                 </div>
               ))}
             </div>
