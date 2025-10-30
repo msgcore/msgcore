@@ -25,7 +25,7 @@ import { CryptoUtil } from '../../common/utils/crypto.util';
 import { MessagesService } from '../messages/messages.service';
 import { SdkContract } from '../../common/decorators/sdk-contract.decorator';
 
-@Controller('api/v1/projects/:projectId/chats')
+@Controller('api/v1/projects/:project/chats')
 @UseGuards(AppAuthGuard, ProjectAccessGuard)
 export class ChatsController {
   constructor(
@@ -68,7 +68,7 @@ export class ChatsController {
     },
   })
   async listChats(
-    @Param('projectId') projectId: string,
+    @Param('project') projectId: string,
     @Query() query: ListChatsDto,
     @AuthContextParam() authContext: AuthContext,
   ) {
@@ -89,7 +89,7 @@ export class ChatsController {
     },
   })
   async getChat(
-    @Param('projectId') projectId: string,
+    @Param('project') projectId: string,
     @Param('chatId') chatId: string,
     @AuthContextParam() authContext: AuthContext,
   ) {
@@ -120,7 +120,7 @@ export class ChatsController {
     },
   })
   async getChatMessages(
-    @Param('projectId') projectId: string,
+    @Param('project') projectId: string,
     @Param('chatId') chatId: string,
     @AuthContextParam() authContext: AuthContext,
     @Query('limit') limit?: number,
@@ -162,7 +162,7 @@ export class ChatsController {
     },
   })
   async updateChat(
-    @Param('projectId') projectId: string,
+    @Param('project') projectId: string,
     @Param('chatId') chatId: string,
     @Body() updateDto: UpdateChatDto,
     @AuthContextParam() authContext: AuthContext,
@@ -204,7 +204,7 @@ export class ChatsController {
     },
   })
   async syncChatHistory(
-    @Param('projectId') projectId: string,
+    @Param('project') projectId: string,
     @Param('chatId') chatId: string,
     @Body() syncDto: SyncHistoryDto,
     @AuthContextParam() authContext: AuthContext,
