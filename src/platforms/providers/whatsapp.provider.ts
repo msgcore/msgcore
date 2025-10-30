@@ -1699,6 +1699,15 @@ export class WhatsAppProvider implements PlatformProvider, PlatformAdapter {
       // Filter by date if provided
       let filteredMessages = messages;
       if (params.startDate || params.endDate) {
+        // Adjust endDate to include the whole day (23:59:59.999)
+        let adjustedEndDate = params.endDate;
+        if (adjustedEndDate) {
+          adjustedEndDate = new Date(adjustedEndDate);
+          adjustedEndDate.setHours(23, 59, 59, 999);
+        }
+
+        this.logger.log(`Date filter range: ${params.startDate?.toISOString()} to ${adjustedEndDate?.toISOString()}`);
+
         filteredMessages = messages.filter((msg: any) => {
           // messageTimestamp can be a number or an object with {low, high}
           let timestampSeconds: number;
@@ -1714,7 +1723,7 @@ export class WhatsAppProvider implements PlatformProvider, PlatformAdapter {
 
           const msgTimestamp = new Date(timestampSeconds * 1000);
           if (params.startDate && msgTimestamp < params.startDate) return false;
-          if (params.endDate && msgTimestamp > params.endDate) return false;
+          if (adjustedEndDate && msgTimestamp > adjustedEndDate) return false;
           return true;
         });
         this.logger.log(`After date filtering: ${filteredMessages.length} messages`);
