@@ -35,6 +35,7 @@ model Project {
   ownerId            String               @map("owner_id")
   apiKeys            ApiKey[]
   blocked_messages   blocked_messages[]
+  chats              Chat[]
   guardrail_policies guardrail_policies[]
   identities         Identity[]
   identityAliases    IdentityAlias[]
@@ -126,6 +127,7 @@ model ProjectPlatform {
   testMode             Boolean            @default(false) @map("test_mode")
   createdAt            DateTime           @default(now()) @map("created_at")
   updatedAt            DateTime           @updatedAt @map("updated_at")
+  chats                Chat[]
   identityAliases      IdentityAlias[]
   platformLogs         PlatformLog[]
   project              Project            @relation(fields: [projectId], references: [id], onDelete: Cascade)
@@ -156,11 +158,37 @@ model ApiKeyUsage {
   @@map("api_key_usage")
 }
 
+model Chat {
+  id              String            @id @default(uuid())
+  projectId       String            @map("project_id")
+  platformId      String            @map("platform_id")
+  providerChatId  String            @map("provider_chat_id")
+  chatType        ChatType          @map("chat_type")
+  name            String?
+  avatarUrl       String?           @map("avatar_url")
+  lastMessageAt   DateTime?         @map("last_message_at")
+  lastSyncedAt    DateTime?         @map("last_synced_at")
+  metadata        Json?
+  createdAt       DateTime          @default(now()) @map("created_at")
+  updatedAt       DateTime          @updatedAt @map("updated_at")
+  messages        ReceivedMessage[]
+  platformConfig  ProjectPlatform   @relation(fields: [platformId], references: [id], onDelete: Cascade)
+  project         Project           @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@unique([projectId, platformId, providerChatId])
+  @@index([projectId])
+  @@index([platformId])
+  @@index([lastMessageAt])
+  @@index([chatType])
+  @@map("chats")
+}
+
 model ReceivedMessage {
   id                String              @id @default(uuid())
   projectId         String              @map("project_id")
   platformId        String              @map("platform_id")
   platform          String
+  chatId            String?             @map("chat_id")
   providerMessageId String              @map("provider_message_id")
   providerChatId    String              @map("provider_chat_id")
   providerUserId    String              @map("provider_user_id")
@@ -170,12 +198,14 @@ model ReceivedMessage {
   rawData           Json                @map("raw_data")
   receivedAt        DateTime            @default(now()) @map("received_at")
   attachments       MessageAttachment[]
+  chat              Chat?               @relation(fields: [chatId], references: [id], onDelete: SetNull)
   platformConfig    ProjectPlatform     @relation(fields: [platformId], references: [id], onDelete: Cascade)
   project           Project             @relation(fields: [projectId], references: [id], onDelete: Cascade)
 
   @@unique([platformId, providerMessageId])
   @@index([projectId])
   @@index([platformId])
+  @@index([chatId])
   @@index([receivedAt])
   @@index([providerChatId])
   @@index([providerUserId])
@@ -419,4 +449,10 @@ enum ReactionType {
 enum IdentityLinkMethod {
   manual
   automatic
+}
+
+enum ChatType {
+  individual
+  group
+  channel
 }

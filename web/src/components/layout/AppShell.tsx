@@ -19,6 +19,7 @@ import {
   Webhook,
   UserCircle,
   Settings,
+  MessagesSquare,
 } from 'lucide-react';
 import { cn, getInitials } from '../../lib/utils';
 
@@ -61,6 +62,11 @@ export function AppShell({ children }: AppShellProps) {
       label: t('nav.messages'),
       icon: MessageSquare,
       href: '/messages',
+    },
+    {
+      label: t('nav.chats'),
+      icon: MessagesSquare,
+      href: '/chats',
     },
     {
       label: t('nav.platforms'),

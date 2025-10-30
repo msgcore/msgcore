@@ -1585,4 +1585,164 @@ export class WhatsAppProvider implements PlatformProvider, PlatformAdapter {
 
     return attachments;
   }
+
+  /**
+   * List all chats from Evolution API
+   */
+  async listChats(connectionKey: string): Promise<any[]> {
+    const { platformId, credentials } =
+      await ProviderUtil.getPlatformCredentials<WhatsAppCredentials>(
+        connectionKey,
+        this.prisma,
+        'WhatsApp',
+      );
+
+    const { evolutionApiUrl, evolutionApiKey, instanceName } = credentials;
+
+    try {
+      const url = `${evolutionApiUrl}/chat/findChats/${instanceName}`;
+
+      const response = await fetch(url, {
+        method: 'GET',
+        headers: {
+          apikey: evolutionApiKey,
+        },
+      });
+
+      if (!response.ok) {
+        const error = await response.text();
+        throw new Error(
+          `Evolution API listChats error: ${response.status} - ${error}`,
+        );
+      }
+
+      const chats = await response.json();
+      this.logger.debug(`Retrieved ${chats.length} chats from Evolution API`);
+
+      return chats;
+    } catch (error) {
+      this.logger.error(
+        `Failed to list chats [${connectionKey}]: ${error.message}`,
+      );
+      throw error;
+    }
+  }
+
+  /**
+   * Sync chat history from Evolution API
+   */
+  async syncChatHistory(
+    connectionKey: string,
+    chatId: string,
+    params: {
+      startDate?: Date;
+      endDate?: Date;
+      limit?: number;
+    },
+  ): Promise<void> {
+    const { platformId, credentials } =
+      await ProviderUtil.getPlatformCredentials<WhatsAppCredentials>(
+        connectionKey,
+        this.prisma,
+        'WhatsApp',
+      );
+
+    const { evolutionApiUrl, evolutionApiKey, instanceName } = credentials;
+    const [projectId] = connectionKey.split(':');
+
+    try {
+      this.logger.log(
+        `Syncing chat history for ${chatId} from ${params.startDate || 'beginning'} to ${params.endDate || 'now'}`,
+      );
+
+      const url = `${evolutionApiUrl}/chat/fetchMessages/${instanceName}`;
+
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          apikey: evolutionApiKey,
+        },
+        body: JSON.stringify({
+          remoteJid: chatId,
+          limit: params.limit || 100,
+        }),
+      });
+
+      if (!response.ok) {
+        const error = await response.text();
+        throw new Error(
+          `Evolution API fetchMessages error: ${response.status} - ${error}`,
+        );
+      }
+
+      const messages = await response.json();
+      this.logger.log(`Retrieved ${messages.length} messages from Evolution API`);
+
+      // Filter by date if provided
+      let filteredMessages = messages;
+      if (params.startDate || params.endDate) {
+        filteredMessages = messages.filter((msg: any) => {
+          const msgTimestamp = new Date(msg.messageTimestamp * 1000);
+          if (params.startDate && msgTimestamp < params.startDate) return false;
+          if (params.endDate && msgTimestamp > params.endDate) return false;
+          return true;
+        });
+      }
+
+      // Store messages with conflict resolution (skip existing)
+      let stored = 0;
+      let skipped = 0;
+
+      for (const msg of filteredMessages) {
+        // Skip messages sent from this device (fromMe: true)
+        if (msg.key?.fromMe) {
+          skipped++;
+          continue;
+        }
+
+        try {
+          const messageText = this.extractEvolutionMessageText(msg);
+          const normalizedAttachments = this.normalizeAttachments(msg);
+
+          const success = await this.messagesService.storeIncomingMessage({
+            projectId,
+            platformId,
+            platform: PlatformType.WHATSAPP_EVO,
+            providerMessageId: msg.key?.id || msg.id || `evo-${Date.now()}`,
+            providerChatId: msg.key?.remoteJid || msg.remoteJid || chatId,
+            providerUserId:
+              msg.sender || msg.key?.remoteJid || msg.remoteJid || 'unknown',
+            userDisplay: msg.pushName || msg.senderName || 'WhatsApp User',
+            messageText,
+            messageType: 'text',
+            attachments:
+              normalizedAttachments.length > 0
+                ? normalizedAttachments
+                : undefined,
+            rawData: msg,
+            skipIfExists: true, // Enable conflict resolution
+          });
+
+          if (success) {
+            stored++;
+          } else {
+            skipped++;
+          }
+        } catch (error) {
+          this.logger.error(`Failed to store message: ${error.message}`);
+          skipped++;
+        }
+      }
+
+      this.logger.log(
+        `Chat history sync completed: ${stored} stored, ${skipped} skipped`,
+      );
+    } catch (error) {
+      this.logger.error(
+        `Failed to sync chat history [${connectionKey}]: ${error.message}`,
+      );
+      throw error;
+    }
+  }
 }

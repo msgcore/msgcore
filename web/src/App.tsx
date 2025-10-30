@@ -16,6 +16,7 @@ import { Webhooks } from './pages/Webhooks';
 import { Identities } from './pages/Identities';
 import { Settings } from './pages/Settings';
 import { AcceptInvite } from './pages/AcceptInvite';
+import { Chats } from './pages/Chats';
 import { ProtectedRoute } from './components/ProtectedRoute';
 import { SetupRoute } from './components/SetupRoute';
 
@@ -143,6 +144,14 @@ function App() {
               element={
                 <ProtectedRoute>
                   <Settings />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/chats"
+              element={
+                <ProtectedRoute>
+                  <Chats />
                 </ProtectedRoute>
               }
             />

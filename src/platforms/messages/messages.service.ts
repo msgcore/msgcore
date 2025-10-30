@@ -11,7 +11,7 @@ import { MessageQueue } from '../../queues/message.queue';
 import { PlatformsService } from '../platforms.service';
 import { PlatformRegistry } from '../services/platform-registry.service';
 import { SecurityUtil, AuthContext } from '../../common/utils/security.util';
-import { ReactionType, Prisma } from '@prisma/client';
+import { ReactionType, Prisma, ChatType } from '@prisma/client';
 import { WebhookDeliveryService } from '../../webhooks/services/webhook-delivery.service';
 import { WebhookEventType } from '../../webhooks/types/webhook-event.types';
 import { PlatformAttachment } from '../../messages/interfaces/message-attachment.interface';
@@ -248,13 +248,62 @@ export class MessagesService {
     messageType: string;
     rawData: any;
     attachments?: PlatformAttachment[];
+    skipIfExists?: boolean;
   }): Promise<boolean> {
     try {
+      // Check if message already exists (for conflict resolution during history sync)
+      if (data.skipIfExists) {
+        const existing = await this.prisma.receivedMessage.findUnique({
+          where: {
+            platformId_providerMessageId: {
+              platformId: data.platformId,
+              providerMessageId: data.providerMessageId,
+            },
+          },
+        });
+        if (existing) {
+          this.logger.debug(
+            `Skipping existing message: ${data.providerMessageId}`,
+          );
+          return false;
+        }
+      }
+
+      // Determine chat type from providerChatId format
+      let chatType: ChatType = ChatType.individual;
+      if (data.providerChatId.includes('@g.us')) {
+        chatType = ChatType.group;
+      } else if (data.providerChatId.includes('@broadcast')) {
+        chatType = ChatType.channel;
+      }
+
+      // Upsert chat first (create or update lastMessageAt)
+      const chat = await this.prisma.chat.upsert({
+        where: {
+          projectId_platformId_providerChatId: {
+            projectId: data.projectId,
+            platformId: data.platformId,
+            providerChatId: data.providerChatId,
+          },
+        },
+        create: {
+          projectId: data.projectId,
+          platformId: data.platformId,
+          providerChatId: data.providerChatId,
+          chatType,
+          lastMessageAt: new Date(),
+        },
+        update: {
+          lastMessageAt: new Date(),
+        },
+      });
+
       const storedMessage = await this.prisma.receivedMessage.create({
         data: {
           projectId: data.projectId,
           platformId: data.platformId,
           platform: data.platform,
+          chatId: chat.id,
           providerMessageId: data.providerMessageId,
           providerChatId: data.providerChatId,
           providerUserId: data.providerUserId,
