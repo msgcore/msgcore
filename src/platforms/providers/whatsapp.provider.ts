@@ -1669,11 +1669,14 @@ export class WhatsAppProvider implements PlatformProvider, PlatformAdapter {
 
       const url = `${evolutionApiUrl}/chat/findMessages/${instanceName}`;
 
-      // Fetch all messages with pagination
+      // Fetch messages with pagination (respecting user's limit)
+      const userLimit = params.limit || 100; // Default to 100 if not specified
       const allMessages: any[] = [];
       let currentPage = 1;
       let totalPages = 1;
       const pageLimit = 50; // Evolution API default page size
+
+      this.logger.log(`User requested limit: ${userLimit} messages`);
 
       do {
         const response = await fetch(url, {
@@ -1708,10 +1711,17 @@ export class WhatsAppProvider implements PlatformProvider, PlatformAdapter {
         this.logger.log(`Retrieved page ${currentPage}/${totalPages} (${messages.length} messages)`);
 
         currentPage++;
+
+        // Stop if we've reached the user's requested limit
+        if (allMessages.length >= userLimit) {
+          this.logger.log(`Reached user limit of ${userLimit} messages, stopping pagination`);
+          break;
+        }
       } while (currentPage <= totalPages && currentPage <= 20); // Safety limit: max 20 pages (1000 messages)
 
-      const messages = allMessages;
-      this.logger.log(`Retrieved total of ${messages.length} messages from Evolution API`);
+      // Trim to user's requested limit
+      const messages = allMessages.slice(0, userLimit);
+      this.logger.log(`Retrieved total of ${allMessages.length} messages, using first ${messages.length} (user limit: ${userLimit})`);
 
       // Filter by date if provided
       let filteredMessages = messages;
