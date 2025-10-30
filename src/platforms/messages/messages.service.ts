@@ -252,24 +252,6 @@ export class MessagesService {
     skipIfExists?: boolean;
   }): Promise<boolean> {
     try {
-      // Check if message already exists (for conflict resolution during history sync)
-      if (data.skipIfExists) {
-        const existing = await this.prisma.receivedMessage.findUnique({
-          where: {
-            platformId_providerMessageId: {
-              platformId: data.platformId,
-              providerMessageId: data.providerMessageId,
-            },
-          },
-        });
-        if (existing) {
-          this.logger.debug(
-            `Skipping existing message: ${data.providerMessageId}`,
-          );
-          return false;
-        }
-      }
-
       // Determine chat type from providerChatId format
       let chatType: ChatType = ChatType.individual;
       if (data.providerChatId.includes('@g.us')) {
@@ -301,6 +283,36 @@ export class MessagesService {
           ...(data.chatName ? { name: data.chatName } : {}),
         },
       });
+
+      // Check if message already exists (for conflict resolution during history sync)
+      if (data.skipIfExists) {
+        const existing = await this.prisma.receivedMessage.findUnique({
+          where: {
+            platformId_providerMessageId: {
+              platformId: data.platformId,
+              providerMessageId: data.providerMessageId,
+            },
+          },
+        });
+        if (existing) {
+          // If message exists but has no chatId, update it
+          if (!existing.chatId && chat.id) {
+            await this.prisma.receivedMessage.update({
+              where: { id: existing.id },
+              data: { chatId: chat.id },
+            });
+            this.logger.debug(
+              `Updated existing message with chatId: ${data.providerMessageId}`,
+            );
+            return true;
+          }
+
+          this.logger.debug(
+            `Skipping existing message: ${data.providerMessageId}`,
+          );
+          return false;
+        }
+      }
 
       const storedMessage = await this.prisma.receivedMessage.create({
         data: {
