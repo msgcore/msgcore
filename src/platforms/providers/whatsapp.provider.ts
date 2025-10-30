@@ -1669,32 +1669,49 @@ export class WhatsAppProvider implements PlatformProvider, PlatformAdapter {
 
       const url = `${evolutionApiUrl}/chat/findMessages/${instanceName}`;
 
-      const response = await fetch(url, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          apikey: evolutionApiKey,
-        },
-        body: JSON.stringify({
-          where: {
-            key: {
-              remoteJid: chatId,
-            },
+      // Fetch all messages with pagination
+      const allMessages: any[] = [];
+      let currentPage = 1;
+      let totalPages = 1;
+      const pageLimit = 50; // Evolution API default page size
+
+      do {
+        const response = await fetch(url, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            apikey: evolutionApiKey,
           },
-          limit: params.limit || 100,
-        }),
-      });
+          body: JSON.stringify({
+            where: {
+              key: {
+                remoteJid: chatId,
+              },
+            },
+            limit: pageLimit,
+            page: currentPage,
+          }),
+        });
 
-      if (!response.ok) {
-        const error = await response.text();
-        throw new Error(
-          `Evolution API findMessages error: ${response.status} - ${error}`,
-        );
-      }
+        if (!response.ok) {
+          const error = await response.text();
+          throw new Error(
+            `Evolution API findMessages error: ${response.status} - ${error}`,
+          );
+        }
 
-      const data = await response.json();
-      const messages = data.messages?.records || [];
-      this.logger.log(`Retrieved ${messages.length} messages from Evolution API`);
+        const data = await response.json();
+        const messages = data.messages?.records || [];
+        allMessages.push(...messages);
+
+        totalPages = data.messages?.pages || 1;
+        this.logger.log(`Retrieved page ${currentPage}/${totalPages} (${messages.length} messages)`);
+
+        currentPage++;
+      } while (currentPage <= totalPages && currentPage <= 20); // Safety limit: max 20 pages (1000 messages)
+
+      const messages = allMessages;
+      this.logger.log(`Retrieved total of ${messages.length} messages from Evolution API`);
 
       // Filter by date if provided
       let filteredMessages = messages;
