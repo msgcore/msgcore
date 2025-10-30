@@ -1495,6 +1495,30 @@ export class WhatsAppProvider implements PlatformProvider, PlatformAdapter {
   }
 
   /**
+   * Convert Long object to number (handles WhatsApp Evolution API's Long type)
+   */
+  private convertToInteger(value: any): number | undefined {
+    if (value === null || value === undefined) {
+      return undefined;
+    }
+
+    // If it's already a number, return it
+    if (typeof value === 'number') {
+      return Math.floor(value);
+    }
+
+    // If it's a Long object from WhatsApp API (has low, high, unsigned properties)
+    if (typeof value === 'object' && 'low' in value) {
+      // For most file sizes, the 'low' value is sufficient (handles up to ~2GB)
+      return value.low;
+    }
+
+    // Try to parse as number
+    const parsed = parseInt(String(value), 10);
+    return isNaN(parsed) ? undefined : parsed;
+  }
+
+  /**
    * Normalize WhatsApp (Evolution API) attachments to universal PlatformAttachment format
    */
   private normalizeAttachments(message: any): PlatformAttachment[] {
@@ -1506,7 +1530,7 @@ export class WhatsAppProvider implements PlatformProvider, PlatformAdapter {
         type: FileTypeUtil.detectFileType(message.mimetype, message.fileName),
         url: message.mediaUrl,
         filename: message.fileName,
-        size: message.filesize,
+        size: this.convertToInteger(message.filesize),
         mimeType: message.mimetype,
       });
     }
@@ -1520,7 +1544,7 @@ export class WhatsAppProvider implements PlatformProvider, PlatformAdapter {
           type: 'image',
           url: msg.imageMessage.url || '',
           filename: msg.imageMessage.fileName,
-          size: msg.imageMessage.fileLength,
+          size: this.convertToInteger(msg.imageMessage.fileLength),
           mimeType: msg.imageMessage.mimetype || 'image/jpeg',
         });
       }
@@ -1530,7 +1554,7 @@ export class WhatsAppProvider implements PlatformProvider, PlatformAdapter {
           type: 'video',
           url: msg.videoMessage.url || '',
           filename: msg.videoMessage.fileName,
-          size: msg.videoMessage.fileLength,
+          size: this.convertToInteger(msg.videoMessage.fileLength),
           mimeType: msg.videoMessage.mimetype || 'video/mp4',
         });
       }
@@ -1540,7 +1564,7 @@ export class WhatsAppProvider implements PlatformProvider, PlatformAdapter {
           type: 'audio',
           url: msg.audioMessage.url || '',
           filename: 'audio.ogg',
-          size: msg.audioMessage.fileLength,
+          size: this.convertToInteger(msg.audioMessage.fileLength),
           mimeType: msg.audioMessage.mimetype || 'audio/ogg',
         });
       }
@@ -1553,7 +1577,7 @@ export class WhatsAppProvider implements PlatformProvider, PlatformAdapter {
           ),
           url: msg.documentMessage.url || '',
           filename: msg.documentMessage.fileName,
-          size: msg.documentMessage.fileLength,
+          size: this.convertToInteger(msg.documentMessage.fileLength),
           mimeType: msg.documentMessage.mimetype,
         });
       }
