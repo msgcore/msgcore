@@ -1655,7 +1655,7 @@ export class WhatsAppProvider implements PlatformProvider, PlatformAdapter {
         `Syncing chat history for ${chatId} from ${params.startDate || 'beginning'} to ${params.endDate || 'now'}`,
       );
 
-      const url = `${evolutionApiUrl}/chat/fetchMessages/${instanceName}`;
+      const url = `${evolutionApiUrl}/chat/findMessages/${instanceName}`;
 
       const response = await fetch(url, {
         method: 'POST',
@@ -1664,7 +1664,11 @@ export class WhatsAppProvider implements PlatformProvider, PlatformAdapter {
           apikey: evolutionApiKey,
         },
         body: JSON.stringify({
-          remoteJid: chatId,
+          where: {
+            key: {
+              remoteJid: chatId,
+            },
+          },
           limit: params.limit || 100,
         }),
       });
@@ -1672,11 +1676,12 @@ export class WhatsAppProvider implements PlatformProvider, PlatformAdapter {
       if (!response.ok) {
         const error = await response.text();
         throw new Error(
-          `Evolution API fetchMessages error: ${response.status} - ${error}`,
+          `Evolution API findMessages error: ${response.status} - ${error}`,
         );
       }
 
-      const messages = await response.json();
+      const data = await response.json();
+      const messages = data.messages?.records || [];
       this.logger.log(`Retrieved ${messages.length} messages from Evolution API`);
 
       // Filter by date if provided
@@ -1741,6 +1746,76 @@ export class WhatsAppProvider implements PlatformProvider, PlatformAdapter {
     } catch (error) {
       this.logger.error(
         `Failed to sync chat history [${connectionKey}]: ${error.message}`,
+      );
+      throw error;
+    }
+  }
+
+  async syncAllChats(
+    connectionKey: string,
+    params: {
+      startDate?: Date;
+      endDate?: Date;
+      limit?: number;
+    },
+  ): Promise<void> {
+    const { platformId, credentials } =
+      await ProviderUtil.getPlatformCredentials<WhatsAppCredentials>(
+        connectionKey,
+        this.prisma,
+        'WhatsApp',
+      );
+
+    const { evolutionApiUrl, evolutionApiKey, instanceName } = credentials;
+    const [projectId] = connectionKey.split(':');
+
+    try {
+      this.logger.log(`Syncing all chats for ${connectionKey}`);
+
+      // Fetch all chats from Evolution API
+      const url = `${evolutionApiUrl}/chat/findChats/${instanceName}`;
+
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          apikey: evolutionApiKey,
+        },
+        body: JSON.stringify({
+          where: {},
+          limit: 1000, // Get all chats
+        }),
+      });
+
+      if (!response.ok) {
+        const error = await response.text();
+        throw new Error(
+          `Evolution API findChats error: ${response.status} - ${error}`,
+        );
+      }
+
+      const data = await response.json();
+      const chats = data.chats?.records || [];
+      this.logger.log(`Found ${chats.length} chats to sync`);
+
+      // Sync each chat
+      for (const chat of chats) {
+        const remoteJid = chat.id;
+
+        try {
+          await this.syncChatHistory(connectionKey, remoteJid, params);
+        } catch (error) {
+          this.logger.error(
+            `Failed to sync chat ${remoteJid}: ${error.message}`,
+          );
+          // Continue with other chats
+        }
+      }
+
+      this.logger.log(`Completed syncing all chats for ${connectionKey}`);
+    } catch (error) {
+      this.logger.error(
+        `Failed to sync all chats [${connectionKey}]: ${error.message}`,
       );
       throw error;
     }

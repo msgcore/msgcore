@@ -175,11 +175,100 @@ export class ChatsController {
     );
   }
 
+  @Post('sync-all')
+  @HttpCode(HttpStatus.ACCEPTED)
+  @SdkContract({
+    command: 'chats sync-all',
+    description: 'Sync all chats and their messages from all platforms',
+    category: 'Chats',
+    inputType: 'SyncHistoryDto',
+    options: {
+      platformId: {
+        description: 'Optional: Sync only chats from specific platform',
+        type: 'string',
+      },
+      startDate: {
+        description: 'Start date for history sync (ISO 8601)',
+        type: 'string',
+      },
+      endDate: {
+        description: 'End date for history sync (ISO 8601)',
+        type: 'string',
+      },
+      limit: {
+        description: 'Maximum number of messages to sync per chat (1-1000)',
+        type: 'number',
+        default: 100,
+      },
+    },
+  })
+  async syncAllChats(
+    @Param('project') projectId: string,
+    @Body() syncDto: SyncHistoryDto & { platformId?: string },
+    @AuthContextParam() authContext: AuthContext,
+  ) {
+    // Get all platforms for the project
+    const platforms = await this.prisma.projectPlatform.findMany({
+      where: {
+        projectId,
+        ...(syncDto.platformId ? { id: syncDto.platformId } : {}),
+      },
+    });
+
+    const results = [];
+
+    for (const platformConfig of platforms) {
+      // Get provider
+      const provider = this.platformRegistry.getProvider(
+        platformConfig.platform,
+      );
+
+      if (!provider || !('syncAllChats' in provider)) {
+        results.push({
+          platformId: platformConfig.id,
+          platform: platformConfig.platform,
+          status: 'skipped',
+          reason: 'Platform does not support sync-all',
+        });
+        continue;
+      }
+
+      try {
+        const connectionKey = `${projectId}:${platformConfig.id}`;
+        await (provider as any).syncAllChats(connectionKey, {
+          startDate: syncDto.startDate ? new Date(syncDto.startDate) : undefined,
+          endDate: syncDto.endDate ? new Date(syncDto.endDate) : undefined,
+          limit: syncDto.limit,
+        });
+
+        results.push({
+          platformId: platformConfig.id,
+          platform: platformConfig.platform,
+          status: 'success',
+        });
+      } catch (error) {
+        results.push({
+          platformId: platformConfig.id,
+          platform: platformConfig.platform,
+          status: 'failed',
+          error: error.message,
+        });
+      }
+    }
+
+    return {
+      success: true,
+      message: 'Chat sync initiated for all platforms',
+      results,
+      timestamp: new Date().toISOString(),
+    };
+  }
+
   @Post(':chatId/sync')
   @HttpCode(HttpStatus.ACCEPTED)
   @SdkContract({
     command: 'chats sync',
-    description: 'Sync historical messages for a chat from the platform provider',
+    description: 'Sync historical messages for a specific chat from the platform provider',
     category: 'Chats',
     inputType: 'SyncHistoryDto',
     options: {

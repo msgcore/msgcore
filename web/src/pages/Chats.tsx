@@ -18,7 +18,7 @@ import { Badge } from '../components/ui/Badge';
 import { Alert } from '../components/ui/Alert';
 import { formatDateTime } from '../lib/utils';
 import { useProjectContext } from '../contexts/ProjectContext';
-import { useChats, useSyncChatHistory } from '../hooks/useChats';
+import { useChats, useSyncChatHistory, useSyncAllChats } from '../hooks/useChats';
 import { usePlatforms } from '../hooks/usePlatforms';
 import { useToast } from '../contexts/ToastContext';
 import { SyncHistoryModal } from '../components/chats/SyncHistoryModal';
@@ -35,6 +35,7 @@ export function Chats() {
   const [selectedPlatformId, setSelectedPlatformId] = useState<string>('');
   const [selectedChatId, setSelectedChatId] = useState<string | null>(null);
   const [syncModalOpen, setSyncModalOpen] = useState(false);
+  const [syncAllMode, setSyncAllMode] = useState(false);
   const [messagesModalOpen, setMessagesModalOpen] = useState(false);
   const [currentSyncChat, setCurrentSyncChat] = useState<{ id: string; name: string } | null>(null);
 
@@ -54,6 +55,7 @@ export function Chats() {
   const platforms = platformsData?.platforms || [];
 
   const syncHistoryMutation = useSyncChatHistory(selectedProjectId || undefined);
+  const syncAllChatsMutation = useSyncAllChats(selectedProjectId || undefined);
 
   const chats = chatsData?.chats || [];
   const pagination = chatsData?.pagination || { total: 0, limit: 100, offset: 0 };
@@ -88,24 +90,43 @@ export function Chats() {
     );
   };
 
-  // Handle sync history
+  // Handle sync history for specific chat
   const handleOpenSyncModal = (chat: any) => {
     setCurrentSyncChat({ id: chat.id, name: chat.name || chat.providerChatId });
+    setSyncAllMode(false);
+    setSyncModalOpen(true);
+  };
+
+  // Handle sync all chats
+  const handleOpenSyncAllModal = () => {
+    setCurrentSyncChat({ id: '', name: 'All Chats' });
+    setSyncAllMode(true);
     setSyncModalOpen(true);
   };
 
   const handleSync = async (params: { startDate?: string; endDate?: string; limit?: number }) => {
-    if (!currentSyncChat) return;
-
     try {
-      await syncHistoryMutation.mutateAsync({
-        chatId: currentSyncChat.id,
-        ...params,
-      });
-      toast.success(`Successfully synced history for ${currentSyncChat.name}`);
+      if (syncAllMode) {
+        // Sync all chats
+        const response = await syncAllChatsMutation.mutateAsync({
+          platformId: selectedPlatformId || undefined,
+          ...params,
+        });
+        const successCount = response.results?.filter((r: any) => r.status === 'success').length || 0;
+        const totalCount = response.results?.length || 0;
+        toast.success(`Successfully initiated sync for ${successCount}/${totalCount} platforms`);
+      } else {
+        // Sync specific chat
+        if (!currentSyncChat) return;
+        await syncHistoryMutation.mutateAsync({
+          chatId: currentSyncChat.id,
+          ...params,
+        });
+        toast.success(`Successfully synced history for ${currentSyncChat.name}`);
+      }
       refetch(); // Refresh chat list
     } catch (error) {
-      toast.error(`Failed to sync chat history: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      toast.error(`Failed to sync: ${error instanceof Error ? error.message : 'Unknown error'}`);
       throw error; // Re-throw to let modal handle it
     }
   };
@@ -151,11 +172,21 @@ export function Chats() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div>
-        <h1 className="text-3xl font-bold text-gray-900">Chats</h1>
-        <p className="text-gray-600 mt-1">
-          View and manage conversations across all platforms
-        </p>
+      <div className="flex items-start justify-between">
+        <div>
+          <h1 className="text-3xl font-bold text-gray-900">Chats</h1>
+          <p className="text-gray-600 mt-1">
+            View and manage conversations across all platforms
+          </p>
+        </div>
+        <Button
+          variant="primary"
+          onClick={handleOpenSyncAllModal}
+          disabled={syncAllChatsMutation.isPending}
+        >
+          <RefreshCw className={`h-4 w-4 mr-2 ${syncAllChatsMutation.isPending ? 'animate-spin' : ''}`} />
+          {syncAllChatsMutation.isPending ? 'Syncing...' : 'Sync All Chats'}
+        </Button>
       </div>
 
       {/* Filters */}

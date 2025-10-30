@@ -205,3 +205,40 @@ export function useSyncChatHistory(projectId?: string) {
     },
   });
 }
+
+// Sync all chats
+export function useSyncAllChats(projectId?: string) {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (params?: {
+      platformId?: string;
+      startDate?: string;
+      endDate?: string;
+      limit?: number;
+    }) => {
+      const token = localStorage.getItem('msgcore_token');
+      const response = await fetch(
+        `${window.location.origin}/api/v1/projects/${projectId}/chats/sync-all`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify(params || {}),
+        },
+      );
+
+      if (!response.ok) {
+        throw new Error(`Failed to sync all chats: ${response.statusText}`);
+      }
+
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['chats', projectId] });
+      queryClient.invalidateQueries({ queryKey: ['messages', projectId] });
+    },
+  });
+}
