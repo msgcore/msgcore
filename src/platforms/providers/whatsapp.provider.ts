@@ -1795,12 +1795,6 @@ export class WhatsAppProvider implements PlatformProvider, PlatformAdapter {
       let skipped = 0;
 
       for (const msg of filteredMessages) {
-        // Skip messages sent from this device (fromMe: true)
-        if (msg.key?.fromMe) {
-          skipped++;
-          continue;
-        }
-
         try {
           const messageText = this.extractEvolutionMessageText(msg);
           const normalizedAttachments = this.normalizeAttachments(msg);
