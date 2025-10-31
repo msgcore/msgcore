@@ -4,12 +4,10 @@ import { sdk } from '../shared/lib/sdk';
 export interface CreateEntitySchemaDto {
   name: string;
   description?: string;
-  extractionType: 'llm_extraction' | 'rule_based' | 'api_logged';
   properties: Record<string, any>;
   prompt?: string;
   model?: string;
   temperature?: number;
-  ruleDefinition?: Record<string, any>;
 }
 
 export function useEntitySchemas(projectId?: string) {
@@ -61,6 +59,24 @@ export function useDeleteEntitySchema(projectId?: string) {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['entitySchemas', projectId] });
     },
+  });
+}
+
+// ============================================
+// Models
+// ============================================
+
+export interface ModelResponse {
+  id: string;
+  name: string;
+  description?: string;
+}
+
+export function useModels() {
+  return useQuery({
+    queryKey: ['models'],
+    queryFn: () => sdk.analysisModels.list(),
+    staleTime: 3600000, // 1 hour (matches backend cache)
   });
 }
 

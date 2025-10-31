@@ -40,6 +40,7 @@ import {
   CreateAnalysisRunDto,
   useExtractedEntities,
   useAnalysisStats,
+  useModels,
 } from '../hooks/useAnalysis';
 import { useProjectContext } from '../contexts/ProjectContext';
 import { useConfirm } from '../hooks/useConfirm';
@@ -55,6 +56,7 @@ export function Analysis() {
   const createSchema = useCreateEntitySchema(selectedProjectId || undefined);
   const updateSchema = useUpdateEntitySchema(selectedProjectId || undefined);
   const deleteSchema = useDeleteEntitySchema(selectedProjectId || undefined);
+  const { data: models = [], isLoading: modelsLoading } = useModels();
 
   // Profiles
   const { data: profiles = [], isLoading: profilesLoading, error: profilesError } = useAnalysisProfiles(selectedProjectId || undefined);
@@ -105,7 +107,6 @@ export function Analysis() {
   const [newSchema, setNewSchema] = useState<CreateEntitySchemaDto>({
     name: '',
     description: '',
-    extractionType: 'llm_extraction',
     properties: {},
     prompt: '',
     model: 'anthropic/claude-3.5-sonnet',
@@ -502,71 +503,64 @@ export function Analysis() {
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Extraction Type *
+                    Model
                   </label>
                   <select
-                    value={newSchema.extractionType}
-                    onChange={(e) => setNewSchema({ ...newSchema, extractionType: e.target.value as any })}
+                    value={newSchema.model}
+                    onChange={(e) => setNewSchema({ ...newSchema, model: e.target.value })}
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    disabled={modelsLoading}
                   >
-                    <option value="llm_extraction">LLM Extraction (OpenRouter)</option>
-                    <option value="rule_based">Rule-Based (Regex)</option>
-                    <option value="api_logged">API Logged (External)</option>
+                    {modelsLoading ? (
+                      <option>Loading models...</option>
+                    ) : models.length > 0 ? (
+                      models.map((model) => (
+                        <option key={model.id} value={model.id}>
+                          {model.name}
+                        </option>
+                      ))
+                    ) : (
+                      <option value="anthropic/claude-3.5-sonnet">Claude 3.5 Sonnet (Fallback)</option>
+                    )}
                   </select>
+                  {!modelsLoading && models.length > 0 && (
+                    <p className="text-xs text-gray-500 mt-1">
+                      {models.find(m => m.id === newSchema.model)?.description || 'Select a model for extraction'}
+                    </p>
+                  )}
                 </div>
 
-                {newSchema.extractionType === 'llm_extraction' && (
-                  <>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Model
-                      </label>
-                      <select
-                        value={newSchema.model}
-                        onChange={(e) => setNewSchema({ ...newSchema, model: e.target.value })}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      >
-                        <option value="anthropic/claude-3-haiku">Claude 3 Haiku (Fast & Cheap)</option>
-                        <option value="anthropic/claude-3.5-sonnet">Claude 3.5 Sonnet (Balanced)</option>
-                        <option value="anthropic/claude-3-opus">Claude 3 Opus (Powerful)</option>
-                        <option value="openai/gpt-4-turbo">GPT-4 Turbo</option>
-                        <option value="openai/gpt-3.5-turbo">GPT-3.5 Turbo</option>
-                      </select>
-                    </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Prompt *
+                  </label>
+                  <textarea
+                    value={newSchema.prompt}
+                    onChange={(e) => setNewSchema({ ...newSchema, prompt: e.target.value })}
+                    placeholder="e.g., Analyze the sentiment of this message and return a score from -1 to 1"
+                    rows={3}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
 
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Prompt *
-                      </label>
-                      <textarea
-                        value={newSchema.prompt}
-                        onChange={(e) => setNewSchema({ ...newSchema, prompt: e.target.value })}
-                        placeholder="e.g., Analyze the sentiment of this message and return a score from -1 to 1"
-                        rows={3}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Temperature ({newSchema.temperature})
-                      </label>
-                      <input
-                        type="range"
-                        min="0"
-                        max="1"
-                        step="0.1"
-                        value={newSchema.temperature}
-                        onChange={(e) => setNewSchema({ ...newSchema, temperature: parseFloat(e.target.value) })}
-                        className="w-full"
-                      />
-                      <div className="flex justify-between text-xs text-gray-500">
-                        <span>Precise (0)</span>
-                        <span>Creative (1)</span>
-                      </div>
-                    </div>
-                  </>
-                )}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Temperature ({newSchema.temperature})
+                  </label>
+                  <input
+                    type="range"
+                    min="0"
+                    max="1"
+                    step="0.1"
+                    value={newSchema.temperature}
+                    onChange={(e) => setNewSchema({ ...newSchema, temperature: parseFloat(e.target.value) })}
+                    className="w-full"
+                  />
+                  <div className="flex justify-between text-xs text-gray-500">
+                    <span>Precise (0)</span>
+                    <span>Creative (1)</span>
+                  </div>
+                </div>
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
