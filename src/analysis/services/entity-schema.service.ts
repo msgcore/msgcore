@@ -2,6 +2,7 @@ import { Injectable, ConflictException, NotFoundException, Logger } from '@nestj
 import { PrismaService } from '../../prisma/prisma.service';
 import { CreateEntitySchemaDto, EntitySchemaResponse } from '../dto';
 import { AuthContext, SecurityUtil } from '../../common/utils/security.util';
+import { MessageResponse } from '../../common/types/api-responses';
 
 @Injectable()
 export class EntitySchemaService {
@@ -182,7 +183,7 @@ export class EntitySchemaService {
     projectId: string,
     schemaId: string,
     authContext: AuthContext,
-  ): Promise<void> {
+  ): Promise<MessageResponse> {
     // Validate project access
     await SecurityUtil.getProjectWithAccess(
       this.prisma,
@@ -212,6 +213,8 @@ export class EntitySchemaService {
       where: { id: schemaId },
       data: { isActive: false },
     });
+
+    return { message: 'Entity schema deleted successfully' };
   }
 
   private mapToResponse(schema: any): EntitySchemaResponse {

@@ -17,6 +17,7 @@ import type { AuthContext } from '../../common/utils/security.util';
 import { SdkContract } from '../../common/decorators/sdk-contract.decorator';
 import { RequireScopes } from '../../common/decorators/scopes.decorator';
 import { ApiScope } from '../../common/enums/api-scopes.enum';
+import { MessageResponse } from '../../common/types/api-responses';
 
 @Controller('api/v1/projects/:project/analysis/schemas/entities')
 @UseGuards(AppAuthGuard, ProjectAccessGuard)
@@ -154,7 +155,7 @@ export class EntitySchemasController {
     command: 'analysis schemas delete',
     category: 'Analysis',
     requiredScopes: [ApiScope.PROJECTS_WRITE],
-    outputType: 'void',
+    outputType: 'MessageResponse',
     description: 'Delete an entity schema (soft delete)',
     options: {
       project: { type: 'string', description: 'Project ID', required: true },
@@ -171,7 +172,7 @@ export class EntitySchemasController {
     @Param('project') projectId: string,
     @Param('schemaId') schemaId: string,
     @AuthContextParam() authContext: AuthContext,
-  ): Promise<void> {
+  ): Promise<MessageResponse> {
     return this.entitySchemaService.delete(projectId, schemaId, authContext);
   }
 }
