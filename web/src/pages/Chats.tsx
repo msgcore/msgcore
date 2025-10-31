@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import {
   MessageSquare,
   Users,
@@ -6,8 +6,6 @@ import {
   Search,
   RefreshCw,
   Loader2,
-  ChevronLeft,
-  ChevronRight,
 } from 'lucide-react';
 import { Alert } from '../components/ui/Alert';
 import { useProjectContext } from '../contexts/ProjectContext';
@@ -29,8 +27,10 @@ export function Chats() {
   const [syncAllMode, setSyncAllMode] = useState(false);
   const [currentSyncChat, setCurrentSyncChat] = useState<{ id: string; name: string } | null>(null);
   const [messageSearchQuery, setMessageSearchQuery] = useState('');
-  const [messagePage, setMessagePage] = useState(0);
+  const [allMessages, setAllMessages] = useState<any[]>([]);
+  const [hasMore, setHasMore] = useState(true);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const messagesContainerRef = useRef<HTMLDivElement>(null);
 
   // Fetch chats with filters
   const { data: chatsData, isLoading, error, refetch } = useChats(
@@ -52,22 +52,41 @@ export function Chats() {
 
   const chats = chatsData?.chats || [];
 
-  // Fetch messages for selected chat
+  // Fetch messages for selected chat with infinite scroll
   const messageLimit = 50;
-  const messageOffset = messagePage * messageLimit;
-  const { data: messagesData, isLoading: messagesLoading } = useChatMessages(
+  const { data: messagesData, isLoading: messagesLoading, refetch: refetchMessages } = useChatMessages(
     selectedProjectId || undefined,
     selectedChatId || undefined,
     messageLimit,
-    messageOffset
+    allMessages.length
   );
 
-  const messages = messagesData?.messages || [];
+  // Update messages when new data arrives
+  useEffect(() => {
+    if (messagesData?.messages) {
+      const newMessages = messagesData.messages;
+      if (allMessages.length === 0) {
+        // Initial load
+        setAllMessages(newMessages);
+        setHasMore(newMessages.length === messageLimit);
+      } else {
+        // Append new messages (avoiding duplicates)
+        const existingIds = new Set(allMessages.map((m: any) => m.id));
+        const uniqueNew = newMessages.filter((m: any) => !existingIds.has(m.id));
+        if (uniqueNew.length > 0) {
+          setAllMessages([...allMessages, ...uniqueNew]);
+          setHasMore(newMessages.length === messageLimit);
+        } else {
+          setHasMore(false);
+        }
+      }
+    }
+  }, [messagesData]);
+
   const messagesTotal = messagesData?.pagination?.total || 0;
-  const messagesTotalPages = Math.ceil(messagesTotal / messageLimit);
 
   // Filter messages by search query
-  const filteredMessages = messages.filter((msg: any) => {
+  const filteredMessages = allMessages.filter((msg: any) => {
     if (!messageSearchQuery) return true;
     const searchLower = messageSearchQuery.toLowerCase();
     return (
@@ -76,18 +95,33 @@ export function Chats() {
     );
   });
 
-  // Scroll to bottom when messages load
+  // Scroll to bottom when messages first load
   useEffect(() => {
-    if (messagePage === 0 && messages.length > 0) {
-      messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    if (allMessages.length > 0 && allMessages.length <= messageLimit) {
+      setTimeout(() => {
+        messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+      }, 100);
     }
-  }, [messages, messagePage]);
+  }, [allMessages.length]);
 
-  // Reset message page when changing chats
+  // Reset messages when changing chats
   useEffect(() => {
-    setMessagePage(0);
+    setAllMessages([]);
+    setHasMore(true);
     setMessageSearchQuery('');
   }, [selectedChatId]);
+
+  // Infinite scroll handler
+  const handleScroll = useCallback(() => {
+    const container = messagesContainerRef.current;
+    if (!container || messagesLoading || !hasMore) return;
+
+    // Check if scrolled near bottom (within 200px)
+    const distanceFromBottom = container.scrollHeight - container.scrollTop - container.clientHeight;
+    if (distanceFromBottom < 200) {
+      refetchMessages();
+    }
+  }, [messagesLoading, hasMore, refetchMessages]);
 
   const selectedChat = chats.find((c: any) => c.id === selectedChatId);
 
@@ -327,8 +361,12 @@ export function Chats() {
             </div>
 
             {/* Messages Area */}
-            <div className="flex-1 overflow-y-auto bg-gray-50 px-6 py-4">
-              {messagesLoading ? (
+            <div
+              ref={messagesContainerRef}
+              onScroll={handleScroll}
+              className="flex-1 overflow-y-auto bg-gray-50 px-6 py-4"
+            >
+              {messagesLoading && allMessages.length === 0 ? (
                 <div className="flex items-center justify-center h-full">
                   <Loader2 className="h-8 w-8 animate-spin text-green-500" />
                 </div>
@@ -428,38 +466,20 @@ export function Chats() {
                     );
                   })}
                   <div ref={messagesEndRef} />
+                  {/* Loading indicator for infinite scroll */}
+                  {messagesLoading && allMessages.length > 0 && (
+                    <div className="flex items-center justify-center py-4">
+                      <Loader2 className="h-6 w-6 animate-spin text-green-500" />
+                    </div>
+                  )}
+                  {!hasMore && allMessages.length > 0 && (
+                    <div className="text-center py-4 text-sm text-gray-500">
+                      No more messages
+                    </div>
+                  )}
                 </div>
               )}
             </div>
-
-            {/* Pagination Footer */}
-            {messagesTotalPages > 1 && (
-              <div className="px-6 py-3 border-t border-gray-200 bg-white">
-                <div className="flex items-center justify-between">
-                  <div className="text-sm text-gray-600">
-                    Page {messagePage + 1} of {messagesTotalPages}
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <button
-                      onClick={() => setMessagePage(messagePage - 1)}
-                      disabled={messagePage === 0 || messagesLoading}
-                      className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
-                    >
-                      <ChevronLeft className="h-4 w-4" />
-                      Previous
-                    </button>
-                    <button
-                      onClick={() => setMessagePage(messagePage + 1)}
-                      disabled={messagePage >= messagesTotalPages - 1 || messagesLoading}
-                      className="px-4 py-2 text-sm font-medium text-white bg-green-500 rounded-lg hover:bg-green-600 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
-                    >
-                      Next
-                      <ChevronRight className="h-4 w-4" />
-                    </button>
-                  </div>
-                </div>
-              </div>
-            )}
           </>
         ) : (
           <div className="flex-1 flex items-center justify-center bg-gray-50">

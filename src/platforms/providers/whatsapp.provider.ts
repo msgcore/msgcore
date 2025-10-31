@@ -1833,6 +1833,7 @@ export class WhatsAppProvider implements PlatformProvider, PlatformAdapter {
             chatName: storedChatName,
             messageText,
             messageType: 'text',
+            fromMe: msg.key?.fromMe || false,
             attachments:
               normalizedAttachments.length > 0
                 ? normalizedAttachments

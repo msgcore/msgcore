@@ -247,6 +247,7 @@ export class MessagesService {
     chatName?: string;
     messageText: string | null;
     messageType: string;
+    fromMe?: boolean;
     rawData: any;
     attachments?: PlatformAttachment[];
     skipIfExists?: boolean;
@@ -326,6 +327,7 @@ export class MessagesService {
           userDisplay: data.userDisplay,
           messageText: data.messageText,
           messageType: data.messageType,
+          fromMe: data.fromMe || false,
           rawData: data.rawData,
           ...(data.attachments && data.attachments.length > 0
             ? {

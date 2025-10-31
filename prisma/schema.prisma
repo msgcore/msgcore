@@ -195,6 +195,7 @@ model ReceivedMessage {
   userDisplay       String?             @map("user_display")
   messageText       String?             @map("message_text")
   messageType       String              @default("text") @map("message_type")
+  fromMe            Boolean             @default(false) @map("from_me")
   rawData           Json                @map("raw_data")
   receivedAt        DateTime            @default(now()) @map("received_at")
   attachments       MessageAttachment[]

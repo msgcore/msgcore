@@ -191,7 +191,7 @@ export class ChatsService {
         include: {
           attachments: true,
         },
-        orderBy: { receivedAt: 'desc' },
+        orderBy: { receivedAt: 'asc' },
         take: limit,
         skip: offset,
       }),
