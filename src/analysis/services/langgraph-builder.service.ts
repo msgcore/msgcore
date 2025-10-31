@@ -120,12 +120,18 @@ export class LangGraphBuilderService {
 
         const extracted = JSON.parse(jsonMatch[0]);
 
+        // Extract confidence score (default to 0.5 if not provided)
+        const confidence = extracted._confidence ?? 0.5;
+
+        // Remove _confidence from properties before storing
+        const { _confidence, ...properties } = extracted;
+
         return {
           extractedEntities: [
             {
               schemaName: schema.name,
-              properties: extracted,
-              confidence: 0.9, // TODO: Implement confidence scoring
+              properties,
+              confidence: Math.max(0, Math.min(1, confidence)), // Clamp between 0 and 1
             },
           ],
           currentSchema: schema.name,
@@ -205,12 +211,20 @@ ${schema.prompt || `Extract ${schema.name} entities from the provided text.`}
 Extract the following properties:
 ${propertyDescriptions}
 
-Return ONLY a valid JSON object with these exact property names. Do not include any explanation or additional text.
+IMPORTANT: You must also provide a "_confidence" score (0.0 to 1.0) indicating your confidence in the extraction:
+- 1.0 = Highly confident, explicit information found
+- 0.7-0.9 = Confident, clear indicators present
+- 0.4-0.6 = Moderate confidence, some inference required
+- 0.1-0.3 = Low confidence, significant uncertainty
+- 0.0 = No relevant information found
+
+Return ONLY a valid JSON object with these exact property names plus "_confidence". Do not include any explanation or additional text.
 
 Example format:
 {
   "property1": "value1",
-  "property2": 123
+  "property2": 123,
+  "_confidence": 0.85
 }`;
   }
 }
