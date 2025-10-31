@@ -29,6 +29,7 @@ export function Chats() {
   const [messageSearchQuery, setMessageSearchQuery] = useState('');
   const [allMessages, setAllMessages] = useState<any[]>([]);
   const [hasMore, setHasMore] = useState(true);
+  const [isInitialLoad, setIsInitialLoad] = useState(true);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
 
@@ -69,6 +70,13 @@ export function Chats() {
         // Initial load - reverse to show oldest first, newest at bottom
         setAllMessages([...newMessages].reverse());
         setHasMore(newMessages.length === messageLimit);
+        setIsInitialLoad(true);
+
+        // Scroll to bottom immediately after initial load
+        setTimeout(() => {
+          messagesEndRef.current?.scrollIntoView({ behavior: 'instant' });
+          setIsInitialLoad(false);
+        }, 100);
       } else {
         // Load older messages (prepend to beginning, avoiding duplicates)
         const existingIds = new Set(allMessages.map((m: any) => m.id));
@@ -108,32 +116,24 @@ export function Chats() {
     );
   });
 
-  // Scroll to bottom when messages first load
-  useEffect(() => {
-    if (allMessages.length > 0 && allMessages.length <= messageLimit) {
-      setTimeout(() => {
-        messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-      }, 100);
-    }
-  }, [allMessages.length]);
-
   // Reset messages when changing chats
   useEffect(() => {
     setAllMessages([]);
     setHasMore(true);
+    setIsInitialLoad(true);
     setMessageSearchQuery('');
   }, [selectedChatId]);
 
   // Infinite scroll handler - load older messages when scrolling UP
   const handleScroll = useCallback(() => {
     const container = messagesContainerRef.current;
-    if (!container || messagesLoading || !hasMore) return;
+    if (!container || messagesLoading || !hasMore || isInitialLoad) return;
 
     // Check if scrolled near TOP (within 200px) to load older messages
     if (container.scrollTop < 200) {
       refetchMessages();
     }
-  }, [messagesLoading, hasMore, refetchMessages]);
+  }, [messagesLoading, hasMore, isInitialLoad, refetchMessages]);
 
   const selectedChat = chats.find((c: any) => c.id === selectedChatId);
 
