@@ -71,18 +71,6 @@ export function Chats() {
         setAllMessages([...newMessages].reverse());
         setHasMore(newMessages.length === messageLimit);
         setIsInitialLoad(true);
-
-        // Scroll to bottom after DOM updates, then enable scroll detection after delay
-        setTimeout(() => {
-          messagesEndRef.current?.scrollIntoView({ behavior: 'instant' });
-          // Wait for DOM to paint after scroll, then start the delay counter
-          requestAnimationFrame(() => {
-            // Now that messages are rendered and scroll is complete, wait before enabling detection
-            setTimeout(() => {
-              setIsInitialLoad(false);
-            }, 500);
-          });
-        }, 100);
       } else {
         // Load older messages (prepend to beginning, avoiding duplicates)
         const existingIds = new Set(allMessages.map((m: any) => m.id));
@@ -109,6 +97,23 @@ export function Chats() {
       }
     }
   }, [messagesData]);
+
+  // Scroll to bottom AFTER initial messages have loaded and rendered
+  useEffect(() => {
+    if (isInitialLoad && allMessages.length > 0) {
+      // Wait for DOM to render the messages
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          // Scroll to bottom
+          messagesEndRef.current?.scrollIntoView({ behavior: 'instant' });
+          // Wait before enabling scroll detection
+          setTimeout(() => {
+            setIsInitialLoad(false);
+          }, 500);
+        });
+      });
+    }
+  }, [allMessages, isInitialLoad]);
 
   const messagesTotal = messagesData?.pagination?.total || 0;
 
