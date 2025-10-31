@@ -298,6 +298,22 @@ export class AnalysisRunService {
         for (const entity of result.entities) {
           const schema = schemas.find((s) => s.name === entity.schemaName);
           if (schema && profile.storeEntities) {
+            const normalizedChatId = chatId === 'no-chat' ? null : chatId;
+
+            // Mark all previous entities for this chat+schema as NOT latest
+            await this.prisma.extractedEntity.updateMany({
+              where: {
+                projectId: profile.projectId,
+                entitySchemaId: schema.id,
+                chatId: normalizedChatId,
+                isLatest: true,
+              },
+              data: {
+                isLatest: false,
+              },
+            });
+
+            // Create new entity as latest
             await this.prisma.extractedEntity.create({
               data: {
                 projectId: profile.projectId,
@@ -307,7 +323,7 @@ export class AnalysisRunService {
                 properties: entity.properties,
                 sourceMessageIds: messageIds,
                 identityId: null,
-                chatId: chatId === 'no-chat' ? null : chatId,
+                chatId: normalizedChatId,
                 confidence: entity.confidence,
                 isLatest: true,
               },
