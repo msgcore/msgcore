@@ -12,7 +12,6 @@ import {
   FileText,
   Play,
 } from 'lucide-react';
-import { AppShell } from '../components/layout/AppShell';
 import { Card, CardContent, CardHeader } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
 import { Badge } from '../components/ui/Badge';
@@ -129,21 +128,25 @@ export function Analysis() {
 
   if (!selectedProjectId) {
     return (
-      <AppShell>
-        <div className="p-6">
-          <Alert variant="warning">
-            <AlertCircle className="h-4 w-4" />
-            <span>Please select a project first</span>
-          </Alert>
+      <div className="space-y-6">
+        <div>
+          <h1 className="text-3xl font-bold text-gray-900">Analysis & Extraction</h1>
+          <p className="text-gray-600 mt-1">
+            Generic, reusable analysis pipelines with LangGraph
+          </p>
         </div>
-      </AppShell>
+        <Alert variant="warning">
+          <AlertCircle className="h-4 w-4" />
+          <span>Please select a project first</span>
+        </Alert>
+      </div>
     );
   }
 
   return (
-    <AppShell>
-      <div className="p-6 max-w-7xl mx-auto">
-        <ConfirmDialog />
+    <>
+      <ConfirmDialog />
+      <div className="p-4 lg:p-8 space-y-6">
 
         {/* Header */}
         <div className="flex justify-between items-center mb-6">
@@ -481,6 +484,6 @@ export function Analysis() {
           </Card>
         )}
       </div>
-    </AppShell>
+    </>
   );
 }
