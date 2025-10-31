@@ -316,7 +316,7 @@ export function Platforms() {
 
   if (!selectedProjectId) {
     return (
-      <div className="space-y-6">
+      <div className="p-4 lg:p-8 space-y-6">
         <div>
           <h1 className="text-3xl font-bold text-gray-900">{t('title')}</h1>
           <p className="text-gray-600 mt-1">
@@ -332,7 +332,7 @@ export function Platforms() {
 
   if (error) {
     return (
-      <div className="space-y-6">
+      <div className="p-4 lg:p-8 space-y-6">
         <div>
           <h1 className="text-3xl font-bold text-gray-900">{t('title')}</h1>
           <p className="text-gray-600 mt-1">
@@ -349,7 +349,7 @@ export function Platforms() {
   return (
     <>
       <ConfirmDialog />
-      <div className="space-y-6">
+      <div className="p-4 lg:p-8 space-y-6">
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-3xl font-bold text-gray-900">{t('title')}</h1>

@@ -285,7 +285,7 @@ export function AppShell({ children }: AppShellProps) {
           </div>
         </header>
 
-        <main className="p-4 lg:p-8">{children}</main>
+        <main>{children}</main>
       </div>
     </div>
   );
