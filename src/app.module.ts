@@ -26,6 +26,7 @@ import { WebhooksModule } from './webhooks/webhooks.module';
 import { IdentitiesModule } from './identities/identities.module';
 import { McpModule } from './mcp/mcp.module';
 import { ChatsModule } from './platforms/chats/chats.module';
+import { AnalysisModule } from './analysis/analysis.module';
 import { sentryConfig } from './config/sentry.config';
 
 @Module({
@@ -126,6 +127,7 @@ import { sentryConfig } from './config/sentry.config';
     IdentitiesModule,
     McpModule,
     ChatsModule,
+    AnalysisModule,
 
     // Serve static frontend files (registered last so API routes take precedence)
     ServeStaticModule.forRoot({

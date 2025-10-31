@@ -32,6 +32,9 @@
     "prepare": "[ \"$NODE_ENV\" = \"production\" ] || husky || true"
   },
   "dependencies": {
+    "@langchain/core": "^1.0.2",
+    "@langchain/langgraph": "^1.0.1",
+    "@langchain/openai": "^1.0.0",
     "@nestjs/axios": "^4.0.1",
     "@nestjs/bullmq": "^11.0.3",
     "@nestjs/common": "^11.1.6",
@@ -63,6 +66,7 @@
     "joi": "^18.0.1",
     "jsonwebtoken": "^9.0.2",
     "jwks-rsa": "^3.2.0",
+    "langchain": "^1.0.2",
     "node-telegram-bot-api": "^0.66.0",
     "nodemailer": "^7.0.6",
     "openai": "^6.1.0",

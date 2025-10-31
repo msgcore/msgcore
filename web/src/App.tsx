@@ -17,6 +17,7 @@ import { Identities } from './pages/Identities';
 import { Settings } from './pages/Settings';
 import { AcceptInvite } from './pages/AcceptInvite';
 import { Chats } from './pages/Chats';
+import { Analysis } from './pages/Analysis';
 import { ProtectedRoute } from './components/ProtectedRoute';
 import { SetupRoute } from './components/SetupRoute';
 
@@ -152,6 +153,14 @@ function App() {
               element={
                 <ProtectedRoute>
                   <Chats />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/analysis"
+              element={
+                <ProtectedRoute>
+                  <Analysis />
                 </ProtectedRoute>
               }
             />

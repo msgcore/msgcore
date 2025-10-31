@@ -20,6 +20,7 @@ import {
   UserCircle,
   Settings,
   MessagesSquare,
+  Sparkles,
 } from 'lucide-react';
 import { cn, getInitials } from '../../lib/utils';
 
@@ -92,6 +93,11 @@ export function AppShell({ children }: AppShellProps) {
       label: t('nav.identities'),
       icon: UserCircle,
       href: '/identities',
+    },
+    {
+      label: t('nav.analysis'),
+      icon: Sparkles,
+      href: '/analysis',
     },
   ];
 

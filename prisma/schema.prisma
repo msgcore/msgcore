@@ -48,6 +48,10 @@ model Project {
   receivedReactions  ReceivedReaction[]
   sentMessages       SentMessage[]
   webhooks           Webhook[]
+  entitySchemas      EntitySchema[]
+  analysisProfiles   AnalysisProfile[]
+  analysisRuns       AnalysisRun[]
+  extractedEntities  ExtractedEntity[]
 
   @@index([ownerId])
   @@map("projects")
@@ -159,21 +163,22 @@ model ApiKeyUsage {
 }
 
 model Chat {
-  id              String            @id @default(uuid())
-  projectId       String            @map("project_id")
-  platformId      String            @map("platform_id")
-  providerChatId  String            @map("provider_chat_id")
-  chatType        ChatType          @map("chat_type")
-  name            String?
-  avatarUrl       String?           @map("avatar_url")
-  lastMessageAt   DateTime?         @map("last_message_at")
-  lastSyncedAt    DateTime?         @map("last_synced_at")
-  metadata        Json?
-  createdAt       DateTime          @default(now()) @map("created_at")
-  updatedAt       DateTime          @updatedAt @map("updated_at")
-  messages        ReceivedMessage[]
-  platformConfig  ProjectPlatform   @relation(fields: [platformId], references: [id], onDelete: Cascade)
-  project         Project           @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  id                String            @id @default(uuid())
+  projectId         String            @map("project_id")
+  platformId        String            @map("platform_id")
+  providerChatId    String            @map("provider_chat_id")
+  chatType          ChatType          @map("chat_type")
+  name              String?
+  avatarUrl         String?           @map("avatar_url")
+  lastMessageAt     DateTime?         @map("last_message_at")
+  lastSyncedAt      DateTime?         @map("last_synced_at")
+  metadata          Json?
+  createdAt         DateTime          @default(now()) @map("created_at")
+  updatedAt         DateTime          @updatedAt @map("updated_at")
+  messages          ReceivedMessage[]
+  platformConfig    ProjectPlatform   @relation(fields: [platformId], references: [id], onDelete: Cascade)
+  project           Project           @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  extractedEntities ExtractedEntity[]
 
   @@unique([projectId, platformId, providerChatId])
   @@index([projectId])
@@ -352,15 +357,16 @@ model WebhookDelivery {
 }
 
 model Identity {
-  id          String          @id @default(uuid())
-  projectId   String          @map("project_id")
-  displayName String?         @map("display_name")
-  email       String?
-  metadata    Json?
-  createdAt   DateTime        @default(now()) @map("created_at")
-  updatedAt   DateTime        @updatedAt @map("updated_at")
-  project     Project         @relation(fields: [projectId], references: [id], onDelete: Cascade)
-  aliases     IdentityAlias[]
+  id               String            @id @default(uuid())
+  projectId        String            @map("project_id")
+  displayName      String?           @map("display_name")
+  email            String?
+  metadata         Json?
+  createdAt        DateTime          @default(now()) @map("created_at")
+  updatedAt        DateTime          @updatedAt @map("updated_at")
+  project          Project           @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  aliases          IdentityAlias[]
+  extractedEntities ExtractedEntity[]
 
   @@index([projectId])
   @@index([projectId, email])
@@ -456,4 +462,124 @@ enum ChatType {
   individual
   group
   channel
+}
+
+model EntitySchema {
+  id              String   @id @default(uuid())
+  projectId       String   @map("project_id")
+  name            String
+  description     String?
+
+  extractionType  String   @map("extraction_type")
+  properties      Json
+
+  prompt          String?  @db.Text
+  model           String?
+  temperature     Float?
+
+  ruleDefinition  Json?    @map("rule_definition")
+
+  isActive        Boolean  @default(true) @map("is_active")
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+
+  project         Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  entities        ExtractedEntity[]
+
+  @@unique([projectId, name])
+  @@index([projectId, isActive])
+  @@map("entity_schemas")
+}
+
+model AnalysisProfile {
+  id                String   @id @default(uuid())
+  projectId         String   @map("project_id")
+  name              String
+  description       String?
+  version           Int      @default(1)
+
+  graphDefinition   Json     @map("graph_definition")
+  entitySchemaIds   String[] @map("entity_schema_ids")
+
+  triggerOnReceive  Boolean  @default(false) @map("trigger_on_receive")
+  triggerOnSchedule String?  @map("trigger_on_schedule")
+  triggerOnDemand   Boolean  @default(true) @map("trigger_on_demand")
+
+  storeEntities     Boolean  @default(true) @map("store_entities")
+  generateTags      Boolean  @default(false) @map("generate_tags")
+
+  isActive          Boolean  @default(true) @map("is_active")
+  createdAt         DateTime @default(now()) @map("created_at")
+  updatedAt         DateTime @updatedAt @map("updated_at")
+
+  project           Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  runs              AnalysisRun[]
+
+  @@unique([projectId, name, version])
+  @@index([projectId, isActive])
+  @@map("analysis_profiles")
+}
+
+model AnalysisRun {
+  id               String    @id @default(uuid())
+  projectId        String    @map("project_id")
+  profileId        String    @map("profile_id")
+  profileVersion   Int       @map("profile_version")
+
+  targetType       String    @map("target_type")
+  targetIds        String[]  @map("target_ids")
+  dateRangeStart   DateTime? @map("date_range_start")
+  dateRangeEnd     DateTime? @map("date_range_end")
+
+  status           String
+  progress         Float     @default(0)
+
+  entitiesExtracted Int      @default(0) @map("entities_extracted")
+  errorMessage     String?   @db.Text @map("error_message")
+
+  tokensUsed       Int?      @map("tokens_used")
+  estimatedCostUsd Float?    @map("estimated_cost_usd")
+
+  startedAt        DateTime? @map("started_at")
+  completedAt      DateTime? @map("completed_at")
+  createdAt        DateTime  @default(now()) @map("created_at")
+
+  profile          AnalysisProfile @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  project          Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  entities         ExtractedEntity[]
+
+  @@index([projectId, status])
+  @@index([profileId, createdAt])
+  @@map("analysis_runs")
+}
+
+model ExtractedEntity {
+  id               String   @id @default(uuid())
+  projectId        String   @map("project_id")
+  entitySchemaId   String   @map("entity_schema_id")
+  runId            String   @map("run_id")
+  profileVersion   Int      @map("profile_version")
+
+  properties       Json
+
+  identityId       String?  @map("identity_id")
+  chatId           String?  @map("chat_id")
+  sourceMessageIds String[] @map("source_message_ids")
+
+  isLatest         Boolean  @default(true) @map("is_latest")
+  confidence       Float?
+
+  extractedAt      DateTime @default(now()) @map("extracted_at")
+
+  entitySchema     EntitySchema @relation(fields: [entitySchemaId], references: [id], onDelete: Cascade)
+  run              AnalysisRun @relation(fields: [runId], references: [id], onDelete: Cascade)
+  project          Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  identity         Identity? @relation(fields: [identityId], references: [id], onDelete: SetNull)
+  chat             Chat?    @relation(fields: [chatId], references: [id], onDelete: SetNull)
+
+  @@index([projectId, entitySchemaId, isLatest])
+  @@index([identityId, extractedAt])
+  @@index([chatId, extractedAt])
+  @@index([runId])
+  @@map("extracted_entities")
 }
