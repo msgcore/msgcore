@@ -176,29 +176,58 @@ export class AnalysisRunService {
       let totalCost = 0;
       let entitiesExtracted = 0;
 
-      // Process each message
-      for (let i = 0; i < messages.length; i++) {
-        const message = messages[i];
+      // Group messages by chat for conversation-aware analysis
+      const messagesByChat = new Map<string, any[]>();
+      for (const message of messages) {
+        const chatId = message.chatId || 'no-chat';
+        if (!messagesByChat.has(chatId)) {
+          messagesByChat.set(chatId, []);
+        }
+        messagesByChat.get(chatId)!.push(message);
+      }
 
-        // Convert schemas to EntitySchemaDefinition format
-        const schemaDefinitions: EntitySchemaDefinition[] = schemas.map((s) => ({
-          name: s.name,
-          extractionType: s.extractionType,
-          properties: s.properties as Record<string, any>,
-          prompt: s.prompt,
-          model: s.model,
-          temperature: s.temperature,
-          ruleDefinition: s.ruleDefinition as Record<string, any>,
-        }));
+      this.logger.log(
+        `Run ${runId}: Grouped ${messages.length} messages into ${messagesByChat.size} conversations`,
+      );
 
-        // Extract entities using LangGraph
+      // Convert schemas to EntitySchemaDefinition format
+      const schemaDefinitions: EntitySchemaDefinition[] = schemas.map((s) => ({
+        name: s.name,
+        extractionType: s.extractionType,
+        properties: s.properties as Record<string, any>,
+        prompt: s.prompt,
+        model: s.model,
+        temperature: s.temperature,
+        ruleDefinition: s.ruleDefinition as Record<string, any>,
+      }));
+
+      // Process each conversation
+      let processedConversations = 0;
+      const totalConversations = messagesByChat.size;
+
+      for (const [chatId, chatMessages] of messagesByChat) {
+        // Build conversation context
+        const conversationText = chatMessages
+          .map((msg, idx) => {
+            const timestamp = new Date(msg.receivedAt).toISOString();
+            const sender = msg.fromMe ? 'Agent' : (msg.userDisplay || 'User');
+            return `[${timestamp}] ${sender}: ${msg.messageText || ''}`;
+          })
+          .join('\n');
+
+        this.logger.debug(
+          `Run ${runId}: Analyzing conversation ${chatId} with ${chatMessages.length} messages`,
+        );
+
+        // Extract entities from entire conversation
         const result = await this.extractionService.extractEntities(
-          message.messageText || '',
+          conversationText,
           schemaDefinitions,
           this.openrouterApiKey,
         );
 
         // Store extracted entities
+        const messageIds = chatMessages.map((m) => m.id);
         for (const entity of result.entities) {
           const schema = schemas.find((s) => s.name === entity.schemaName);
           if (schema && profile.storeEntities) {
@@ -209,9 +238,9 @@ export class AnalysisRunService {
                 runId,
                 profileVersion: profile.version,
                 properties: entity.properties,
-                sourceMessageIds: [message.id],
-                identityId: null, // ReceivedMessage doesn't have identityId yet
-                chatId: message.chatId,
+                sourceMessageIds: messageIds,
+                identityId: null,
+                chatId: chatId === 'no-chat' ? null : chatId,
                 confidence: entity.confidence,
                 isLatest: true,
               },
@@ -224,7 +253,8 @@ export class AnalysisRunService {
         totalCost += this.estimateCost(result.tokensUsed || 0);
 
         // Update progress
-        const progress = (i + 1) / messages.length;
+        processedConversations++;
+        const progress = processedConversations / totalConversations;
         await this.prisma.analysisRun.update({
           where: { id: runId },
           data: {
@@ -236,7 +266,7 @@ export class AnalysisRunService {
         });
 
         this.logger.debug(
-          `Run ${runId}: Processed ${i + 1}/${messages.length} messages (${entitiesExtracted} entities)`,
+          `Run ${runId}: Processed ${processedConversations}/${totalConversations} conversations (${entitiesExtracted} entities)`,
         );
       }
 
