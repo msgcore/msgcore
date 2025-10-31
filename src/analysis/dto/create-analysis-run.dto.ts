@@ -1,15 +1,18 @@
-import { IsString, IsOptional, IsArray, IsDateString, IsIn } from 'class-validator';
+import { IsString, IsOptional, IsArray, IsDateString } from 'class-validator';
 
 export class CreateAnalysisRunDto {
   @IsString()
   profileId: string;
 
-  @IsIn(['message', 'chat', 'identity', 'date_range'])
-  targetType: 'message' | 'chat' | 'identity' | 'date_range';
-
+  @IsOptional()
   @IsArray()
   @IsString({ each: true })
-  targetIds: string[];
+  chatIds?: string[];
+
+  @IsOptional()
+  @IsArray()
+  @IsString({ each: true })
+  identityIds?: string[];
 
   @IsOptional()
   @IsDateString()

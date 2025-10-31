@@ -12,6 +12,10 @@ import {
   FileText,
   Play,
   Database,
+  BarChart3,
+  TrendingUp,
+  ChevronLeft,
+  ChevronRight,
 } from 'lucide-react';
 import { Card, CardContent, CardHeader } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
@@ -21,23 +25,27 @@ import { Input } from '../components/ui/Input';
 import {
   useEntitySchemas,
   useCreateEntitySchema,
+  useUpdateEntitySchema,
   useDeleteEntitySchema,
   CreateEntitySchemaDto,
   useAnalysisProfiles,
   useCreateAnalysisProfile,
+  useUpdateAnalysisProfile,
   useDeleteAnalysisProfile,
   CreateAnalysisProfileDto,
   useAnalysisRuns,
   useCreateAnalysisRun,
+  useCancelAnalysisRun,
   useAnalysisRun,
   CreateAnalysisRunDto,
   useExtractedEntities,
+  useAnalysisStats,
 } from '../hooks/useAnalysis';
 import { useProjectContext } from '../contexts/ProjectContext';
 import { useConfirm } from '../hooks/useConfirm';
 import { formatDateTime } from '../lib/utils';
 
-type Tab = 'schemas' | 'profiles' | 'runs' | 'entities';
+type Tab = 'schemas' | 'profiles' | 'runs' | 'entities' | 'stats';
 
 export function Analysis() {
   const { selectedProjectId } = useProjectContext();
@@ -45,16 +53,25 @@ export function Analysis() {
   // Schemas
   const { data: schemas = [], isLoading, error } = useEntitySchemas(selectedProjectId || undefined);
   const createSchema = useCreateEntitySchema(selectedProjectId || undefined);
+  const updateSchema = useUpdateEntitySchema(selectedProjectId || undefined);
   const deleteSchema = useDeleteEntitySchema(selectedProjectId || undefined);
 
   // Profiles
   const { data: profiles = [], isLoading: profilesLoading, error: profilesError } = useAnalysisProfiles(selectedProjectId || undefined);
   const createProfile = useCreateAnalysisProfile(selectedProjectId || undefined);
+  const updateProfile = useUpdateAnalysisProfile(selectedProjectId || undefined);
   const deleteProfile = useDeleteAnalysisProfile(selectedProjectId || undefined);
 
   // Runs
-  const { data: runs = [], isLoading: runsLoading, error: runsError } = useAnalysisRuns(selectedProjectId || undefined);
+  const [runsSortBy, setRunsSortBy] = useState<string>('createdAt');
+  const [runsSortOrder, setRunsSortOrder] = useState<'asc' | 'desc'>('desc');
+  const { data: runs = [], isLoading: runsLoading, error: runsError } = useAnalysisRuns(
+    selectedProjectId || undefined,
+    runsSortBy,
+    runsSortOrder
+  );
   const createRun = useCreateAnalysisRun(selectedProjectId || undefined);
+  const cancelRun = useCancelAnalysisRun(selectedProjectId || undefined);
 
   // Entities
   const [entityFilters, setEntityFilters] = useState<{
@@ -62,17 +79,25 @@ export function Analysis() {
     schemaId?: string;
     chatId?: string;
     limit?: number;
-  }>({});
+    offset?: number;
+    sortBy?: string;
+    sortOrder?: 'asc' | 'desc';
+  }>({ limit: 20, offset: 0, sortBy: 'extractedAt', sortOrder: 'desc' });
   const { data: entities = [], isLoading: entitiesLoading, error: entitiesError } = useExtractedEntities(
     selectedProjectId || undefined,
     entityFilters
   );
 
+  // Stats
+  const { data: stats, isLoading: statsLoading, error: statsError } = useAnalysisStats(selectedProjectId || undefined);
+
   const { confirm, ConfirmDialog } = useConfirm();
 
   const [activeTab, setActiveTab] = useState<Tab>('schemas');
   const [showCreateForm, setShowCreateForm] = useState(false);
+  const [editingSchemaId, setEditingSchemaId] = useState<string | null>(null);
   const [deletingSchemaId, setDeletingSchemaId] = useState<string | null>(null);
+  const [editingProfileId, setEditingProfileId] = useState<string | null>(null);
   const [deletingProfileId, setDeletingProfileId] = useState<string | null>(null);
   const [showCreateProfileForm, setShowCreateProfileForm] = useState(false);
   const [showCreateRunForm, setShowCreateRunForm] = useState(false);
@@ -102,8 +127,8 @@ export function Analysis() {
 
   const [newRun, setNewRun] = useState<CreateAnalysisRunDto>({
     profileId: '',
-    targetType: 'date_range',
-    targetIds: [],
+    chatIds: [],
+    identityIds: [],
     dateRangeStart: '',
     dateRangeEnd: '',
   });
@@ -113,11 +138,25 @@ export function Analysis() {
 
     try {
       const properties = JSON.parse(propertiesJson);
-      await createSchema.mutateAsync({
-        ...newSchema,
-        properties,
-      });
 
+      if (editingSchemaId) {
+        // Update existing schema
+        await updateSchema.mutateAsync({
+          schemaId: editingSchemaId,
+          ...newSchema,
+          properties,
+        });
+        setEditingSchemaId(null);
+      } else {
+        // Create new schema
+        await createSchema.mutateAsync({
+          ...newSchema,
+          properties,
+        });
+        setShowCreateForm(false);
+      }
+
+      // Reset form
       setNewSchema({
         name: '',
         description: '',
@@ -128,9 +167,8 @@ export function Analysis() {
         temperature: 0.1,
       });
       setPropertiesJson('{\n  "score": "number",\n  "label": "string"\n}');
-      setShowCreateForm(false);
     } catch (error) {
-      console.error('Failed to create entity schema:', error);
+      console.error('Failed to save entity schema:', error);
     }
   };
 
@@ -160,7 +198,20 @@ export function Analysis() {
     if (!newProfile.name.trim() || newProfile.entitySchemaIds.length === 0) return;
 
     try {
-      await createProfile.mutateAsync(newProfile);
+      if (editingProfileId) {
+        // Update existing profile
+        await updateProfile.mutateAsync({
+          profileId: editingProfileId,
+          ...newProfile,
+        });
+        setEditingProfileId(null);
+      } else {
+        // Create new profile
+        await createProfile.mutateAsync(newProfile);
+        setShowCreateProfileForm(false);
+      }
+
+      // Reset form
       setNewProfile({
         name: '',
         description: '',
@@ -171,9 +222,8 @@ export function Analysis() {
         storeEntities: true,
         generateTags: false,
       });
-      setShowCreateProfileForm(false);
     } catch (error) {
-      console.error('Failed to create analysis profile:', error);
+      console.error('Failed to save analysis profile:', error);
     }
   };
 
@@ -202,24 +252,31 @@ export function Analysis() {
   const handleCreateRun = async () => {
     if (!newRun.profileId) return;
 
+    // Validate that at least one target is specified
+    const hasTargets =
+      (newRun.chatIds && newRun.chatIds.length > 0) ||
+      (newRun.identityIds && newRun.identityIds.length > 0) ||
+      (newRun.dateRangeStart && newRun.dateRangeEnd);
+
+    if (!hasTargets) {
+      alert('Please specify at least one target: chats, identities, or date range');
+      return;
+    }
+
     try {
-      // Only include date fields for date_range target type
       const runData: CreateAnalysisRunDto = {
         profileId: newRun.profileId,
-        targetType: newRun.targetType,
-        targetIds: newRun.targetIds,
+        chatIds: newRun.chatIds && newRun.chatIds.length > 0 ? newRun.chatIds : undefined,
+        identityIds: newRun.identityIds && newRun.identityIds.length > 0 ? newRun.identityIds : undefined,
+        dateRangeStart: newRun.dateRangeStart || undefined,
+        dateRangeEnd: newRun.dateRangeEnd || undefined,
       };
-
-      if (newRun.targetType === 'date_range') {
-        runData.dateRangeStart = newRun.dateRangeStart;
-        runData.dateRangeEnd = newRun.dateRangeEnd;
-      }
 
       await createRun.mutateAsync(runData);
       setNewRun({
         profileId: '',
-        targetType: 'date_range',
-        targetIds: [],
+        chatIds: [],
+        identityIds: [],
         dateRangeStart: '',
         dateRangeEnd: '',
       });
@@ -299,8 +356,11 @@ export function Analysis() {
           </div>
           {activeTab === 'schemas' && (
             <Button
-              onClick={() => setShowCreateForm(true)}
-              disabled={showCreateForm}
+              onClick={() => {
+                setEditingSchemaId(null);
+                setShowCreateForm(true);
+              }}
+              disabled={showCreateForm || editingSchemaId !== null}
               variant="primary"
             >
               <Plus className="w-4 h-4 mr-2" />
@@ -309,8 +369,11 @@ export function Analysis() {
           )}
           {activeTab === 'profiles' && (
             <Button
-              onClick={() => setShowCreateProfileForm(true)}
-              disabled={showCreateProfileForm || schemas.length === 0}
+              onClick={() => {
+                setEditingProfileId(null);
+                setShowCreateProfileForm(true);
+              }}
+              disabled={showCreateProfileForm || editingProfileId !== null || schemas.length === 0}
               variant="primary"
             >
               <Plus className="w-4 h-4 mr-2" />
@@ -384,17 +447,32 @@ export function Analysis() {
                 Extracted Entities
               </div>
             </button>
+            <button
+              onClick={() => setActiveTab('stats')}
+              className={`py-4 px-1 border-b-2 font-medium text-sm ${
+                activeTab === 'stats'
+                  ? 'border-blue-500 text-blue-600'
+                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+              }`}
+            >
+              <div className="flex items-center gap-2">
+                <BarChart3 className="w-4 h-4" />
+                Statistics
+              </div>
+            </button>
           </nav>
         </div>
 
         {/* Schemas Tab */}
         {activeTab === 'schemas' && (
           <>
-            {/* Create Form */}
-            {showCreateForm && (
+            {/* Create/Edit Form */}
+            {(showCreateForm || editingSchemaId) && (
           <Card className="mb-6">
             <CardHeader>
-              <h2 className="text-lg font-semibold">Create Entity Schema</h2>
+              <h2 className="text-lg font-semibold">
+                {editingSchemaId ? 'Edit Entity Schema' : 'Create Entity Schema'}
+              </h2>
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
@@ -509,22 +587,35 @@ export function Analysis() {
                 <div className="flex gap-2">
                   <Button
                     onClick={handleCreateSchema}
-                    disabled={createSchema.isPending || !newSchema.name.trim()}
+                    disabled={createSchema.isPending || updateSchema.isPending || !newSchema.name.trim()}
                     variant="primary"
                   >
-                    {createSchema.isPending ? (
+                    {(createSchema.isPending || updateSchema.isPending) ? (
                       <>
                         <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                        Creating...
+                        {editingSchemaId ? 'Updating...' : 'Creating...'}
                       </>
                     ) : (
                       <>
-                        <Plus className="w-4 h-4 mr-2" />
-                        Create Schema
+                        {editingSchemaId ? <Edit2 className="w-4 h-4 mr-2" /> : <Plus className="w-4 h-4 mr-2" />}
+                        {editingSchemaId ? 'Update Schema' : 'Create Schema'}
                       </>
                     )}
                   </Button>
-                  <Button onClick={() => setShowCreateForm(false)} variant="secondary">
+                  <Button onClick={() => {
+                    setShowCreateForm(false);
+                    setEditingSchemaId(null);
+                    setNewSchema({
+                      name: '',
+                      description: '',
+                      extractionType: 'llm_extraction',
+                      properties: {},
+                      prompt: '',
+                      model: 'anthropic/claude-3.5-sonnet',
+                      temperature: 0.1,
+                    });
+                    setPropertiesJson('{\n  "score": "number",\n  "label": "string"\n}');
+                  }} variant="secondary">
                     Cancel
                   </Button>
                 </div>
@@ -557,7 +648,10 @@ export function Analysis() {
               <p className="text-gray-500 mb-4">
                 Create your first entity schema to start extracting insights from messages
               </p>
-              <Button onClick={() => setShowCreateForm(true)} variant="primary">
+              <Button onClick={() => {
+                setEditingSchemaId(null);
+                setShowCreateForm(true);
+              }} variant="primary">
                 <Plus className="w-4 h-4 mr-2" />
                 Create Schema
               </Button>
@@ -577,20 +671,41 @@ export function Analysis() {
                         <p className="text-sm text-gray-500 mt-1">{schema.description}</p>
                       )}
                     </div>
-                    <Button
-                      onClick={() => handleDeleteSchema(schema.id, schema.name)}
-                      disabled={deletingSchemaId === schema.id}
-                      variant="secondary"
-                      size="sm"
-                    >
-                      {deletingSchemaId === schema.id ? (
-                        <Loader2 className="w-4 h-4 animate-spin" />
-                      ) : (
-                        <Trash2 className="w-4 h-4" />
-                      )}
-                    </Button>
-                  </div>
-                </CardHeader>
+                    <div className="flex gap-2">
+                      <Button
+                        onClick={() => {
+                          setEditingSchemaId(schema.id);
+                          setNewSchema({
+                            name: schema.name,
+                            description: schema.description || '',
+                            extractionType: schema.extractionType,
+                            properties: schema.properties,
+                            prompt: schema.prompt || '',
+                            model: schema.model || 'anthropic/claude-3.5-sonnet',
+                            temperature: schema.temperature || 0.1,
+                            ruleDefinition: schema.ruleDefinition,
+                          });
+                          setPropertiesJson(JSON.stringify(schema.properties, null, 2));
+                        }}
+                        variant="secondary"
+                        size="sm"
+                      >
+                        <Edit2 className="w-4 h-4" />
+                      </Button>
+                      <Button
+                        onClick={() => handleDeleteSchema(schema.id, schema.name)}
+                        disabled={deletingSchemaId === schema.id}
+                        variant="secondary"
+                        size="sm"
+                      >
+                        {deletingSchemaId === schema.id ? (
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                        ) : (
+                          <Trash2 className="w-4 h-4" />
+                        )}
+                      </Button>
+                    </div>
+                  </div>                </CardHeader>
                 <CardContent>
                   <div className="space-y-3">
                     <div className="flex items-center gap-2">
@@ -632,11 +747,13 @@ export function Analysis() {
         {/* Profiles Tab */}
         {activeTab === 'profiles' && (
           <>
-            {/* Create Profile Form */}
-            {showCreateProfileForm && (
+            {/* Create/Edit Profile Form */}
+            {(showCreateProfileForm || editingProfileId) && (
               <Card className="mb-6">
                 <CardHeader>
-                  <h2 className="text-lg font-semibold">Create Analysis Profile</h2>
+                  <h2 className="text-lg font-semibold">
+                    {editingProfileId ? 'Edit Analysis Profile' : 'Create Analysis Profile'}
+                  </h2>
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-4">
@@ -737,22 +854,35 @@ export function Analysis() {
                     <div className="flex gap-2">
                       <Button
                         onClick={handleCreateProfile}
-                        disabled={createProfile.isPending || !newProfile.name.trim() || newProfile.entitySchemaIds.length === 0}
+                        disabled={createProfile.isPending || updateProfile.isPending || !newProfile.name.trim() || newProfile.entitySchemaIds.length === 0}
                         variant="primary"
                       >
-                        {createProfile.isPending ? (
+                        {(createProfile.isPending || updateProfile.isPending) ? (
                           <>
                             <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                            Creating...
+                            {editingProfileId ? 'Updating...' : 'Creating...'}
                           </>
                         ) : (
                           <>
-                            <Plus className="w-4 h-4 mr-2" />
-                            Create Profile
+                            {editingProfileId ? <Edit2 className="w-4 h-4 mr-2" /> : <Plus className="w-4 h-4 mr-2" />}
+                            {editingProfileId ? 'Update Profile' : 'Create Profile'}
                           </>
                         )}
                       </Button>
-                      <Button onClick={() => setShowCreateProfileForm(false)} variant="secondary">
+                      <Button onClick={() => {
+                        setShowCreateProfileForm(false);
+                        setEditingProfileId(null);
+                        setNewProfile({
+                          name: '',
+                          description: '',
+                          graphDefinition: {},
+                          entitySchemaIds: [],
+                          triggerOnReceive: false,
+                          triggerOnDemand: true,
+                          storeEntities: true,
+                          generateTags: false,
+                        });
+                      }} variant="secondary">
                         Cancel
                       </Button>
                     </div>
@@ -791,7 +921,10 @@ export function Analysis() {
                       <span>Create entity schemas first, then create a profile</span>
                     </Alert>
                   ) : (
-                    <Button onClick={() => setShowCreateProfileForm(true)} variant="primary">
+                    <Button onClick={() => {
+                      setEditingProfileId(null);
+                      setShowCreateProfileForm(true);
+                    }} variant="primary">
                       <Plus className="w-4 h-4 mr-2" />
                       Create Profile
                     </Button>
@@ -813,18 +946,39 @@ export function Analysis() {
                             <p className="text-sm text-gray-500 mt-1">{profile.description}</p>
                           )}
                         </div>
-                        <Button
-                          onClick={() => handleDeleteProfile(profile.id, profile.name)}
-                          disabled={deletingProfileId === profile.id}
-                          variant="secondary"
-                          size="sm"
-                        >
-                          {deletingProfileId === profile.id ? (
-                            <Loader2 className="w-4 h-4 animate-spin" />
-                          ) : (
-                            <Trash2 className="w-4 h-4" />
-                          )}
-                        </Button>
+                        <div className="flex gap-2">
+                          <Button
+                            onClick={() => {
+                              setEditingProfileId(profile.id);
+                              setNewProfile({
+                                name: profile.name,
+                                description: profile.description || '',
+                                graphDefinition: profile.graphDefinition,
+                                entitySchemaIds: profile.entitySchemaIds,
+                                triggerOnReceive: profile.triggerOnReceive,
+                                triggerOnDemand: profile.triggerOnDemand,
+                                storeEntities: profile.storeEntities,
+                                generateTags: profile.generateTags,
+                              });
+                            }}
+                            variant="secondary"
+                            size="sm"
+                          >
+                            <Edit2 className="w-4 h-4" />
+                          </Button>
+                          <Button
+                            onClick={() => handleDeleteProfile(profile.id, profile.name)}
+                            disabled={deletingProfileId === profile.id}
+                            variant="secondary"
+                            size="sm"
+                          >
+                            {deletingProfileId === profile.id ? (
+                              <Loader2 className="w-4 h-4 animate-spin" />
+                            ) : (
+                              <Trash2 className="w-4 h-4" />
+                            )}
+                          </Button>
+                        </div>
                       </div>
                     </CardHeader>
                     <CardContent>
@@ -895,63 +1049,78 @@ export function Analysis() {
                       </select>
                     </div>
 
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Target Type *
-                      </label>
-                      <select
-                        value={newRun.targetType}
-                        onChange={(e) => setNewRun({ ...newRun, targetType: e.target.value as any })}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      >
-                        <option value="date_range">Date Range</option>
-                        <option value="chat">Specific Chat</option>
-                        <option value="message">Specific Messages</option>
-                        <option value="identity">Specific Identity</option>
-                      </select>
-                    </div>
+                    <div className="space-y-4 border border-gray-200 rounded-lg p-4 bg-gray-50">
+                      <p className="text-sm font-medium text-gray-700">
+                        Target Filters (specify at least one)
+                      </p>
 
-                    {newRun.targetType === 'date_range' && (
-                      <div className="grid grid-cols-2 gap-4">
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-1">
-                            Start Date
-                          </label>
-                          <Input
-                            type="date"
-                            value={newRun.dateRangeStart}
-                            onChange={(e) => setNewRun({ ...newRun, dateRangeStart: e.target.value })}
-                          />
-                        </div>
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-1">
-                            End Date
-                          </label>
-                          <Input
-                            type="date"
-                            value={newRun.dateRangeEnd}
-                            onChange={(e) => setNewRun({ ...newRun, dateRangeEnd: e.target.value })}
-                          />
+                      {/* Date Range Filter */}
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          Date Range (optional)
+                        </label>
+                        <div className="grid grid-cols-2 gap-4">
+                          <div>
+                            <label className="block text-xs text-gray-600 mb-1">
+                              Start Date
+                            </label>
+                            <Input
+                              type="date"
+                              value={newRun.dateRangeStart}
+                              onChange={(e) => setNewRun({ ...newRun, dateRangeStart: e.target.value })}
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-xs text-gray-600 mb-1">
+                              End Date
+                            </label>
+                            <Input
+                              type="date"
+                              value={newRun.dateRangeEnd}
+                              onChange={(e) => setNewRun({ ...newRun, dateRangeEnd: e.target.value })}
+                            />
+                          </div>
                         </div>
                       </div>
-                    )}
 
-                    {newRun.targetType !== 'date_range' && (
+                      {/* Chat IDs Filter */}
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1">
-                          Target IDs (comma-separated)
+                          Specific Chats (optional)
                         </label>
                         <Input
                           type="text"
-                          value={newRun.targetIds.join(', ')}
-                          onChange={(e) => setNewRun({ ...newRun, targetIds: e.target.value.split(',').map(id => id.trim()) })}
-                          placeholder="e.g., chat-1, chat-2, chat-3"
+                          value={newRun.chatIds?.join(', ') || ''}
+                          onChange={(e) => setNewRun({
+                            ...newRun,
+                            chatIds: e.target.value ? e.target.value.split(',').map(id => id.trim()).filter(id => id) : []
+                          })}
+                          placeholder="e.g., chat-id-1, chat-id-2"
                         />
                         <p className="text-xs text-gray-500 mt-1">
-                          Enter {newRun.targetType} IDs separated by commas
+                          Enter chat IDs separated by commas (combine with date range to filter specific chats in a time period)
                         </p>
                       </div>
-                    )}
+
+                      {/* Identity IDs Filter */}
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          Specific Identities (optional)
+                        </label>
+                        <Input
+                          type="text"
+                          value={newRun.identityIds?.join(', ') || ''}
+                          onChange={(e) => setNewRun({
+                            ...newRun,
+                            identityIds: e.target.value ? e.target.value.split(',').map(id => id.trim()).filter(id => id) : []
+                          })}
+                          placeholder="e.g., user-123, user-456"
+                        />
+                        <p className="text-xs text-gray-500 mt-1">
+                          Enter identity IDs separated by commas (for future use)
+                        </p>
+                      </div>
+                    </div>
 
                     <div className="flex gap-2">
                       <Button
@@ -1022,6 +1191,38 @@ export function Analysis() {
             {/* Runs List */}
             {!runsLoading && !runsError && runs.length > 0 && (
               <div className="space-y-4">
+                {/* Sorting Controls */}
+                <Card>
+                  <CardContent className="p-4">
+                    <div className="flex items-center gap-4">
+                      <span className="text-sm font-medium text-gray-700">Sort by:</span>
+                      <select
+                        value={runsSortBy}
+                        onChange={(e) => setRunsSortBy(e.target.value)}
+                        className="px-3 py-1.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                      >
+                        <option value="createdAt">Created Date</option>
+                        <option value="startedAt">Started Date</option>
+                        <option value="completedAt">Completed Date</option>
+                        <option value="status">Status</option>
+                        <option value="progress">Progress</option>
+                        <option value="entitiesExtracted">Entities Extracted</option>
+                      </select>
+                      <select
+                        value={runsSortOrder}
+                        onChange={(e) => setRunsSortOrder(e.target.value as 'asc' | 'desc')}
+                        className="px-3 py-1.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                      >
+                        <option value="desc">Newest First</option>
+                        <option value="asc">Oldest First</option>
+                      </select>
+                      <span className="text-sm text-gray-500 ml-auto">
+                        {runs.length} {runs.length === 1 ? 'run' : 'runs'}
+                      </span>
+                    </div>
+                  </CardContent>
+                </Card>
+
                 {runs.map((run: any) => (
                   <Card key={run.id} className="hover:shadow-lg transition-shadow">
                     <CardHeader>
@@ -1049,19 +1250,56 @@ export function Analysis() {
                             {run.status === 'failed' && (
                               <Badge variant="danger">Failed</Badge>
                             )}
+                            {run.status === 'cancelled' && (
+                              <Badge variant="secondary">Cancelled</Badge>
+                            )}
                           </div>
                           <p className="text-sm text-gray-500 mt-1">
                             Profile: {run.profileId} (v{run.profileVersion})
                           </p>
                         </div>
+                        {(run.status === 'pending' || run.status === 'running') && (
+                          <Button
+                            onClick={async () => {
+                              if (confirm('Cancel this analysis run?')) {
+                                await cancelRun.mutateAsync(run.id);
+                              }
+                            }}
+                            disabled={cancelRun.isPending}
+                            variant="secondary"
+                            size="sm"
+                          >
+                            {cancelRun.isPending ? (
+                              <Loader2 className="w-4 h-4 animate-spin" />
+                            ) : (
+                              'Cancel'
+                            )}
+                          </Button>
+                        )}
                       </div>
                     </CardHeader>
                     <CardContent>
                       <div className="space-y-3">
-                        <div className="grid grid-cols-2 gap-4 text-sm">
+                        <div className="text-sm space-y-2">
                           <div>
-                            <span className="text-gray-500">Target:</span>
-                            <span className="ml-2 font-medium">{run.targetType}</span>
+                            <span className="text-gray-500">Targets:</span>
+                            <div className="ml-2 mt-1 flex flex-wrap gap-2">
+                              {run.dateRangeStart && run.dateRangeEnd && (
+                                <Badge variant="blue" size="sm">
+                                  {new Date(run.dateRangeStart).toLocaleDateString()} - {new Date(run.dateRangeEnd).toLocaleDateString()}
+                                </Badge>
+                              )}
+                              {run.chatIds && run.chatIds.length > 0 && (
+                                <Badge variant="purple" size="sm">
+                                  {run.chatIds.length} chat{run.chatIds.length > 1 ? 's' : ''}
+                                </Badge>
+                              )}
+                              {run.identityIds && run.identityIds.length > 0 && (
+                                <Badge variant="green" size="sm">
+                                  {run.identityIds.length} identit{run.identityIds.length > 1 ? 'ies' : 'y'}
+                                </Badge>
+                              )}
+                            </div>
                           </div>
                           <div>
                             <span className="text-gray-500">Progress:</span>
@@ -1172,20 +1410,49 @@ export function Analysis() {
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Limit
+                      Page Size
                     </label>
                     <Input
                       type="number"
-                      value={entityFilters.limit || 100}
-                      onChange={(e) => setEntityFilters({ ...entityFilters, limit: parseInt(e.target.value) || 100 })}
-                      placeholder="100"
+                      value={entityFilters.limit || 20}
+                      onChange={(e) => setEntityFilters({ ...entityFilters, limit: parseInt(e.target.value) || 20, offset: 0 })}
+                      placeholder="20"
                     />
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-4 mt-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Sort By
+                    </label>
+                    <select
+                      value={entityFilters.sortBy || 'extractedAt'}
+                      onChange={(e) => setEntityFilters({ ...entityFilters, sortBy: e.target.value, offset: 0 })}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    >
+                      <option value="extractedAt">Extraction Date</option>
+                      <option value="confidence">Confidence Score</option>
+                      <option value="isLatest">Latest Status</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Sort Order
+                    </label>
+                    <select
+                      value={entityFilters.sortOrder || 'desc'}
+                      onChange={(e) => setEntityFilters({ ...entityFilters, sortOrder: e.target.value as 'asc' | 'desc', offset: 0 })}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    >
+                      <option value="desc">Descending</option>
+                      <option value="asc">Ascending</option>
+                    </select>
                   </div>
                 </div>
                 <div className="mt-4 flex gap-2">
                   <Button
                     variant="outline"
-                    onClick={() => setEntityFilters({})}
+                    onClick={() => setEntityFilters({ limit: 20, offset: 0, sortBy: 'extractedAt', sortOrder: 'desc' })}
                   >
                     Clear Filters
                   </Button>
@@ -1283,7 +1550,284 @@ export function Analysis() {
                     </CardContent>
                   </Card>
                 ))}
+
+                {/* Pagination Controls */}
+                <div className="flex items-center justify-between mt-6">
+                  <div className="text-sm text-gray-600">
+                    Showing {(entityFilters.offset || 0) + 1} - {(entityFilters.offset || 0) + entities.length} (Page size: {entityFilters.limit || 20})
+                  </div>
+                  <div className="flex gap-2">
+                    <Button
+                      onClick={() => setEntityFilters({
+                        ...entityFilters,
+                        offset: Math.max(0, (entityFilters.offset || 0) - (entityFilters.limit || 20))
+                      })}
+                      disabled={(entityFilters.offset || 0) === 0}
+                      variant="outline"
+                      size="sm"
+                    >
+                      <ChevronLeft className="w-4 h-4 mr-1" />
+                      Previous
+                    </Button>
+                    <Button
+                      onClick={() => setEntityFilters({
+                        ...entityFilters,
+                        offset: (entityFilters.offset || 0) + (entityFilters.limit || 20)
+                      })}
+                      disabled={entities.length < (entityFilters.limit || 20)}
+                      variant="outline"
+                      size="sm"
+                    >
+                      Next
+                      <ChevronRight className="w-4 h-4 ml-1" />
+                    </Button>
+                  </div>
+                </div>
               </div>
+            )}
+          </>
+        )}
+
+        {/* Stats Tab */}
+        {activeTab === 'stats' && (
+          <>
+            {/* Loading State */}
+            {statsLoading && (
+              <div className="flex items-center justify-center py-12">
+                <Loader2 className="h-8 w-8 animate-spin text-blue-500" />
+              </div>
+            )}
+
+            {/* Error State */}
+            {statsError && (
+              <Alert variant="error">
+                <AlertCircle className="h-4 w-4" />
+                <span>Failed to load statistics: {(statsError as any).message}</span>
+              </Alert>
+            )}
+
+            {/* Stats Content */}
+            {!statsLoading && !statsError && stats && (
+              <div className="space-y-6">
+                {/* Overview Cards */}
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                  <Card>
+                    <CardContent className="p-6">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <p className="text-sm text-gray-500 mb-1">Total Runs</p>
+                          <p className="text-3xl font-bold text-gray-900">{stats.totalRuns}</p>
+                        </div>
+                        <Play className="h-8 w-8 text-blue-500" />
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  <Card>
+                    <CardContent className="p-6">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <p className="text-sm text-gray-500 mb-1">Entities Extracted</p>
+                          <p className="text-3xl font-bold text-gray-900">{stats.totalEntitiesExtracted}</p>
+                        </div>
+                        <Database className="h-8 w-8 text-green-500" />
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  <Card>
+                    <CardContent className="p-6">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <p className="text-sm text-gray-500 mb-1">Tokens Used</p>
+                          <p className="text-3xl font-bold text-gray-900">
+                            {stats.totalTokensUsed.toLocaleString()}
+                          </p>
+                        </div>
+                        <Zap className="h-8 w-8 text-yellow-500" />
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  <Card>
+                    <CardContent className="p-6">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <p className="text-sm text-gray-500 mb-1">Estimated Cost</p>
+                          <p className="text-3xl font-bold text-gray-900">
+                            ${stats.totalEstimatedCostUsd.toFixed(2)}
+                          </p>
+                        </div>
+                        <TrendingUp className="h-8 w-8 text-purple-500" />
+                      </div>
+                    </CardContent>
+                  </Card>
+                </div>
+
+                {/* Runs by Status */}
+                <Card>
+                  <CardHeader>
+                    <h2 className="text-lg font-semibold">Runs by Status</h2>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-3">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <Badge variant="default">Completed</Badge>
+                          <span className="text-sm text-gray-600">
+                            {stats.runsByStatus.completed} runs
+                          </span>
+                        </div>
+                        <div className="text-sm font-medium text-gray-900">
+                          {stats.totalRuns > 0
+                            ? ((stats.runsByStatus.completed / stats.totalRuns) * 100).toFixed(1)
+                            : 0}%
+                        </div>
+                      </div>
+
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <Badge variant="warning">Running</Badge>
+                          <span className="text-sm text-gray-600">
+                            {stats.runsByStatus.running} runs
+                          </span>
+                        </div>
+                        <div className="text-sm font-medium text-gray-900">
+                          {stats.totalRuns > 0
+                            ? ((stats.runsByStatus.running / stats.totalRuns) * 100).toFixed(1)
+                            : 0}%
+                        </div>
+                      </div>
+
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <Badge variant="secondary">Pending</Badge>
+                          <span className="text-sm text-gray-600">
+                            {stats.runsByStatus.pending} runs
+                          </span>
+                        </div>
+                        <div className="text-sm font-medium text-gray-900">
+                          {stats.totalRuns > 0
+                            ? ((stats.runsByStatus.pending / stats.totalRuns) * 100).toFixed(1)
+                            : 0}%
+                        </div>
+                      </div>
+
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <Badge variant="error">Failed</Badge>
+                          <span className="text-sm text-gray-600">
+                            {stats.runsByStatus.failed} runs
+                          </span>
+                        </div>
+                        <div className="text-sm font-medium text-gray-900">
+                          {stats.totalRuns > 0
+                            ? ((stats.runsByStatus.failed / stats.totalRuns) * 100).toFixed(1)
+                            : 0}%
+                        </div>
+                      </div>
+
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <Badge variant="secondary">Cancelled</Badge>
+                          <span className="text-sm text-gray-600">
+                            {stats.runsByStatus.cancelled} runs
+                          </span>
+                        </div>
+                        <div className="text-sm font-medium text-gray-900">
+                          {stats.totalRuns > 0
+                            ? ((stats.runsByStatus.cancelled / stats.totalRuns) * 100).toFixed(1)
+                            : 0}%
+                        </div>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* Additional Insights */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <Card>
+                    <CardHeader>
+                      <h3 className="text-lg font-semibold">Average Metrics</h3>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="space-y-3">
+                        <div className="flex justify-between">
+                          <span className="text-sm text-gray-600">Entities per run</span>
+                          <span className="text-sm font-medium text-gray-900">
+                            {stats.totalRuns > 0
+                              ? (stats.totalEntitiesExtracted / stats.totalRuns).toFixed(1)
+                              : 0}
+                          </span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-sm text-gray-600">Tokens per run</span>
+                          <span className="text-sm font-medium text-gray-900">
+                            {stats.totalRuns > 0
+                              ? Math.round(stats.totalTokensUsed / stats.totalRuns).toLocaleString()
+                              : 0}
+                          </span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-sm text-gray-600">Cost per run</span>
+                          <span className="text-sm font-medium text-gray-900">
+                            ${stats.totalRuns > 0
+                              ? (stats.totalEstimatedCostUsd / stats.totalRuns).toFixed(4)
+                              : 0}
+                          </span>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  <Card>
+                    <CardHeader>
+                      <h3 className="text-lg font-semibold">Success Rate</h3>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="space-y-3">
+                        <div className="flex justify-between">
+                          <span className="text-sm text-gray-600">Completed runs</span>
+                          <span className="text-sm font-medium text-green-600">
+                            {stats.totalRuns > 0
+                              ? ((stats.runsByStatus.completed / stats.totalRuns) * 100).toFixed(1)
+                              : 0}%
+                          </span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-sm text-gray-600">Failed runs</span>
+                          <span className="text-sm font-medium text-red-600">
+                            {stats.totalRuns > 0
+                              ? ((stats.runsByStatus.failed / stats.totalRuns) * 100).toFixed(1)
+                              : 0}%
+                          </span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-sm text-gray-600">Cancelled runs</span>
+                          <span className="text-sm font-medium text-gray-600">
+                            {stats.totalRuns > 0
+                              ? ((stats.runsByStatus.cancelled / stats.totalRuns) * 100).toFixed(1)
+                              : 0}%
+                          </span>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </div>
+              </div>
+            )}
+
+            {/* Empty State */}
+            {!statsLoading && !statsError && stats && stats.totalRuns === 0 && (
+              <Card>
+                <CardContent className="flex flex-col items-center justify-center py-12 text-center">
+                  <BarChart3 className="h-12 w-12 text-gray-300 mb-4" />
+                  <h3 className="text-lg font-medium text-gray-900 mb-1">No statistics yet</h3>
+                  <p className="text-gray-500 max-w-sm">
+                    Run your first analysis to see statistics here.
+                  </p>
+                </CardContent>
+              </Card>
             )}
           </>
         )}

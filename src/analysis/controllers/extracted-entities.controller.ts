@@ -18,7 +18,7 @@ export class ExtractedEntitiesController {
     category: 'Analysis / Entities',
     requiredScopes: [ApiScope.PROJECTS_READ],
     outputType: 'ExtractedEntityResponse[]',
-    description: 'List all extracted entities for a project',
+    description: 'List all extracted entities for a project with pagination and sorting',
   })
   async listEntities(
     @Param('project') projectId: string,
@@ -26,6 +26,9 @@ export class ExtractedEntitiesController {
     @Query('schemaId') schemaId?: string,
     @Query('chatId') chatId?: string,
     @Query('limit') limit?: string,
+    @Query('offset') offset?: string,
+    @Query('sortBy') sortBy?: string,
+    @Query('sortOrder') sortOrder?: 'asc' | 'desc',
     @AuthContextParam() authContext?: AuthContext,
   ) {
     return this.entitiesService.findAll(
@@ -35,6 +38,9 @@ export class ExtractedEntitiesController {
         schemaId,
         chatId,
         limit: limit ? parseInt(limit) : undefined,
+        offset: offset ? parseInt(offset) : undefined,
+        sortBy,
+        sortOrder,
       },
       authContext!,
     );

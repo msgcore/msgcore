@@ -23,6 +23,9 @@ export interface EntityFilters {
   schemaId?: string;
   chatId?: string;
   limit?: number;
+  offset?: number;
+  sortBy?: string;
+  sortOrder?: 'asc' | 'desc';
 }
 
 @Injectable()
@@ -55,6 +58,13 @@ export class ExtractedEntitiesService {
       where.chatId = filters.chatId;
     }
 
+    // Validate sortBy field
+    const validSortFields = ['extractedAt', 'confidence', 'isLatest'];
+    const sortField = filters.sortBy && validSortFields.includes(filters.sortBy)
+      ? filters.sortBy
+      : 'extractedAt';
+    const sortOrder = filters.sortOrder || 'desc';
+
     const entities = await this.prisma.extractedEntity.findMany({
       where,
       include: {
@@ -64,8 +74,9 @@ export class ExtractedEntitiesService {
           },
         },
       },
-      orderBy: { extractedAt: 'desc' },
+      orderBy: { [sortField]: sortOrder },
       take: filters.limit || 100,
+      skip: filters.offset || 0,
     });
 
     return entities.map((e) => this.mapToResponse(e));

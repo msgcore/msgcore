@@ -4,12 +4,16 @@ import {
   Post,
   Body,
   Param,
+  Query,
   UseGuards,
+  HttpCode,
+  HttpStatus,
 } from '@nestjs/common';
 import { AnalysisRunService } from '../services/analysis-run.service';
 import {
   CreateAnalysisRunDto,
   AnalysisRunResponse,
+  AnalysisStatsResponse,
 } from '../dto';
 import { AppAuthGuard } from '../../common/guards/app-auth.guard';
 import { ProjectAccessGuard } from '../../common/guards/project-access.guard';
@@ -48,6 +52,28 @@ export class AnalysisRunsController {
     return this.runService.create(projectId, dto, authContext);
   }
 
+  @Get('stats')
+  @RequireScopes(ApiScope.PROJECTS_READ)
+  @SdkContract({
+    command: 'analysis runs stats',
+    category: 'Analysis / Runs',
+    requiredScopes: [ApiScope.PROJECTS_READ],
+    outputType: 'AnalysisStatsResponse',
+    description: 'Get analysis run statistics for a project',
+    examples: [
+      {
+        command: 'analysis runs stats --project my-project',
+        description: 'Get run statistics',
+      },
+    ],
+  })
+  async getStats(
+    @Param('project') projectId: string,
+    @AuthContextParam() authContext: AuthContext,
+  ): Promise<AnalysisStatsResponse> {
+    return this.runService.getStats(projectId, authContext);
+  }
+
   @Get()
   @RequireScopes(ApiScope.PROJECTS_READ)
   @SdkContract({
@@ -55,19 +81,25 @@ export class AnalysisRunsController {
     category: 'Analysis / Runs',
     requiredScopes: [ApiScope.PROJECTS_READ],
     outputType: 'AnalysisRunResponse[]',
-    description: 'List analysis runs for a project',
+    description: 'List analysis runs for a project with sorting',
     examples: [
       {
         command: 'analysis runs list --project my-project',
         description: 'List all runs',
+      },
+      {
+        command: 'analysis runs list --project my-project --sortBy status --sortOrder asc',
+        description: 'List runs sorted by status',
       },
     ],
   })
   async findAll(
     @Param('project') projectId: string,
     @AuthContextParam() authContext: AuthContext,
+    @Query('sortBy') sortBy?: string,
+    @Query('sortOrder') sortOrder?: 'asc' | 'desc',
   ): Promise<AnalysisRunResponse[]> {
-    return this.runService.findAll(projectId, authContext);
+    return this.runService.findAll(projectId, authContext, sortBy, sortOrder);
   }
 
   @Get(':runId')
@@ -91,5 +123,29 @@ export class AnalysisRunsController {
     @AuthContextParam() authContext: AuthContext,
   ): Promise<AnalysisRunResponse> {
     return this.runService.findOne(projectId, runId, authContext);
+  }
+
+  @Post(':runId/cancel')
+  @HttpCode(HttpStatus.OK)
+  @RequireScopes(ApiScope.PROJECTS_WRITE)
+  @SdkContract({
+    command: 'analysis runs cancel',
+    category: 'Analysis / Runs',
+    requiredScopes: [ApiScope.PROJECTS_WRITE],
+    outputType: 'AnalysisRunResponse',
+    description: 'Cancel a running or pending analysis run',
+    examples: [
+      {
+        command: 'analysis runs cancel --project my-project --runId xyz789',
+        description: 'Cancel analysis run',
+      },
+    ],
+  })
+  async cancel(
+    @Param('project') projectId: string,
+    @Param('runId') runId: string,
+    @AuthContextParam() authContext: AuthContext,
+  ): Promise<AnalysisRunResponse> {
+    return this.runService.cancel(projectId, runId, authContext);
   }
 }

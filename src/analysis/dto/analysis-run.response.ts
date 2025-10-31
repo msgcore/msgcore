@@ -3,8 +3,8 @@ export interface AnalysisRunResponse {
   projectId: string;
   profileId: string;
   profileVersion: number;
-  targetType: string;
-  targetIds: string[];
+  chatIds?: string[];
+  identityIds?: string[];
   dateRangeStart?: Date;
   dateRangeEnd?: Date;
   status: string;

@@ -104,6 +104,68 @@ Access at `http://localhost:7890`
 
 See [DOCKER.md](DOCKER.md) for detailed Docker documentation.
 
+## Environment Variables
+
+### Required Variables
+
+**Core**
+- `DATABASE_URL` - PostgreSQL connection string (e.g., `postgresql://user:pass@host:5432/msgcore?schema=public`)
+- `REDIS_URL` - Redis connection string for Bull queue (e.g., `redis://:password@host:6379`)
+- `JWT_SECRET` - Secret for JWT token signing (generate with `openssl rand -hex 32`)
+- `ENCRYPTION_KEY` - AES-256-GCM key for credential encryption (generate with `openssl rand -hex 32`)
+
+**AI/LLM Integration**
+- `OPENROUTER_API_KEY` - OpenRouter API key for LLM-based entity extraction
+- `OPENAI_API_KEY` - OpenAI API key for Whisper voice transcription
+
+**LangSmith (Observability & Tracing)**
+- `LANGCHAIN_API_KEY` - LangSmith API key for tracing and monitoring
+- `LANGCHAIN_TRACING_V2` - Set to `"true"` to enable LangSmith tracing
+- `LANGCHAIN_ENDPOINT` - LangSmith endpoint (default: `https://api.smith.langchain.com`)
+- `LANGCHAIN_PROJECT` - Project name for organizing traces in LangSmith
+
+### Optional Variables
+
+**Application**
+- `PORT` - HTTP server port (default: `7890`)
+- `NODE_ENV` - Environment (`development`, `production`, `test`)
+- `MSGCORE_API_URL` - Public URL for webhooks (e.g., `https://msgcore.yourdomain.com`)
+- `LOG_LEVEL` - Logging level (`debug`, `info`, `warn`, `error`)
+
+**Monitoring**
+- `SENTRY_DSN` - Sentry error tracking DSN for production error monitoring
+
+### Example `.env` File
+
+```bash
+# Database
+DATABASE_URL=postgresql://msgcore:password@localhost:5432/msgcore?schema=public
+REDIS_URL=redis://:password@localhost:6379
+
+# Security (Generate with: openssl rand -hex 32)
+JWT_SECRET=$(openssl rand -hex 32)
+ENCRYPTION_KEY=$(openssl rand -hex 32)
+
+# AI/LLM Integration
+OPENROUTER_API_KEY=sk-or-v1-your-key-here
+OPENAI_API_KEY=sk-proj-your-key-here
+
+# LangSmith (Observability & Tracing)
+LANGCHAIN_API_KEY=lsv2_pt_your-key-here
+LANGCHAIN_TRACING_V2=true
+LANGCHAIN_ENDPOINT=https://api.smith.langchain.com
+LANGCHAIN_PROJECT=msgcore-production
+
+# Application
+PORT=7890
+NODE_ENV=production
+MSGCORE_API_URL=https://msgcore.yourdomain.com
+LOG_LEVEL=info
+
+# Monitoring
+SENTRY_DSN=https://your-sentry-dsn@sentry.io/project-id
+```
+
 ## Installation
 
 ### SDK

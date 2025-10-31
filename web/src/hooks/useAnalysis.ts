@@ -109,6 +109,18 @@ export function useCreateAnalysisProfile(projectId?: string) {
   });
 }
 
+export function useUpdateAnalysisProfile(projectId?: string) {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ profileId, ...data }: Partial<CreateAnalysisProfileDto> & { profileId: string }) =>
+      sdk.analysisProfiles.update(profileId, { ...data, project: projectId }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['analysisProfiles', projectId] });
+    },
+  });
+}
+
 export function useDeleteAnalysisProfile(projectId?: string) {
   const queryClient = useQueryClient();
 
@@ -127,16 +139,20 @@ export function useDeleteAnalysisProfile(projectId?: string) {
 
 export interface CreateAnalysisRunDto {
   profileId: string;
-  targetType: 'message' | 'chat' | 'identity' | 'date_range';
-  targetIds: string[];
+  chatIds?: string[];
+  identityIds?: string[];
   dateRangeStart?: string;
   dateRangeEnd?: string;
 }
 
-export function useAnalysisRuns(projectId?: string) {
+export function useAnalysisRuns(
+  projectId?: string,
+  sortBy?: string,
+  sortOrder?: 'asc' | 'desc'
+) {
   return useQuery({
-    queryKey: ['analysisRuns', projectId],
-    queryFn: () => sdk.analysisRuns.list({ project: projectId }),
+    queryKey: ['analysisRuns', projectId, sortBy, sortOrder],
+    queryFn: () => sdk.analysisRuns.list({ project: projectId, sortBy, sortOrder }),
     enabled: !!projectId,
   });
 }
@@ -168,6 +184,40 @@ export function useCreateAnalysisRun(projectId?: string) {
   });
 }
 
+export function useCancelAnalysisRun(projectId?: string) {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (runId: string) =>
+      sdk.analysisRuns.cancel(runId, { project: projectId }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['analysisRuns', projectId] });
+    },
+  });
+}
+
+export interface AnalysisStatsResponse {
+  totalRuns: number;
+  runsByStatus: {
+    pending: number;
+    running: number;
+    completed: number;
+    failed: number;
+    cancelled: number;
+  };
+  totalEntitiesExtracted: number;
+  totalTokensUsed: number;
+  totalEstimatedCostUsd: number;
+}
+
+export function useAnalysisStats(projectId?: string) {
+  return useQuery({
+    queryKey: ['analysisStats', projectId],
+    queryFn: () => sdk.analysisRuns.stats({ project: projectId }),
+    enabled: !!projectId,
+  });
+}
+
 // ============================================
 // Extracted Entities
 // ============================================
@@ -195,6 +245,9 @@ export function useExtractedEntities(
     schemaId?: string;
     chatId?: string;
     limit?: number;
+    offset?: number;
+    sortBy?: string;
+    sortOrder?: 'asc' | 'desc';
   }
 ) {
   return useQuery({

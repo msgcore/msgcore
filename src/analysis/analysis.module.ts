@@ -6,10 +6,12 @@ import { AnalysisRunService } from './services/analysis-run.service';
 import { ExtractedEntitiesService } from './services/extracted-entities.service';
 import { LangGraphBuilderService } from './services/langgraph-builder.service';
 import { EntityExtractionService } from './services/entity-extraction.service';
+import { OpenRouterModelsService } from './services/openrouter-models.service';
 import { EntitySchemasController } from './controllers/entity-schemas.controller';
 import { AnalysisProfilesController } from './controllers/analysis-profiles.controller';
 import { AnalysisRunsController } from './controllers/analysis-runs.controller';
 import { ExtractedEntitiesController } from './controllers/extracted-entities.controller';
+import { OpenRouterModelsController } from './controllers/openrouter-models.controller';
 
 @Module({
   imports: [PrismaModule],
@@ -18,6 +20,7 @@ import { ExtractedEntitiesController } from './controllers/extracted-entities.co
     AnalysisProfilesController,
     AnalysisRunsController,
     ExtractedEntitiesController,
+    OpenRouterModelsController,
   ],
   providers: [
     EntitySchemaService,
@@ -26,6 +29,7 @@ import { ExtractedEntitiesController } from './controllers/extracted-entities.co
     ExtractedEntitiesService,
     LangGraphBuilderService,
     EntityExtractionService,
+    OpenRouterModelsService,
   ],
   exports: [
     EntitySchemaService,
@@ -33,6 +37,7 @@ import { ExtractedEntitiesController } from './controllers/extracted-entities.co
     AnalysisRunService,
     LangGraphBuilderService,
     EntityExtractionService,
+    OpenRouterModelsService,
   ],
 })
 export class AnalysisModule {}

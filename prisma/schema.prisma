@@ -526,8 +526,8 @@ model AnalysisRun {
   profileId        String    @map("profile_id")
   profileVersion   Int       @map("profile_version")
 
-  targetType       String    @map("target_type")
-  targetIds        String[]  @map("target_ids")
+  chatIds          String[]  @default([]) @map("chat_ids")
+  identityIds      String[]  @default([]) @map("identity_ids")
   dateRangeStart   DateTime? @map("date_range_start")
   dateRangeEnd     DateTime? @map("date_range_end")
 

@@ -6,4 +6,6 @@ export * from './update-analysis-profile.dto';
 export * from './analysis-profile.response';
 export * from './create-analysis-run.dto';
 export * from './analysis-run.response';
+export * from './analysis-stats.response';
 export * from './extracted-entity.response';
+export * from './model.response';

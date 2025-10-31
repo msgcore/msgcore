@@ -4,20 +4,24 @@ import { ConfigService } from '@nestjs/config';
 import {
   CreateAnalysisRunDto,
   AnalysisRunResponse,
+  AnalysisStatsResponse,
 } from '../dto';
 import { AuthContext, SecurityUtil } from '../../common/utils/security.util';
 import { EntityExtractionService } from './entity-extraction.service';
 import { EntitySchemaDefinition } from './langgraph-builder.service';
+import { OpenRouterModelsService } from './openrouter-models.service';
 
 @Injectable()
 export class AnalysisRunService {
   private readonly logger = new Logger(AnalysisRunService.name);
   private readonly openrouterApiKey: string;
+  private readonly cancelledRuns = new Set<string>();
 
   constructor(
     private readonly prisma: PrismaService,
     private readonly configService: ConfigService,
     private readonly extractionService: EntityExtractionService,
+    private readonly modelsService: OpenRouterModelsService,
   ) {
     this.openrouterApiKey = this.configService.get<string>('OPENROUTER_API_KEY') || '';
   }
@@ -64,14 +68,26 @@ export class AnalysisRunService {
       `Creating analysis run for profile ${profile.name} v${profile.version} with ${schemas.length} schemas`,
     );
 
+    // Validate that at least one target is specified
+    const hasTargets =
+      (dto.chatIds && dto.chatIds.length > 0) ||
+      (dto.identityIds && dto.identityIds.length > 0) ||
+      (dto.dateRangeStart && dto.dateRangeEnd);
+
+    if (!hasTargets) {
+      throw new BadRequestException(
+        'At least one target must be specified: chatIds, identityIds, or dateRange'
+      );
+    }
+
     // Create the run
     const run = await this.prisma.analysisRun.create({
       data: {
         projectId,
         profileId: profile.id,
         profileVersion: profile.version,
-        targetType: dto.targetType,
-        targetIds: dto.targetIds,
+        chatIds: dto.chatIds || [],
+        identityIds: dto.identityIds || [],
         dateRangeStart: dto.dateRangeStart ? new Date(dto.dateRangeStart) : null,
         dateRangeEnd: dto.dateRangeEnd ? new Date(dto.dateRangeEnd) : null,
         status: 'pending',
@@ -90,6 +106,8 @@ export class AnalysisRunService {
   async findAll(
     projectId: string,
     authContext: AuthContext,
+    sortBy: string = 'createdAt',
+    sortOrder: 'asc' | 'desc' = 'desc',
   ): Promise<AnalysisRunResponse[]> {
     await SecurityUtil.getProjectWithAccess(
       this.prisma,
@@ -98,9 +116,13 @@ export class AnalysisRunService {
       'list analysis runs',
     );
 
+    // Validate sortBy field
+    const validSortFields = ['createdAt', 'startedAt', 'completedAt', 'status', 'progress', 'entitiesExtracted'];
+    const sortField = validSortFields.includes(sortBy) ? sortBy : 'createdAt';
+
     const runs = await this.prisma.analysisRun.findMany({
       where: { projectId },
-      orderBy: { createdAt: 'desc' },
+      orderBy: { [sortField]: sortOrder },
       take: 100,
     });
 
@@ -133,6 +155,44 @@ export class AnalysisRunService {
     return this.mapToResponse(run);
   }
 
+  async getStats(
+    projectId: string,
+    authContext: AuthContext,
+  ): Promise<AnalysisStatsResponse> {
+    await SecurityUtil.getProjectWithAccess(
+      this.prisma,
+      projectId,
+      authContext,
+      'get analysis stats',
+    );
+
+    const runs = await this.prisma.analysisRun.findMany({
+      where: { projectId },
+    });
+
+    const stats: AnalysisStatsResponse = {
+      totalRuns: runs.length,
+      runsByStatus: {
+        pending: runs.filter((r) => r.status === 'pending').length,
+        running: runs.filter((r) => r.status === 'running').length,
+        completed: runs.filter((r) => r.status === 'completed').length,
+        failed: runs.filter((r) => r.status === 'failed').length,
+        cancelled: runs.filter((r) => r.status === 'cancelled').length,
+      },
+      totalEntitiesExtracted: runs.reduce(
+        (sum, r) => sum + (r.entitiesExtracted || 0),
+        0,
+      ),
+      totalTokensUsed: runs.reduce((sum, r) => sum + (r.tokensUsed || 0), 0),
+      totalEstimatedCostUsd: runs.reduce(
+        (sum, r) => sum + (r.estimatedCostUsd || 0),
+        0,
+      ),
+    };
+
+    return stats;
+  }
+
   private async executeRun(
     runId: string,
     profile: any,
@@ -152,8 +212,8 @@ export class AnalysisRunService {
       // Get messages to analyze
       const messages = await this.getTargetMessages(
         profile.projectId,
-        dto.targetType,
-        dto.targetIds,
+        dto.chatIds,
+        dto.identityIds,
         dto.dateRangeStart,
         dto.dateRangeEnd,
       );
@@ -206,6 +266,13 @@ export class AnalysisRunService {
       const totalConversations = messagesByChat.size;
 
       for (const [chatId, chatMessages] of messagesByChat) {
+        // Check for cancellation
+        if (this.cancelledRuns.has(runId)) {
+          this.logger.log(`Run ${runId} was cancelled, stopping execution`);
+          this.cancelledRuns.delete(runId);
+          return;
+        }
+
         // Build conversation context
         const conversationText = chatMessages
           .map((msg, idx) => {
@@ -250,7 +317,11 @@ export class AnalysisRunService {
         }
 
         totalTokens += result.tokensUsed || 0;
-        totalCost += this.estimateCost(result.tokensUsed || 0);
+
+        // Use the model from the first schema for cost estimation
+        const modelUsed = schemaDefinitions[0]?.model || 'anthropic/claude-3.5-sonnet';
+        const cost = await this.modelsService.estimateCost(result.tokensUsed || 0, modelUsed);
+        totalCost += cost;
 
         // Update progress
         processedConversations++;
@@ -302,37 +373,93 @@ export class AnalysisRunService {
 
   private async getTargetMessages(
     projectId: string,
-    targetType: string,
-    targetIds: string[],
+    chatIds?: string[],
+    identityIds?: string[],
     dateRangeStart?: string,
     dateRangeEnd?: string,
   ) {
     const where: any = { projectId };
+    const andConditions: any[] = [];
 
-    if (targetType === 'message') {
-      where.id = { in: targetIds };
-    } else if (targetType === 'chat') {
-      where.chatId = { in: targetIds };
-    } else if (targetType === 'identity') {
-      where.identityId = { in: targetIds };
-    } else if (targetType === 'date_range') {
-      where.receivedAt = {
-        gte: dateRangeStart ? new Date(dateRangeStart) : undefined,
-        lte: dateRangeEnd ? new Date(dateRangeEnd) : undefined,
-      };
+    // Filter by chat IDs if specified
+    if (chatIds && chatIds.length > 0) {
+      andConditions.push({ chatId: { in: chatIds } });
+    }
+
+    // Filter by identity IDs if specified
+    if (identityIds && identityIds.length > 0) {
+      andConditions.push({ identityId: { in: identityIds } });
+    }
+
+    // Filter by date range if specified
+    if (dateRangeStart && dateRangeEnd) {
+      andConditions.push({
+        receivedAt: {
+          gte: new Date(dateRangeStart),
+          lte: new Date(dateRangeEnd),
+        },
+      });
+    }
+
+    // Combine all conditions with AND logic
+    if (andConditions.length > 0) {
+      where.AND = andConditions;
     }
 
     return this.prisma.receivedMessage.findMany({
       where,
       orderBy: { receivedAt: 'asc' },
-      take: 1000, // Limit for safety
+      take: 10000, // Increased limit since we're filtering better
     });
   }
 
-  private estimateCost(tokens: number): number {
-    // Rough estimate: $3 per million tokens (Claude 3.5 Sonnet average)
-    return (tokens / 1_000_000) * 3;
+  async cancel(
+    projectId: string,
+    runId: string,
+    authContext: AuthContext,
+  ): Promise<AnalysisRunResponse> {
+    await SecurityUtil.getProjectWithAccess(
+      this.prisma,
+      projectId,
+      authContext,
+      'cancel analysis run',
+    );
+
+    const run = await this.prisma.analysisRun.findFirst({
+      where: {
+        id: runId,
+        projectId,
+      },
+    });
+
+    if (!run) {
+      throw new NotFoundException(`Run ${runId} not found`);
+    }
+
+    if (run.status !== 'pending' && run.status !== 'running') {
+      throw new BadRequestException(
+        `Cannot cancel run with status ${run.status}`,
+      );
+    }
+
+    // Mark for cancellation
+    this.cancelledRuns.add(runId);
+
+    // Update database
+    const updatedRun = await this.prisma.analysisRun.update({
+      where: { id: runId },
+      data: {
+        status: 'cancelled',
+        completedAt: new Date(),
+        errorMessage: 'Run cancelled by user',
+      },
+    });
+
+    this.logger.log(`Run ${runId} cancelled`);
+
+    return this.mapToResponse(updatedRun);
   }
+
 
   private mapToResponse(run: any): AnalysisRunResponse {
     return {
@@ -340,8 +467,8 @@ export class AnalysisRunService {
       projectId: run.projectId,
       profileId: run.profileId,
       profileVersion: run.profileVersion,
-      targetType: run.targetType,
-      targetIds: run.targetIds,
+      chatIds: run.chatIds,
+      identityIds: run.identityIds,
       dateRangeStart: run.dateRangeStart,
       dateRangeEnd: run.dateRangeEnd,
       status: run.status,
