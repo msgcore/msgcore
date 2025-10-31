@@ -403,65 +403,129 @@ export function Chats() {
                         )}
 
                         {/* Message bubble */}
-                        <div className="flex items-start gap-3">
-                          <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center flex-shrink-0 text-white font-semibold text-sm shadow-md">
-                            {message.userDisplay?.charAt(0)?.toUpperCase() || '?'}
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-baseline gap-2 mb-1">
-                              <span className="font-semibold text-sm text-gray-900">
-                                {message.userDisplay || message.providerUserId}
-                              </span>
-                              <span className="text-xs text-gray-500">
-                                {new Date(message.receivedAt).toLocaleTimeString('en-US', {
-                                  hour: '2-digit',
-                                  minute: '2-digit'
-                                })}
-                              </span>
-                            </div>
+                        {message.fromMe ? (
+                          /* Sent message - Right side */
+                          <div className="flex items-start gap-3 justify-end">
+                            <div className="flex-1 min-w-0 flex flex-col items-end">
+                              <div className="flex items-baseline gap-2 mb-1">
+                                <span className="text-xs text-gray-500">
+                                  {new Date(message.receivedAt).toLocaleTimeString('en-US', {
+                                    hour: '2-digit',
+                                    minute: '2-digit'
+                                  })}
+                                </span>
+                                <span className="font-semibold text-sm text-gray-900">
+                                  You
+                                </span>
+                              </div>
 
-                            <div className="bg-white rounded-2xl rounded-tl-sm px-4 py-3 shadow-sm">
-                              {message.messageText && (
-                                <p className="text-sm text-gray-800 whitespace-pre-wrap break-words">
-                                  {message.messageText}
-                                </p>
-                              )}
+                              <div className="bg-green-500 rounded-2xl rounded-tr-sm px-4 py-3 shadow-sm max-w-[70%]">
+                                {message.messageText && (
+                                  <p className="text-sm text-white whitespace-pre-wrap break-words">
+                                    {message.messageText}
+                                  </p>
+                                )}
 
-                              {message.attachments && message.attachments.length > 0 && (
-                                <div className="mt-2 space-y-2">
-                                  {message.attachments.map((attachment: any, idx: number) => (
-                                    <div
-                                      key={idx}
-                                      className="flex items-center gap-2 bg-gray-50 rounded-lg px-3 py-2 border border-gray-200"
-                                    >
-                                      <div className="w-8 h-8 bg-green-100 rounded flex items-center justify-center flex-shrink-0">
-                                        <span className="text-green-600 font-semibold text-xs">
-                                          {attachment.mimeType?.split('/')[0]?.charAt(0)?.toUpperCase() || '📎'}
-                                        </span>
-                                      </div>
-                                      <div className="flex-1 min-w-0">
-                                        <p className="text-xs font-medium text-gray-900 truncate">
-                                          {attachment.fileName}
-                                        </p>
-                                        {attachment.mimeType && (
-                                          <p className="text-xs text-gray-500">
-                                            {attachment.mimeType}
+                                {message.attachments && message.attachments.length > 0 && (
+                                  <div className="mt-2 space-y-2">
+                                    {message.attachments.map((attachment: any, idx: number) => (
+                                      <div
+                                        key={idx}
+                                        className="flex items-center gap-2 bg-green-600 rounded-lg px-3 py-2"
+                                      >
+                                        <div className="w-8 h-8 bg-green-400 rounded flex items-center justify-center flex-shrink-0">
+                                          <span className="text-white font-semibold text-xs">
+                                            {attachment.mimeType?.split('/')[0]?.charAt(0)?.toUpperCase() || '📎'}
+                                          </span>
+                                        </div>
+                                        <div className="flex-1 min-w-0">
+                                          <p className="text-xs font-medium text-white truncate">
+                                            {attachment.fileName}
                                           </p>
-                                        )}
+                                          {attachment.mimeType && (
+                                            <p className="text-xs text-green-100">
+                                              {attachment.mimeType}
+                                            </p>
+                                          )}
+                                        </div>
                                       </div>
-                                    </div>
-                                  ))}
-                                </div>
+                                    ))}
+                                  </div>
+                                )}
+                              </div>
+
+                              {message.messageType && message.messageType !== 'text' && (
+                                <span className="inline-block mt-1 text-xs text-gray-500 bg-gray-200 px-2 py-0.5 rounded">
+                                  {message.messageType}
+                                </span>
                               )}
                             </div>
-
-                            {message.messageType && message.messageType !== 'text' && (
-                              <span className="inline-block mt-1 text-xs text-gray-500 bg-gray-200 px-2 py-0.5 rounded">
-                                {message.messageType}
-                              </span>
-                            )}
+                            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-green-400 to-green-600 flex items-center justify-center flex-shrink-0 text-white font-semibold text-sm shadow-md">
+                              Me
+                            </div>
                           </div>
-                        </div>
+                        ) : (
+                          /* Received message - Left side */
+                          <div className="flex items-start gap-3">
+                            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center flex-shrink-0 text-white font-semibold text-sm shadow-md">
+                              {message.userDisplay?.charAt(0)?.toUpperCase() || '?'}
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-baseline gap-2 mb-1">
+                                <span className="font-semibold text-sm text-gray-900">
+                                  {message.userDisplay || message.providerUserId}
+                                </span>
+                                <span className="text-xs text-gray-500">
+                                  {new Date(message.receivedAt).toLocaleTimeString('en-US', {
+                                    hour: '2-digit',
+                                    minute: '2-digit'
+                                  })}
+                                </span>
+                              </div>
+
+                              <div className="bg-white rounded-2xl rounded-tl-sm px-4 py-3 shadow-sm max-w-[70%]">
+                                {message.messageText && (
+                                  <p className="text-sm text-gray-800 whitespace-pre-wrap break-words">
+                                    {message.messageText}
+                                  </p>
+                                )}
+
+                                {message.attachments && message.attachments.length > 0 && (
+                                  <div className="mt-2 space-y-2">
+                                    {message.attachments.map((attachment: any, idx: number) => (
+                                      <div
+                                        key={idx}
+                                        className="flex items-center gap-2 bg-gray-50 rounded-lg px-3 py-2 border border-gray-200"
+                                      >
+                                        <div className="w-8 h-8 bg-green-100 rounded flex items-center justify-center flex-shrink-0">
+                                          <span className="text-green-600 font-semibold text-xs">
+                                            {attachment.mimeType?.split('/')[0]?.charAt(0)?.toUpperCase() || '📎'}
+                                          </span>
+                                        </div>
+                                        <div className="flex-1 min-w-0">
+                                          <p className="text-xs font-medium text-gray-900 truncate">
+                                            {attachment.fileName}
+                                          </p>
+                                          {attachment.mimeType && (
+                                            <p className="text-xs text-gray-500">
+                                              {attachment.mimeType}
+                                            </p>
+                                          )}
+                                        </div>
+                                      </div>
+                                    ))}
+                                  </div>
+                                )}
+                              </div>
+
+                              {message.messageType && message.messageType !== 'text' && (
+                                <span className="inline-block mt-1 text-xs text-gray-500 bg-gray-200 px-2 py-0.5 rounded">
+                                  {message.messageType}
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                        )}
                       </div>
                     );
                   })}
