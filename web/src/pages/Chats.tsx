@@ -66,16 +66,29 @@ export function Chats() {
     if (messagesData?.messages) {
       const newMessages = messagesData.messages;
       if (allMessages.length === 0) {
-        // Initial load
-        setAllMessages(newMessages);
+        // Initial load - reverse to show oldest first, newest at bottom
+        setAllMessages([...newMessages].reverse());
         setHasMore(newMessages.length === messageLimit);
       } else {
-        // Append new messages (avoiding duplicates)
+        // Load older messages (prepend to beginning, avoiding duplicates)
         const existingIds = new Set(allMessages.map((m: any) => m.id));
         const uniqueNew = newMessages.filter((m: any) => !existingIds.has(m.id));
         if (uniqueNew.length > 0) {
-          setAllMessages([...allMessages, ...uniqueNew]);
+          // Save current scroll position
+          const container = messagesContainerRef.current;
+          const previousScrollHeight = container?.scrollHeight || 0;
+
+          // Prepend older messages (reversed) to beginning
+          setAllMessages([...uniqueNew.reverse(), ...allMessages]);
           setHasMore(newMessages.length === messageLimit);
+
+          // Restore scroll position after prepending
+          setTimeout(() => {
+            if (container) {
+              const newScrollHeight = container.scrollHeight;
+              container.scrollTop = newScrollHeight - previousScrollHeight;
+            }
+          }, 0);
         } else {
           setHasMore(false);
         }
@@ -111,14 +124,13 @@ export function Chats() {
     setMessageSearchQuery('');
   }, [selectedChatId]);
 
-  // Infinite scroll handler
+  // Infinite scroll handler - load older messages when scrolling UP
   const handleScroll = useCallback(() => {
     const container = messagesContainerRef.current;
     if (!container || messagesLoading || !hasMore) return;
 
-    // Check if scrolled near bottom (within 200px)
-    const distanceFromBottom = container.scrollHeight - container.scrollTop - container.clientHeight;
-    if (distanceFromBottom < 200) {
+    // Check if scrolled near TOP (within 200px) to load older messages
+    if (container.scrollTop < 200) {
       refetchMessages();
     }
   }, [messagesLoading, hasMore, refetchMessages]);
