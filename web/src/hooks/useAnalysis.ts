@@ -63,3 +63,107 @@ export function useDeleteEntitySchema(projectId?: string) {
     },
   });
 }
+
+// ============================================
+// Analysis Profiles
+// ============================================
+
+export interface CreateAnalysisProfileDto {
+  name: string;
+  description?: string;
+  version?: number;
+  graphDefinition: Record<string, any>;
+  entitySchemaIds: string[];
+  triggerOnReceive?: boolean;
+  triggerOnSchedule?: string;
+  triggerOnDemand?: boolean;
+  storeEntities?: boolean;
+  generateTags?: boolean;
+}
+
+export function useAnalysisProfiles(projectId?: string) {
+  return useQuery({
+    queryKey: ['analysisProfiles', projectId],
+    queryFn: () => sdk.analysisProfiles.list({ project: projectId }),
+    enabled: !!projectId,
+  });
+}
+
+export function useAnalysisProfile(projectId?: string, profileId?: string) {
+  return useQuery({
+    queryKey: ['analysisProfile', projectId, profileId],
+    queryFn: () => sdk.analysisProfiles.get(profileId!, { project: projectId }),
+    enabled: !!projectId && !!profileId,
+  });
+}
+
+export function useCreateAnalysisProfile(projectId?: string) {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (data: CreateAnalysisProfileDto) =>
+      sdk.analysisProfiles.create({ ...data, project: projectId }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['analysisProfiles', projectId] });
+    },
+  });
+}
+
+export function useDeleteAnalysisProfile(projectId?: string) {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (profileId: string) =>
+      sdk.analysisProfiles.delete(profileId, { project: projectId }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['analysisProfiles', projectId] });
+    },
+  });
+}
+
+// ============================================
+// Analysis Runs
+// ============================================
+
+export interface CreateAnalysisRunDto {
+  profileId: string;
+  targetType: 'message' | 'chat' | 'identity' | 'date_range';
+  targetIds: string[];
+  dateRangeStart?: string;
+  dateRangeEnd?: string;
+}
+
+export function useAnalysisRuns(projectId?: string) {
+  return useQuery({
+    queryKey: ['analysisRuns', projectId],
+    queryFn: () => sdk.analysisRuns.list({ project: projectId }),
+    enabled: !!projectId,
+  });
+}
+
+export function useAnalysisRun(projectId?: string, runId?: string) {
+  return useQuery({
+    queryKey: ['analysisRun', projectId, runId],
+    queryFn: () => sdk.analysisRuns.get(runId!, { project: projectId }),
+    enabled: !!projectId && !!runId,
+    refetchInterval: (data: any) => {
+      // Refetch every 2 seconds if run is still in progress
+      if (data?.status === 'pending' || data?.status === 'running') {
+        return 2000;
+      }
+      return false;
+    },
+  });
+}
+
+export function useCreateAnalysisRun(projectId?: string) {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (data: CreateAnalysisRunDto) =>
+      sdk.analysisRuns.create({ ...data, project: projectId }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['analysisRuns', projectId] });
+    },
+  });
+}
