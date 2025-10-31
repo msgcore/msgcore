@@ -1,10 +1,10 @@
 import { Controller, Get, Param, Query, UseGuards } from '@nestjs/common';
-import { AppAuthGuard } from '../../auth/guards/app-auth.guard';
-import { ProjectAccessGuard } from '../../auth/guards/project-access.guard';
-import { AuthContextParam } from '../../auth/decorators/auth-context.decorator';
-import { AuthContext } from '../../common/utils/security.util';
+import { AppAuthGuard } from '../../common/guards/app-auth.guard';
+import { ProjectAccessGuard } from '../../common/guards/project-access.guard';
+import { AuthContextParam } from '../../common/decorators/auth-context.decorator';
+import type { AuthContext } from '../../common/utils/security.util';
 import { SdkContract } from '../../common/decorators/sdk-contract.decorator';
-import { ApiScope } from '../../common/enums/api-scope.enum';
+import { ApiScope } from '../../common/enums/api-scopes.enum';
 import { ExtractedEntitiesService } from '../services/extracted-entities.service';
 
 @Controller('api/v1/projects/:project/analysis/entities')
