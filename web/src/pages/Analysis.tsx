@@ -9,6 +9,8 @@ import {
   Sparkles,
   Code,
   Zap,
+  FileText,
+  Play,
 } from 'lucide-react';
 import { AppShell } from '../components/layout/AppShell';
 import { Card, CardContent, CardHeader } from '../components/ui/Card';
@@ -26,6 +28,8 @@ import { useProjectContext } from '../contexts/ProjectContext';
 import { useConfirm } from '../hooks/useConfirm';
 import { formatDateTime } from '../lib/utils';
 
+type Tab = 'schemas' | 'profiles' | 'runs';
+
 export function Analysis() {
   const { selectedProjectId } = useProjectContext();
   const { data: schemas = [], isLoading, error } = useEntitySchemas(selectedProjectId || undefined);
@@ -33,6 +37,7 @@ export function Analysis() {
   const deleteSchema = useDeleteEntitySchema(selectedProjectId || undefined);
   const { confirm, ConfirmDialog } = useConfirm();
 
+  const [activeTab, setActiveTab] = useState<Tab>('schemas');
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [deletingSchemaId, setDeletingSchemaId] = useState<string | null>(null);
 
@@ -148,21 +153,71 @@ export function Analysis() {
               Analysis & Extraction
             </h1>
             <p className="mt-1 text-sm text-gray-500">
-              Define entity schemas for intelligent message analysis
+              Generic, reusable analysis pipelines with LangGraph
             </p>
           </div>
-          <Button
-            onClick={() => setShowCreateForm(true)}
-            disabled={showCreateForm}
-            variant="primary"
-          >
-            <Plus className="w-4 h-4 mr-2" />
-            Create Schema
-          </Button>
+          {activeTab === 'schemas' && (
+            <Button
+              onClick={() => setShowCreateForm(true)}
+              disabled={showCreateForm}
+              variant="primary"
+            >
+              <Plus className="w-4 h-4 mr-2" />
+              Create Schema
+            </Button>
+          )}
         </div>
 
-        {/* Create Form */}
-        {showCreateForm && (
+        {/* Tabs */}
+        <div className="border-b border-gray-200 mb-6">
+          <nav className="-mb-px flex space-x-8">
+            <button
+              onClick={() => setActiveTab('schemas')}
+              className={`py-4 px-1 border-b-2 font-medium text-sm ${
+                activeTab === 'schemas'
+                  ? 'border-blue-500 text-blue-600'
+                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+              }`}
+            >
+              <div className="flex items-center gap-2">
+                <Brain className="w-4 h-4" />
+                Entity Schemas
+              </div>
+            </button>
+            <button
+              onClick={() => setActiveTab('profiles')}
+              className={`py-4 px-1 border-b-2 font-medium text-sm ${
+                activeTab === 'profiles'
+                  ? 'border-blue-500 text-blue-600'
+                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+              }`}
+            >
+              <div className="flex items-center gap-2">
+                <FileText className="w-4 h-4" />
+                Analysis Profiles
+              </div>
+            </button>
+            <button
+              onClick={() => setActiveTab('runs')}
+              className={`py-4 px-1 border-b-2 font-medium text-sm ${
+                activeTab === 'runs'
+                  ? 'border-blue-500 text-blue-600'
+                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+              }`}
+            >
+              <div className="flex items-center gap-2">
+                <Play className="w-4 h-4" />
+                Analysis Runs
+              </div>
+            </button>
+          </nav>
+        </div>
+
+        {/* Schemas Tab */}
+        {activeTab === 'schemas' && (
+          <>
+            {/* Create Form */}
+            {showCreateForm && (
           <Card className="mb-6">
             <CardHeader>
               <h2 className="text-lg font-semibold">Create Entity Schema</h2>
@@ -396,6 +451,34 @@ export function Analysis() {
               </Card>
             ))}
           </div>
+        )}
+          </>
+        )}
+
+        {/* Profiles Tab */}
+        {activeTab === 'profiles' && (
+          <Card>
+            <CardContent className="py-12 text-center">
+              <FileText className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+              <h3 className="text-lg font-semibold text-gray-900 mb-2">Analysis Profiles</h3>
+              <p className="text-gray-500">
+                Coming soon: Create versioned analysis pipelines combining multiple schemas
+              </p>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Runs Tab */}
+        {activeTab === 'runs' && (
+          <Card>
+            <CardContent className="py-12 text-center">
+              <Play className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+              <h3 className="text-lg font-semibold text-gray-900 mb-2">Analysis Runs</h3>
+              <p className="text-gray-500">
+                Coming soon: Execute analysis over message history and view extracted entities
+              </p>
+            </CardContent>
+          </Card>
         )}
       </div>
     </AppShell>
