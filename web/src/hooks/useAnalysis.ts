@@ -167,3 +167,39 @@ export function useCreateAnalysisRun(projectId?: string) {
     },
   });
 }
+
+// ============================================
+// Extracted Entities
+// ============================================
+
+export interface ExtractedEntityResponse {
+  id: string;
+  projectId: string;
+  entitySchemaId: string;
+  entitySchemaName: string;
+  runId: string;
+  profileVersion: number;
+  properties: Record<string, any>;
+  identityId: string | null;
+  chatId: string | null;
+  sourceMessageIds: string[];
+  isLatest: boolean;
+  confidence: number | null;
+  extractedAt: string;
+}
+
+export function useExtractedEntities(
+  projectId?: string,
+  filters?: {
+    runId?: string;
+    schemaId?: string;
+    chatId?: string;
+    limit?: number;
+  }
+) {
+  return useQuery({
+    queryKey: ['extractedEntities', projectId, filters],
+    queryFn: () => sdk.analysisEntities.list({ project: projectId, ...filters }),
+    enabled: !!projectId,
+  });
+}

@@ -11,6 +11,7 @@ import {
   Zap,
   FileText,
   Play,
+  Database,
 } from 'lucide-react';
 import { Card, CardContent, CardHeader } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
@@ -30,12 +31,13 @@ import {
   useCreateAnalysisRun,
   useAnalysisRun,
   CreateAnalysisRunDto,
+  useExtractedEntities,
 } from '../hooks/useAnalysis';
 import { useProjectContext } from '../contexts/ProjectContext';
 import { useConfirm } from '../hooks/useConfirm';
 import { formatDateTime } from '../lib/utils';
 
-type Tab = 'schemas' | 'profiles' | 'runs';
+type Tab = 'schemas' | 'profiles' | 'runs' | 'entities';
 
 export function Analysis() {
   const { selectedProjectId } = useProjectContext();
@@ -53,6 +55,18 @@ export function Analysis() {
   // Runs
   const { data: runs = [], isLoading: runsLoading, error: runsError } = useAnalysisRuns(selectedProjectId || undefined);
   const createRun = useCreateAnalysisRun(selectedProjectId || undefined);
+
+  // Entities
+  const [entityFilters, setEntityFilters] = useState<{
+    runId?: string;
+    schemaId?: string;
+    chatId?: string;
+    limit?: number;
+  }>({});
+  const { data: entities = [], isLoading: entitiesLoading, error: entitiesError } = useExtractedEntities(
+    selectedProjectId || undefined,
+    entityFilters
+  );
 
   const { confirm, ConfirmDialog } = useConfirm();
 
@@ -355,6 +369,19 @@ export function Analysis() {
               <div className="flex items-center gap-2">
                 <Play className="w-4 h-4" />
                 Analysis Runs
+              </div>
+            </button>
+            <button
+              onClick={() => setActiveTab('entities')}
+              className={`py-4 px-1 border-b-2 font-medium text-sm ${
+                activeTab === 'entities'
+                  ? 'border-blue-500 text-blue-600'
+                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+              }`}
+            >
+              <div className="flex items-center gap-2">
+                <Database className="w-4 h-4" />
+                Extracted Entities
               </div>
             </button>
           </nav>
@@ -1084,6 +1111,173 @@ export function Analysis() {
                           {run.completedAt && (
                             <> • Completed {formatDateTime(run.completedAt)}</>
                           )}
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            )}
+          </>
+        )}
+
+        {/* Entities Tab */}
+        {activeTab === 'entities' && (
+          <>
+            {/* Filters */}
+            <Card className="mb-6">
+              <CardHeader>
+                <h2 className="text-lg font-semibold">Filters</h2>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Run ID
+                    </label>
+                    <Input
+                      type="text"
+                      value={entityFilters.runId || ''}
+                      onChange={(e) => setEntityFilters({ ...entityFilters, runId: e.target.value || undefined })}
+                      placeholder="Filter by run ID"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Schema
+                    </label>
+                    <select
+                      value={entityFilters.schemaId || ''}
+                      onChange={(e) => setEntityFilters({ ...entityFilters, schemaId: e.target.value || undefined })}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    >
+                      <option value="">All schemas</option>
+                      {schemas.map((schema) => (
+                        <option key={schema.id} value={schema.id}>
+                          {schema.name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Chat ID
+                    </label>
+                    <Input
+                      type="text"
+                      value={entityFilters.chatId || ''}
+                      onChange={(e) => setEntityFilters({ ...entityFilters, chatId: e.target.value || undefined })}
+                      placeholder="Filter by chat ID"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Limit
+                    </label>
+                    <Input
+                      type="number"
+                      value={entityFilters.limit || 100}
+                      onChange={(e) => setEntityFilters({ ...entityFilters, limit: parseInt(e.target.value) || 100 })}
+                      placeholder="100"
+                    />
+                  </div>
+                </div>
+                <div className="mt-4 flex gap-2">
+                  <Button
+                    variant="outline"
+                    onClick={() => setEntityFilters({})}
+                  >
+                    Clear Filters
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Loading State */}
+            {entitiesLoading && (
+              <div className="flex items-center justify-center py-12">
+                <Loader2 className="h-8 w-8 animate-spin text-blue-500" />
+              </div>
+            )}
+
+            {/* Error State */}
+            {entitiesError && (
+              <Alert variant="error">
+                <AlertCircle className="h-4 w-4" />
+                <span>Failed to load entities: {(entitiesError as any).message}</span>
+              </Alert>
+            )}
+
+            {/* Empty State */}
+            {!entitiesLoading && !entitiesError && entities.length === 0 && (
+              <Card>
+                <CardContent className="flex flex-col items-center justify-center py-12 text-center">
+                  <Database className="h-12 w-12 text-gray-300 mb-4" />
+                  <h3 className="text-lg font-medium text-gray-900 mb-1">No entities found</h3>
+                  <p className="text-gray-500 max-w-sm">
+                    No extracted entities match your filters. Try running an analysis or adjusting your filters.
+                  </p>
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Entities List */}
+            {!entitiesLoading && !entitiesError && entities.length > 0 && (
+              <div className="space-y-4">
+                <div className="flex items-center justify-between mb-4">
+                  <h2 className="text-lg font-semibold">
+                    {entities.length} {entities.length === 1 ? 'Entity' : 'Entities'} Found
+                  </h2>
+                </div>
+
+                {entities.map((entity: any) => (
+                  <Card key={entity.id}>
+                    <CardContent className="p-6">
+                      <div className="space-y-4">
+                        {/* Header */}
+                        <div className="flex items-start justify-between">
+                          <div className="flex-1">
+                            <div className="flex items-center gap-2 mb-2">
+                              <h3 className="text-lg font-semibold">{entity.entitySchemaName}</h3>
+                              {entity.isLatest && (
+                                <Badge variant="success">Latest</Badge>
+                              )}
+                              {entity.confidence !== null && (
+                                <Badge variant="secondary">
+                                  {Math.round(entity.confidence * 100)}% confidence
+                                </Badge>
+                              )}
+                            </div>
+                            <div className="flex flex-wrap gap-2 text-xs text-gray-500">
+                              <span>Run: {entity.runId.substring(0, 8)}</span>
+                              {entity.chatId && (
+                                <>
+                                  <span>•</span>
+                                  <span>Chat: {entity.chatId.substring(0, 8)}</span>
+                                </>
+                              )}
+                              <span>•</span>
+                              <span>{entity.sourceMessageIds.length} messages</span>
+                              <span>•</span>
+                              <span>Version {entity.profileVersion}</span>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Properties */}
+                        <div className="bg-gray-50 rounded-lg p-4">
+                          <div className="text-sm font-medium text-gray-700 mb-2">
+                            Extracted Properties
+                          </div>
+                          <pre className="text-xs text-gray-800 overflow-x-auto">
+                            {JSON.stringify(entity.properties, null, 2)}
+                          </pre>
+                        </div>
+
+                        {/* Footer */}
+                        <div className="text-xs text-gray-400 pt-2 border-t">
+                          Extracted {formatDateTime(entity.extractedAt)}
+                          <span className="ml-2">• Entity ID: {entity.id.substring(0, 8)}</span>
                         </div>
                       </div>
                     </CardContent>
