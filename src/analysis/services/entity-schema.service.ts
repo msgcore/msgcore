@@ -1,6 +1,6 @@
 import { Injectable, ConflictException, NotFoundException, Logger } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
-import { CreateEntitySchemaDto, EntitySchemaResponse } from '../dto';
+import { CreateEntitySchemaDto, UpdateEntitySchemaDto, EntitySchemaResponse } from '../dto';
 import { AuthContext, SecurityUtil } from '../../common/utils/security.util';
 import { MessageResponse } from '../../common/types/api-responses';
 
@@ -117,7 +117,7 @@ export class EntitySchemaService {
   async update(
     projectId: string,
     schemaId: string,
-    dto: Partial<CreateEntitySchemaDto>,
+    dto: UpdateEntitySchemaDto,
     authContext: AuthContext,
   ): Promise<EntitySchemaResponse> {
     // Validate project access

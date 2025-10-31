@@ -9,7 +9,7 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { EntitySchemaService } from '../services/entity-schema.service';
-import { CreateEntitySchemaDto, EntitySchemaResponse } from '../dto';
+import { CreateEntitySchemaDto, UpdateEntitySchemaDto, EntitySchemaResponse } from '../dto';
 import { AppAuthGuard } from '../../common/guards/app-auth.guard';
 import { ProjectAccessGuard } from '../../common/guards/project-access.guard';
 import { AuthContextParam } from '../../common/decorators/auth-context.decorator';
@@ -123,7 +123,7 @@ export class EntitySchemasController {
     command: 'analysis schemas update',
     category: 'Analysis',
     requiredScopes: [ApiScope.PROJECTS_WRITE],
-    inputType: 'Partial<CreateEntitySchemaDto>',
+    inputType: 'UpdateEntitySchemaDto',
     outputType: 'EntitySchemaResponse',
     description: 'Update an entity schema',
     options: {
@@ -143,7 +143,7 @@ export class EntitySchemasController {
   async update(
     @Param('project') projectId: string,
     @Param('schemaId') schemaId: string,
-    @Body() dto: Partial<CreateEntitySchemaDto>,
+    @Body() dto: UpdateEntitySchemaDto,
     @AuthContextParam() authContext: AuthContext,
   ): Promise<EntitySchemaResponse> {
     return this.entitySchemaService.update(projectId, schemaId, dto, authContext);
