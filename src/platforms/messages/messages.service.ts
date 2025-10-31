@@ -248,6 +248,7 @@ export class MessagesService {
     messageText: string | null;
     messageType: string;
     fromMe?: boolean;
+    receivedAt?: Date;
     rawData: any;
     attachments?: PlatformAttachment[];
     skipIfExists?: boolean;
@@ -328,6 +329,7 @@ export class MessagesService {
           messageText: data.messageText,
           messageType: data.messageType,
           fromMe: data.fromMe || false,
+          ...(data.receivedAt && { receivedAt: data.receivedAt }),
           rawData: data.rawData,
           ...(data.attachments && data.attachments.length > 0
             ? {

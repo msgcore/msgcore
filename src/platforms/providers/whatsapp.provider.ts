@@ -1821,6 +1821,21 @@ export class WhatsAppProvider implements PlatformProvider, PlatformAdapter {
             }
           }
 
+          // Extract message timestamp
+          let receivedAt: Date | undefined;
+          if (msg.messageTimestamp) {
+            let timestampSeconds: number | undefined;
+            if (typeof msg.messageTimestamp === 'number') {
+              timestampSeconds = msg.messageTimestamp;
+            } else if (msg.messageTimestamp.low !== undefined) {
+              // Handle Long type from Evolution API
+              timestampSeconds = msg.messageTimestamp.low;
+            }
+            if (timestampSeconds) {
+              receivedAt = new Date(timestampSeconds * 1000);
+            }
+          }
+
           const success = await this.messagesService.storeIncomingMessage({
             projectId,
             platformId,
@@ -1834,6 +1849,7 @@ export class WhatsAppProvider implements PlatformProvider, PlatformAdapter {
             messageText,
             messageType: 'text',
             fromMe: msg.key?.fromMe || false,
+            receivedAt,
             attachments:
               normalizedAttachments.length > 0
                 ? normalizedAttachments
