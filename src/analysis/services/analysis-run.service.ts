@@ -286,7 +286,7 @@ export class AnalysisRunService {
     } else if (targetType === 'identity') {
       where.identityId = { in: targetIds };
     } else if (targetType === 'date_range') {
-      where.createdAt = {
+      where.receivedAt = {
         gte: dateRangeStart ? new Date(dateRangeStart) : undefined,
         lte: dateRangeEnd ? new Date(dateRangeEnd) : undefined,
       };

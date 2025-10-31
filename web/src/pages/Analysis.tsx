@@ -189,7 +189,19 @@ export function Analysis() {
     if (!newRun.profileId) return;
 
     try {
-      await createRun.mutateAsync(newRun);
+      // Only include date fields for date_range target type
+      const runData: CreateAnalysisRunDto = {
+        profileId: newRun.profileId,
+        targetType: newRun.targetType,
+        targetIds: newRun.targetIds,
+      };
+
+      if (newRun.targetType === 'date_range') {
+        runData.dateRangeStart = newRun.dateRangeStart;
+        runData.dateRangeEnd = newRun.dateRangeEnd;
+      }
+
+      await createRun.mutateAsync(runData);
       setNewRun({
         profileId: '',
         targetType: 'date_range',
