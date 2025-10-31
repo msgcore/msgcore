@@ -120,8 +120,6 @@ export function Analysis() {
     description: '',
     graphDefinition: {},
     entitySchemaIds: [],
-    triggerOnReceive: false,
-    triggerOnDemand: true,
     storeEntities: true,
     generateTags: false,
   });
@@ -218,8 +216,6 @@ export function Analysis() {
         description: '',
         graphDefinition: {},
         entitySchemaIds: [],
-        triggerOnReceive: false,
-        triggerOnDemand: true,
         storeEntities: true,
         generateTags: false,
       });
@@ -813,26 +809,8 @@ export function Analysis() {
                     </div>
 
                     <div className="border-t pt-4">
-                      <h3 className="text-sm font-medium text-gray-700 mb-3">Trigger Options</h3>
+                      <h3 className="text-sm font-medium text-gray-700 mb-3">Options</h3>
                       <div className="space-y-2">
-                        <label className="flex items-center gap-2">
-                          <input
-                            type="checkbox"
-                            checked={newProfile.triggerOnReceive}
-                            onChange={(e) => setNewProfile({ ...newProfile, triggerOnReceive: e.target.checked })}
-                            className="w-4 h-4 text-blue-600 rounded focus:ring-blue-500"
-                          />
-                          <span className="text-sm text-gray-700">Trigger on message receive (real-time)</span>
-                        </label>
-                        <label className="flex items-center gap-2">
-                          <input
-                            type="checkbox"
-                            checked={newProfile.triggerOnDemand}
-                            onChange={(e) => setNewProfile({ ...newProfile, triggerOnDemand: e.target.checked })}
-                            className="w-4 h-4 text-blue-600 rounded focus:ring-blue-500"
-                          />
-                          <span className="text-sm text-gray-700">Allow on-demand runs</span>
-                        </label>
                         <label className="flex items-center gap-2">
                           <input
                             type="checkbox"
@@ -871,8 +849,6 @@ export function Analysis() {
                           description: '',
                           graphDefinition: {},
                           entitySchemaIds: [],
-                          triggerOnReceive: false,
-                          triggerOnDemand: true,
                           storeEntities: true,
                           generateTags: false,
                         });
@@ -949,8 +925,6 @@ export function Analysis() {
                                 description: profile.description || '',
                                 graphDefinition: profile.graphDefinition,
                                 entitySchemaIds: profile.entitySchemaIds,
-                                triggerOnReceive: profile.triggerOnReceive,
-                                triggerOnDemand: profile.triggerOnDemand,
                                 storeEntities: profile.storeEntities,
                                 generateTags: profile.generateTags,
                               });
@@ -991,12 +965,6 @@ export function Analysis() {
                         </div>
 
                         <div className="flex flex-wrap gap-1">
-                          {profile.triggerOnReceive && (
-                            <Badge variant="blue" size="sm">Auto-trigger</Badge>
-                          )}
-                          {profile.triggerOnDemand && (
-                            <Badge variant="green" size="sm">On-demand</Badge>
-                          )}
                           {profile.storeEntities && (
                             <Badge variant="purple" size="sm">Store entities</Badge>
                           )}

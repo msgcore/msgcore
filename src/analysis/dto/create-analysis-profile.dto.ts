@@ -21,18 +21,6 @@ export class CreateAnalysisProfileDto {
 
   @IsOptional()
   @IsBoolean()
-  triggerOnReceive?: boolean;
-
-  @IsOptional()
-  @IsString()
-  triggerOnSchedule?: string;
-
-  @IsOptional()
-  @IsBoolean()
-  triggerOnDemand?: boolean;
-
-  @IsOptional()
-  @IsBoolean()
   storeEntities?: boolean;
 
   @IsOptional()

@@ -90,9 +90,6 @@ export interface CreateAnalysisProfileDto {
   version?: number;
   graphDefinition: Record<string, any>;
   entitySchemaIds: string[];
-  triggerOnReceive?: boolean;
-  triggerOnSchedule?: string;
-  triggerOnDemand?: boolean;
   storeEntities?: boolean;
   generateTags?: boolean;
 }

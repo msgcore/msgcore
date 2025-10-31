@@ -6,9 +6,6 @@ export interface AnalysisProfileResponse {
   version: number;
   graphDefinition: Record<string, any>;
   entitySchemaIds: string[];
-  triggerOnReceive: boolean;
-  triggerOnSchedule?: string;
-  triggerOnDemand: boolean;
   storeEntities: boolean;
   generateTags: boolean;
   isActive: boolean;
