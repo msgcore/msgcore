@@ -32,7 +32,7 @@ export class AnalysisProfilesController {
   @RequireScopes(ApiScope.PROJECTS_WRITE)
   @SdkContract({
     command: 'analysis profiles create',
-    category: 'Analysis',
+    category: 'Analysis / Profiles',
     requiredScopes: [ApiScope.PROJECTS_WRITE],
     inputType: 'CreateAnalysisProfileDto',
     outputType: 'AnalysisProfileResponse',
@@ -56,7 +56,7 @@ export class AnalysisProfilesController {
   @RequireScopes(ApiScope.PROJECTS_READ)
   @SdkContract({
     command: 'analysis profiles list',
-    category: 'Analysis',
+    category: 'Analysis / Profiles',
     requiredScopes: [ApiScope.PROJECTS_READ],
     outputType: 'AnalysisProfileResponse[]',
     description: 'List all analysis profiles for a project',
@@ -78,7 +78,7 @@ export class AnalysisProfilesController {
   @RequireScopes(ApiScope.PROJECTS_READ)
   @SdkContract({
     command: 'analysis profiles get',
-    category: 'Analysis',
+    category: 'Analysis / Profiles',
     requiredScopes: [ApiScope.PROJECTS_READ],
     outputType: 'AnalysisProfileResponse',
     description: 'Get a specific analysis profile',
@@ -101,7 +101,7 @@ export class AnalysisProfilesController {
   @RequireScopes(ApiScope.PROJECTS_WRITE)
   @SdkContract({
     command: 'analysis profiles update',
-    category: 'Analysis',
+    category: 'Analysis / Profiles',
     requiredScopes: [ApiScope.PROJECTS_WRITE],
     inputType: 'UpdateAnalysisProfileDto',
     outputType: 'AnalysisProfileResponse',
@@ -126,7 +126,7 @@ export class AnalysisProfilesController {
   @RequireScopes(ApiScope.PROJECTS_WRITE)
   @SdkContract({
     command: 'analysis profiles delete',
-    category: 'Analysis',
+    category: 'Analysis / Profiles',
     requiredScopes: [ApiScope.PROJECTS_WRITE],
     outputType: 'MessageResponse',
     description: 'Delete an analysis profile (soft delete)',

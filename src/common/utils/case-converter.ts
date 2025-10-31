@@ -6,13 +6,13 @@
 export class CaseConverter {
   /**
    * Converts string to PascalCase
-   * Examples: "project members" -> "ProjectMembers", "api-keys" -> "ApiKeys"
+   * Examples: "project members" -> "ProjectMembers", "api-keys" -> "ApiKeys", "Analysis / Schemas" -> "AnalysisSchemas"
    */
   static toPascalCase(input: string): string {
     if (!input) return '';
 
     return input
-      .split(/[\s\-_]+/)
+      .split(/[\s\-_\/]+/) // Added / to split separators
       .filter((word) => word.length > 0)
       .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
       .join('');
@@ -20,12 +20,12 @@ export class CaseConverter {
 
   /**
    * Converts string to camelCase
-   * Examples: "project members" -> "projectMembers", "api-keys" -> "apiKeys"
+   * Examples: "project members" -> "projectMembers", "api-keys" -> "apiKeys", "Analysis / Schemas" -> "analysisSchemas"
    */
   static toCamelCase(input: string): string {
     if (!input) return '';
 
-    const words = input.split(/[\s\-_]+/).filter((word) => word.length > 0);
+    const words = input.split(/[\s\-_\/]+/).filter((word) => word.length > 0); // Added / to split separators
 
     if (words.length === 0) return '';
 
@@ -40,14 +40,14 @@ export class CaseConverter {
 
   /**
    * Converts string to kebab-case
-   * Examples: "project members" -> "project-members", "ApiKeys" -> "api-keys"
+   * Examples: "project members" -> "project-members", "ApiKeys" -> "api-keys", "Analysis / Schemas" -> "analysis-schemas"
    */
   static toKebabCase(input: string): string {
     if (!input) return '';
 
     return input
       .replace(/([a-z0-9])([A-Z])/g, '$1-$2') // Insert hyphen before uppercase letters (including after numbers)
-      .split(/[\s\-_]+/)
+      .split(/[\s\-_\/]+/) // Added / to split separators
       .filter((word) => word.length > 0)
       .map((word) => word.toLowerCase())
       .join('-');
@@ -55,14 +55,14 @@ export class CaseConverter {
 
   /**
    * Converts string to snake_case
-   * Examples: "project members" -> "project_members", "ApiKeys" -> "api_keys"
+   * Examples: "project members" -> "project_members", "ApiKeys" -> "api_keys", "Analysis / Schemas" -> "analysis_schemas"
    */
   static toSnakeCase(input: string): string {
     if (!input) return '';
 
     return input
       .replace(/([a-z])([A-Z])/g, '$1_$2') // Insert underscore before uppercase letters
-      .split(/[\s\-_]+/)
+      .split(/[\s\-_\/]+/) // Added / to split separators
       .filter((word) => word.length > 0)
       .map((word) => word.toLowerCase())
       .join('_');
@@ -78,14 +78,14 @@ export class CaseConverter {
 
   /**
    * Converts string to lowercase with spaces
-   * Examples: "ProjectMembers" -> "project members", "api-keys" -> "api keys"
+   * Examples: "ProjectMembers" -> "project members", "api-keys" -> "api keys", "Analysis/Schemas" -> "analysis schemas"
    */
   static toLowerSpaced(input: string): string {
     if (!input) return '';
 
     return input
       .replace(/([a-z])([A-Z])/g, '$1 $2') // Insert space before uppercase letters
-      .split(/[\s\-_]+/)
+      .split(/[\s\-_\/]+/) // Added / to split separators
       .filter((word) => word.length > 0)
       .map((word) => word.toLowerCase())
       .join(' ');

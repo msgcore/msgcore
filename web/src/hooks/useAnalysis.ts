@@ -15,7 +15,7 @@ export interface CreateEntitySchemaDto {
 export function useEntitySchemas(projectId?: string) {
   return useQuery({
     queryKey: ['entitySchemas', projectId],
-    queryFn: () => sdk.analysis.list({ project: projectId }),
+    queryFn: () => sdk.analysisSchemas.list({ project: projectId }),
     enabled: !!projectId,
   });
 }
@@ -23,7 +23,7 @@ export function useEntitySchemas(projectId?: string) {
 export function useEntitySchema(projectId?: string, schemaId?: string) {
   return useQuery({
     queryKey: ['entitySchema', projectId, schemaId],
-    queryFn: () => sdk.analysis.get(schemaId!, { project: projectId }),
+    queryFn: () => sdk.analysisSchemas.get(schemaId!, { project: projectId }),
     enabled: !!projectId && !!schemaId,
   });
 }
@@ -33,7 +33,7 @@ export function useCreateEntitySchema(projectId?: string) {
 
   return useMutation({
     mutationFn: (data: CreateEntitySchemaDto) =>
-      sdk.analysis.create({ ...data, project: projectId }),
+      sdk.analysisSchemas.create({ ...data, project: projectId }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['entitySchemas', projectId] });
     },
@@ -45,7 +45,7 @@ export function useUpdateEntitySchema(projectId?: string) {
 
   return useMutation({
     mutationFn: ({ schemaId, ...data }: Partial<CreateEntitySchemaDto> & { schemaId: string }) =>
-      sdk.analysis.update(schemaId, { ...data, project: projectId }),
+      sdk.analysisSchemas.update(schemaId, { ...data, project: projectId }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['entitySchemas', projectId] });
     },
@@ -57,7 +57,7 @@ export function useDeleteEntitySchema(projectId?: string) {
 
   return useMutation({
     mutationFn: (schemaId: string) =>
-      sdk.analysis.delete(schemaId, { project: projectId }),
+      sdk.analysisSchemas.delete(schemaId, { project: projectId }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['entitySchemas', projectId] });
     },

@@ -28,7 +28,7 @@ export class AnalysisRunsController {
   @RequireScopes(ApiScope.PROJECTS_WRITE)
   @SdkContract({
     command: 'analysis runs create',
-    category: 'Analysis',
+    category: 'Analysis / Runs',
     requiredScopes: [ApiScope.PROJECTS_WRITE],
     inputType: 'CreateAnalysisRunDto',
     outputType: 'AnalysisRunResponse',
@@ -52,7 +52,7 @@ export class AnalysisRunsController {
   @RequireScopes(ApiScope.PROJECTS_READ)
   @SdkContract({
     command: 'analysis runs list',
-    category: 'Analysis',
+    category: 'Analysis / Runs',
     requiredScopes: [ApiScope.PROJECTS_READ],
     outputType: 'AnalysisRunResponse[]',
     description: 'List analysis runs for a project',
@@ -74,7 +74,7 @@ export class AnalysisRunsController {
   @RequireScopes(ApiScope.PROJECTS_READ)
   @SdkContract({
     command: 'analysis runs get',
-    category: 'Analysis',
+    category: 'Analysis / Runs',
     requiredScopes: [ApiScope.PROJECTS_READ],
     outputType: 'AnalysisRunResponse',
     description: 'Get analysis run status and results',

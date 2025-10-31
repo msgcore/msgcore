@@ -28,7 +28,7 @@ export class EntitySchemasController {
   @RequireScopes(ApiScope.PROJECTS_WRITE)
   @SdkContract({
     command: 'analysis schemas create',
-    category: 'Analysis',
+    category: 'Analysis / Schemas',
     requiredScopes: [ApiScope.PROJECTS_WRITE],
     inputType: 'CreateEntitySchemaDto',
     outputType: 'EntitySchemaResponse',
@@ -69,7 +69,7 @@ export class EntitySchemasController {
   @RequireScopes(ApiScope.PROJECTS_READ)
   @SdkContract({
     command: 'analysis schemas list',
-    category: 'Analysis',
+    category: 'Analysis / Schemas',
     requiredScopes: [ApiScope.PROJECTS_READ],
     outputType: 'EntitySchemaResponse[]',
     description: 'List all entity schemas for a project',
@@ -94,7 +94,7 @@ export class EntitySchemasController {
   @RequireScopes(ApiScope.PROJECTS_READ)
   @SdkContract({
     command: 'analysis schemas get',
-    category: 'Analysis',
+    category: 'Analysis / Schemas',
     requiredScopes: [ApiScope.PROJECTS_READ],
     outputType: 'EntitySchemaResponse',
     description: 'Get a specific entity schema',
@@ -121,7 +121,7 @@ export class EntitySchemasController {
   @RequireScopes(ApiScope.PROJECTS_WRITE)
   @SdkContract({
     command: 'analysis schemas update',
-    category: 'Analysis',
+    category: 'Analysis / Schemas',
     requiredScopes: [ApiScope.PROJECTS_WRITE],
     inputType: 'UpdateEntitySchemaDto',
     outputType: 'EntitySchemaResponse',
@@ -153,7 +153,7 @@ export class EntitySchemasController {
   @RequireScopes(ApiScope.PROJECTS_WRITE)
   @SdkContract({
     command: 'analysis schemas delete',
-    category: 'Analysis',
+    category: 'Analysis / Schemas',
     requiredScopes: [ApiScope.PROJECTS_WRITE],
     outputType: 'MessageResponse',
     description: 'Delete an entity schema (soft delete)',
