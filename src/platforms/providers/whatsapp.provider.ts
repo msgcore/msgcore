@@ -1667,6 +1667,40 @@ export class WhatsAppProvider implements PlatformProvider, PlatformAdapter {
         `Syncing chat history for ${chatId} from ${params.startDate || 'beginning'} to ${params.endDate || 'now'}`,
       );
 
+      // First, fetch contact information to get the real name
+      let contactName: string | undefined;
+      try {
+        const contactResponse = await fetch(
+          `${evolutionApiUrl}/chat/findContacts/${instanceName}`,
+          {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              apikey: evolutionApiKey,
+            },
+            body: JSON.stringify({
+              where: {
+                remoteJid: chatId,
+              },
+            }),
+          },
+        );
+
+        if (contactResponse.ok) {
+          const contacts = await contactResponse.json();
+          if (contacts && contacts.length > 0) {
+            contactName = contacts[0].pushName;
+            this.logger.log(
+              `Found contact name for ${chatId}: ${contactName || 'none'}`,
+            );
+          }
+        }
+      } catch (error) {
+        this.logger.warn(
+          `Failed to fetch contact info for ${chatId}: ${error.message}`,
+        );
+      }
+
       const url = `${evolutionApiUrl}/chat/findMessages/${instanceName}`;
 
       // Fetch messages with pagination (respecting user's limit)
@@ -1771,15 +1805,26 @@ export class WhatsAppProvider implements PlatformProvider, PlatformAdapter {
           const messageText = this.extractEvolutionMessageText(msg);
           const normalizedAttachments = this.normalizeAttachments(msg);
 
-          // Extract chat name - for groups use group subject, for individuals use pushName
+          // Extract chat name - use contact name from API lookup if available
           const msgChatId = msg.key?.remoteJid || msg.remoteJid || chatId;
-          let chatName: string | undefined;
+          let storedChatName: string | undefined;
+          let storedUserDisplay: string | undefined;
+
           if (msgChatId.includes('@g.us')) {
             // Group chat - use group subject from message info
-            chatName = msg.message?.conversation?.groupSubject || msg.pushName;
+            storedChatName = msg.message?.conversation?.groupSubject || msg.pushName;
           } else {
-            // Individual chat - use pushName
-            chatName = msg.pushName || msg.senderName;
+            // Individual chat - prefer contact name from API, fallback to pushName
+            if (contactName) {
+              storedChatName = contactName;
+              storedUserDisplay = contactName;
+            } else {
+              const pushName = msg.pushName || msg.senderName;
+              if (pushName) {
+                storedChatName = pushName;
+                storedUserDisplay = pushName;
+              }
+            }
           }
 
           const success = await this.messagesService.storeIncomingMessage({
@@ -1790,8 +1835,8 @@ export class WhatsAppProvider implements PlatformProvider, PlatformAdapter {
             providerChatId: msgChatId,
             providerUserId:
               msg.sender || msg.key?.remoteJid || msg.remoteJid || 'unknown',
-            userDisplay: msg.pushName || msg.senderName || 'WhatsApp User',
-            chatName,
+            userDisplay: storedUserDisplay || 'WhatsApp User',
+            chatName: storedChatName,
             messageText,
             messageType: 'text',
             attachments:

@@ -260,7 +260,8 @@ export class MessagesService {
         chatType = ChatType.channel;
       }
 
-      // Upsert chat first (create or update lastMessageAt and name)
+      // Upsert chat first (create or update lastMessageAt)
+      // NOTE: We NEVER overwrite existing chat names to preserve user-customized names
       const chat = await this.prisma.chat.upsert({
         where: {
           projectId_platformId_providerChatId: {
@@ -279,8 +280,7 @@ export class MessagesService {
         },
         update: {
           lastMessageAt: new Date(),
-          // Update name if provided and current name is null
-          ...(data.chatName ? { name: data.chatName } : {}),
+          // NEVER update name on existing chats - preserves original names from webhooks
         },
       });
 
