@@ -538,6 +538,37 @@ export class MessagesService {
     rawData: any;
   }): Promise<boolean> {
     try {
+      // Determine chat type from targetChatId format
+      let chatType: ChatType = ChatType.individual;
+      if (data.targetChatId.includes('@g.us')) {
+        chatType = ChatType.group;
+      } else if (data.targetChatId.includes('@broadcast')) {
+        chatType = ChatType.channel;
+      }
+
+      // Upsert chat first (create or update lastMessageAt)
+      // This ensures chats are created when you send messages from your phone
+      await this.prisma.chat.upsert({
+        where: {
+          projectId_platformId_providerChatId: {
+            projectId: data.projectId,
+            platformId: data.platformId,
+            providerChatId: data.targetChatId,
+          },
+        },
+        create: {
+          projectId: data.projectId,
+          platformId: data.platformId,
+          providerChatId: data.targetChatId,
+          chatType,
+          name: null, // Will be filled by incoming messages or manual sync
+          lastMessageAt: new Date(),
+        },
+        update: {
+          lastMessageAt: new Date(),
+        },
+      });
+
       const storedMessage = await this.prisma.sentMessage.create({
         data: {
           projectId: data.projectId,
