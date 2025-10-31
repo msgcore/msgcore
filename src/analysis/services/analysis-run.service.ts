@@ -19,7 +19,7 @@ export class AnalysisRunService {
     private readonly configService: ConfigService,
     private readonly extractionService: EntityExtractionService,
   ) {
-    this.openrouterApiKey = this.configService.get<string>('OPENROUTER_API_KEY');
+    this.openrouterApiKey = this.configService.get<string>('OPENROUTER_API_KEY') || '';
   }
 
   async create(
@@ -193,7 +193,7 @@ export class AnalysisRunService {
 
         // Extract entities using LangGraph
         const result = await this.extractionService.extractEntities(
-          message.text || '',
+          message.messageText || '',
           schemaDefinitions,
           this.openrouterApiKey,
         );
@@ -210,7 +210,7 @@ export class AnalysisRunService {
                 profileVersion: profile.version,
                 properties: entity.properties,
                 sourceMessageIds: [message.id],
-                identityId: message.identityId,
+                identityId: null, // ReceivedMessage doesn't have identityId yet
                 chatId: message.chatId,
                 confidence: entity.confidence,
                 isLatest: true,
@@ -294,7 +294,7 @@ export class AnalysisRunService {
 
     return this.prisma.receivedMessage.findMany({
       where,
-      orderBy: { createdAt: 'asc' },
+      orderBy: { receivedAt: 'asc' },
       take: 1000, // Limit for safety
     });
   }
