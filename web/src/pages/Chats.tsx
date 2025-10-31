@@ -72,13 +72,16 @@ export function Chats() {
         setHasMore(newMessages.length === messageLimit);
         setIsInitialLoad(true);
 
-        // Scroll to bottom immediately after initial load, then enable scroll detection after delay
+        // Scroll to bottom after DOM updates, then enable scroll detection after delay
         setTimeout(() => {
           messagesEndRef.current?.scrollIntoView({ behavior: 'instant' });
-          // Wait additional time before enabling scroll detection to prevent premature loading
-          setTimeout(() => {
-            setIsInitialLoad(false);
-          }, 500);
+          // Wait for DOM to paint after scroll, then start the delay counter
+          requestAnimationFrame(() => {
+            // Now that messages are rendered and scroll is complete, wait before enabling detection
+            setTimeout(() => {
+              setIsInitialLoad(false);
+            }, 500);
+          });
         }, 100);
       } else {
         // Load older messages (prepend to beginning, avoiding duplicates)
