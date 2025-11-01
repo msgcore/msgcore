@@ -69,32 +69,45 @@ interface EvolutionMessage {
 }
 
 /**
- * Helper function to extract the correct chat/user ID from Evolution message
+ * Helper function to extract the correct CHAT ID from Evolution message
  * based on addressingMode (lid vs jid).
  *
  * According to Evolution API:
  * - When addressingMode === 'lid':
- *   - For DMs: Use key.remoteJidAlt (real phone number)
- *   - For groups: Use key.participantAlt (real phone number)
- * - Otherwise: Use key.remoteJid / key.participant
+ *   - Chat ID (remoteJid): Use key.remoteJidAlt for real chat identifier
+ * - Otherwise: Use key.remoteJid
+ *
+ * Chat ID is ALWAYS remoteJid (or remoteJidAlt), regardless of DM or group.
  */
-function extractChatId(msg: any, isGroup: boolean = false): string {
+function extractChatId(msg: any): string {
   const addressingMode = msg.key?.addressingMode;
 
   if (addressingMode === 'lid') {
-    // Use Alt fields for real phone numbers
-    if (isGroup) {
-      return msg.key?.participantAlt || msg.key?.participant || msg.key?.remoteJid || 'unknown';
-    } else {
-      return msg.key?.remoteJidAlt || msg.key?.remoteJid || 'unknown';
-    }
+    // Use Alt field for real chat ID
+    return msg.key?.remoteJidAlt || msg.key?.remoteJid || msg.remoteJid || 'unknown';
   }
 
   // Default behavior (jid mode or no addressingMode)
+  return msg.key?.remoteJid || msg.remoteJid || 'unknown';
+}
+
+/**
+ * Helper function to extract the correct USER ID from Evolution message
+ * (for groups, this is the participant; for DMs, this is the chat ID)
+ */
+function extractUserId(msg: any, chatId: string): string {
+  const isGroup = chatId.includes('@g.us');
+  const addressingMode = msg.key?.addressingMode;
+
   if (isGroup) {
-    return msg.key?.participant || msg.key?.remoteJid || 'unknown';
+    // In groups, userId is the participant (the person who sent the message)
+    if (addressingMode === 'lid') {
+      return msg.key?.participantAlt || msg.key?.participant || chatId;
+    }
+    return msg.key?.participant || msg.sender || chatId;
   } else {
-    return msg.key?.remoteJid || msg.remoteJid || 'unknown';
+    // In DMs, userId is the same as chatId
+    return chatId;
   }
 }
 
@@ -657,9 +670,7 @@ export class WhatsAppProvider implements PlatformProvider, PlatformAdapter {
         if (platformId) {
           try {
             // Extract target information using lid-aware helper
-            const rawChatId = msg.key?.remoteJid || 'unknown';
-            const isGroup = rawChatId.includes('@g.us');
-            const targetChatId = extractChatId(msg, isGroup);
+            const targetChatId = extractChatId(msg);
             const messageText = this.extractEvolutionMessageText(msg);
 
             // Determine target type based on JID format
@@ -713,10 +724,8 @@ export class WhatsAppProvider implements PlatformProvider, PlatformAdapter {
         const reactionKey = reaction.key;
 
         // Extract user and chat info using lid-aware helper
-        const rawChatId = msg.key?.remoteJid || reactionKey?.remoteJid || 'unknown';
-        const isGroup = rawChatId.includes('@g.us');
-        const chatId = extractChatId(msg, isGroup);
-        const userId = isGroup ? extractChatId(msg, true) : chatId;
+        const chatId = extractChatId(msg);
+        const userId = extractUserId(msg, chatId);
         const userDisplay = msg.pushName || userId;
 
         // Determine if it's add or remove (empty text means remove)
@@ -829,11 +838,10 @@ export class WhatsAppProvider implements PlatformProvider, PlatformAdapter {
           // Extract and normalize attachments
           const normalizedAttachments = this.normalizeAttachments(msg);
 
-          // Extract chat ID using lid-aware helper
-          const rawChatId = msg.key?.remoteJid || msg.remoteJid || 'unknown';
-          const isGroup = rawChatId.includes('@g.us');
-          const chatId = extractChatId(msg, isGroup);
-          const userId = extractChatId(msg, true); // Use true to get participant for user ID
+          // Extract chat ID and user ID using lid-aware helpers
+          const chatId = extractChatId(msg);
+          const userId = extractUserId(msg, chatId);
+          const isGroup = chatId.includes('@g.us');
 
           let chatName: string | undefined;
           if (isGroup) {
@@ -850,7 +858,7 @@ export class WhatsAppProvider implements PlatformProvider, PlatformAdapter {
             platform: PlatformType.WHATSAPP_EVO,
             providerMessageId: msg.key?.id || msg.id || `evo-${Date.now()}`,
             providerChatId: chatId,
-            providerUserId: userId || msg.sender || chatId,
+            providerUserId: userId,
             userDisplay: msg.pushName || msg.senderName || 'WhatsApp User',
             chatName,
             messageText,
