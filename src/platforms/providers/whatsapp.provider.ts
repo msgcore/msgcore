@@ -51,8 +51,12 @@ interface WhatsAppConnection {
 interface EvolutionMessage {
   key: {
     remoteJid: string;
+    remoteJidAlt?: string; // Real phone number when addressingMode is 'lid'
     fromMe: boolean;
     id: string;
+    participant?: string; // For groups with lid mode
+    participantAlt?: string; // For groups with lid mode
+    addressingMode?: 'lid' | 'jid'; // Indicates which ID format to use
   };
   message: {
     conversation?: string;
@@ -62,6 +66,36 @@ interface EvolutionMessage {
   };
   messageTimestamp: string;
   pushName?: string;
+}
+
+/**
+ * Helper function to extract the correct chat/user ID from Evolution message
+ * based on addressingMode (lid vs jid).
+ *
+ * According to Evolution API:
+ * - When addressingMode === 'lid':
+ *   - For DMs: Use key.remoteJidAlt (real phone number)
+ *   - For groups: Use key.participantAlt (real phone number)
+ * - Otherwise: Use key.remoteJid / key.participant
+ */
+function extractChatId(msg: any, isGroup: boolean = false): string {
+  const addressingMode = msg.key?.addressingMode;
+
+  if (addressingMode === 'lid') {
+    // Use Alt fields for real phone numbers
+    if (isGroup) {
+      return msg.key?.participantAlt || msg.key?.participant || msg.key?.remoteJid || 'unknown';
+    } else {
+      return msg.key?.remoteJidAlt || msg.key?.remoteJid || 'unknown';
+    }
+  }
+
+  // Default behavior (jid mode or no addressingMode)
+  if (isGroup) {
+    return msg.key?.participant || msg.key?.remoteJid || 'unknown';
+  } else {
+    return msg.key?.remoteJid || msg.remoteJid || 'unknown';
+  }
 }
 
 @Injectable()
@@ -622,8 +656,10 @@ export class WhatsAppProvider implements PlatformProvider, PlatformAdapter {
       if (msg.key?.fromMe) {
         if (platformId) {
           try {
-            // Extract target information
-            const targetChatId = msg.key?.remoteJid || 'unknown';
+            // Extract target information using lid-aware helper
+            const rawChatId = msg.key?.remoteJid || 'unknown';
+            const isGroup = rawChatId.includes('@g.us');
+            const targetChatId = extractChatId(msg, isGroup);
             const messageText = this.extractEvolutionMessageText(msg);
 
             // Determine target type based on JID format
@@ -676,10 +712,11 @@ export class WhatsAppProvider implements PlatformProvider, PlatformAdapter {
         const reaction = msg.message.reactionMessage;
         const reactionKey = reaction.key;
 
-        // Extract user info
-        const userId = msg.key?.participant || msg.key?.remoteJid || 'unknown';
-        const chatId =
-          msg.key?.remoteJid || reactionKey?.remoteJid || 'unknown';
+        // Extract user and chat info using lid-aware helper
+        const rawChatId = msg.key?.remoteJid || reactionKey?.remoteJid || 'unknown';
+        const isGroup = rawChatId.includes('@g.us');
+        const chatId = extractChatId(msg, isGroup);
+        const userId = isGroup ? extractChatId(msg, true) : chatId;
         const userDisplay = msg.pushName || userId;
 
         // Determine if it's add or remove (empty text means remove)
@@ -792,10 +829,14 @@ export class WhatsAppProvider implements PlatformProvider, PlatformAdapter {
           // Extract and normalize attachments
           const normalizedAttachments = this.normalizeAttachments(msg);
 
-          // Extract chat name - for groups use group subject, for individuals use pushName
-          const chatId = msg.key?.remoteJid || msg.remoteJid || 'unknown';
+          // Extract chat ID using lid-aware helper
+          const rawChatId = msg.key?.remoteJid || msg.remoteJid || 'unknown';
+          const isGroup = rawChatId.includes('@g.us');
+          const chatId = extractChatId(msg, isGroup);
+          const userId = extractChatId(msg, true); // Use true to get participant for user ID
+
           let chatName: string | undefined;
-          if (chatId.includes('@g.us')) {
+          if (isGroup) {
             // Group chat - use group subject from message info
             chatName = msg.message?.conversation?.groupSubject || msg.pushName;
           } else {
@@ -809,8 +850,7 @@ export class WhatsAppProvider implements PlatformProvider, PlatformAdapter {
             platform: PlatformType.WHATSAPP_EVO,
             providerMessageId: msg.key?.id || msg.id || `evo-${Date.now()}`,
             providerChatId: chatId,
-            providerUserId:
-              msg.sender || msg.key?.remoteJid || msg.remoteJid || 'unknown',
+            providerUserId: userId || msg.sender || chatId,
             userDisplay: msg.pushName || msg.senderName || 'WhatsApp User',
             chatName,
             messageText,
