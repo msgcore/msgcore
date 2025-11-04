@@ -40,7 +40,6 @@ export function useSendMessage(projectId?: string) {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['messages', projectId] });
       queryClient.invalidateQueries({ queryKey: ['message-stats', projectId] });
-      queryClient.invalidateQueries({ queryKey: ['sent-messages', projectId] });
     },
   });
 }
@@ -70,25 +69,7 @@ export function useRetryMessage(projectId?: string) {
       sdk.messages.retry(jobId, { project: projectId }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['messages', projectId] });
-      queryClient.invalidateQueries({ queryKey: ['sent-messages', projectId] });
     },
-  });
-}
-
-// List sent messages
-export function useSentMessages(projectId?: string) {
-  return useQuery({
-    queryKey: ['sent-messages', projectId],
-    queryFn: async () => {
-      const response: any = await sdk.messages.sent({ project: projectId });
-      // Backend returns {messages: [], pagination: {}} but SDK types say SentMessageResponse[]
-      // Handle both cases
-      if (response && typeof response === 'object' && 'messages' in response) {
-        return response.messages;
-      }
-      return Array.isArray(response) ? response : [];
-    },
-    enabled: !!projectId,
   });
 }
 

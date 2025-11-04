@@ -204,7 +204,7 @@ export class ChatsController {
   })
   async syncAllChats(
     @Param('project') projectId: string,
-    @Body() syncDto: SyncHistoryDto & { platformId?: string },
+    @Body() syncDto: SyncHistoryDto,
     @AuthContextParam() authContext: AuthContext,
   ) {
     // Get all platforms for the project

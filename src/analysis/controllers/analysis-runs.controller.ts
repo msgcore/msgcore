@@ -37,10 +37,33 @@ export class AnalysisRunsController {
     inputType: 'CreateAnalysisRunDto',
     outputType: 'AnalysisRunResponse',
     description: 'Execute an analysis run with a profile',
+    options: {
+      profileId: {
+        required: true,
+        description: 'Analysis profile ID',
+        type: 'string',
+      },
+      chatIds: {
+        description: 'Filter by chat IDs (JSON array)',
+        type: 'array',
+      },
+      identityIds: {
+        description: 'Filter by identity IDs (JSON array)',
+        type: 'array',
+      },
+      dateRangeStart: {
+        description: 'Start date for analysis (ISO 8601)',
+        type: 'string',
+      },
+      dateRangeEnd: {
+        description: 'End date for analysis (ISO 8601)',
+        type: 'string',
+      },
+    },
     examples: [
       {
-        command: 'analysis runs create --project my-project --profileId abc123 --targetType message --targetIds \'["msg-1","msg-2"]\'',
-        description: 'Run analysis on specific messages',
+        command: 'analysis runs create --project my-project --profileId abc123 --chatIds \'["chat-1","chat-2"]\'',
+        description: 'Run analysis on specific chats',
       },
     ],
   })

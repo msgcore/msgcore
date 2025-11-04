@@ -1,7 +1,11 @@
-import { IsOptional, IsDateString, IsInt, Min, Max } from 'class-validator';
+import { IsOptional, IsDateString, IsInt, Min, Max, IsString } from 'class-validator';
 import { Type } from 'class-transformer';
 
 export class SyncHistoryDto {
+  @IsOptional()
+  @IsString()
+  platformId?: string;
+
   @IsOptional()
   @IsDateString()
   startDate?: string;

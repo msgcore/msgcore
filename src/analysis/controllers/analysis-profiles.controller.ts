@@ -37,6 +37,35 @@ export class AnalysisProfilesController {
     inputType: 'CreateAnalysisProfileDto',
     outputType: 'AnalysisProfileResponse',
     description: 'Create a new analysis profile (versioned pipeline)',
+    options: {
+      name: {
+        required: true,
+        description: 'Profile name',
+        type: 'string',
+      },
+      description: {
+        description: 'Profile description',
+        type: 'string',
+      },
+      graphDefinition: {
+        required: true,
+        description: 'Analysis graph definition (JSON)',
+        type: 'object',
+      },
+      entitySchemaIds: {
+        required: true,
+        description: 'Entity schema IDs (JSON array)',
+        type: 'array',
+      },
+      storeEntities: {
+        description: 'Store extracted entities',
+        type: 'boolean',
+      },
+      generateTags: {
+        description: 'Generate tags from analysis',
+        type: 'boolean',
+      },
+    },
     examples: [
       {
         command: 'analysis profiles create --project my-project --name "Sentiment Analysis" --graphDefinition \'{"nodes":[]}\' --entitySchemaIds \'["schema-1"]\'',
