@@ -100,7 +100,7 @@ export class ChatsService {
       chats: chats.map((chat) => {
         // For user chats, prioritize identity displayName over chat.name
         let displayName = chat.name;
-        if (chat.chatType === ChatType.USER) {
+        if (chat.chatType === ChatType.user) {
           const key = `${chat.platformId}:${chat.providerChatId}`;
           const identityName = identityMap.get(key);
           // Use identity name if available, otherwise fall back to chat.name
@@ -173,7 +173,7 @@ export class ChatsService {
 
     // For user chats, prioritize identity displayName over chat.name
     let displayName = chat.name;
-    if (chat.chatType === ChatType.USER) {
+    if (chat.chatType === ChatType.user) {
       const alias = await this.prisma.identityAlias.findFirst({
         where: {
           projectId,
