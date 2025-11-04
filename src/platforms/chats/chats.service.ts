@@ -185,24 +185,59 @@ export class ChatsService {
       throw new NotFoundException(`Chat ${chatId} not found`);
     }
 
-    const [messages, total] = await Promise.all([
+    // Fetch both received and sent messages
+    const [receivedMessages, sentMessages, receivedCount, sentCount] = await Promise.all([
       this.prisma.receivedMessage.findMany({
         where: { chatId },
         include: {
           attachments: true,
         },
-        orderBy: [
-          { receivedAt: 'desc' },
-          { id: 'desc' },
-        ],
-        take: limit,
-        skip: offset,
+      }),
+      this.prisma.sentMessage.findMany({
+        where: {
+          targetChatId: chat.providerChatId,
+          projectId,
+          platformId: chat.platformId,
+        },
       }),
       this.prisma.receivedMessage.count({ where: { chatId } }),
+      this.prisma.sentMessage.count({
+        where: {
+          targetChatId: chat.providerChatId,
+          projectId,
+          platformId: chat.platformId,
+        },
+      }),
     ]);
 
+    // Merge and normalize messages from both tables
+    const allMessages = [
+      ...receivedMessages.map(msg => ({
+        ...msg,
+        type: 'received' as const,
+        timestamp: msg.receivedAt,
+      })),
+      ...sentMessages.map(msg => ({
+        ...msg,
+        type: 'sent' as const,
+        timestamp: msg.sentAt,
+        attachments: [], // Sent messages don't have attachments relation yet
+      })),
+    ];
+
+    // Sort by timestamp descending (newest first)
+    allMessages.sort((a, b) => {
+      const timeA = a.timestamp?.getTime() || 0;
+      const timeB = b.timestamp?.getTime() || 0;
+      return timeB - timeA;
+    });
+
+    // Apply pagination
+    const paginatedMessages = allMessages.slice(offset, offset + limit);
+    const total = receivedCount + sentCount;
+
     return {
-      messages,
+      messages: paginatedMessages,
       pagination: {
         total,
         limit,
