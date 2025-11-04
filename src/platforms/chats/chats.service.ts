@@ -77,24 +77,52 @@ export class ChatsService {
       this.prisma.chat.count({ where }),
     ]);
 
+    // Fetch all identities for this project to resolve names for individual chats
+    const identities = await this.prisma.identity.findMany({
+      where: { projectId },
+      include: {
+        aliases: true,
+      },
+    });
+
+    // Build lookup map: platformId:providerUserId -> Identity displayName
+    const identityMap = new Map<string, string>();
+    identities.forEach((identity) => {
+      if (identity.displayName) {
+        identity.aliases.forEach((alias) => {
+          const key = `${alias.platformId}:${alias.providerUserId}`;
+          identityMap.set(key, identity.displayName!);
+        });
+      }
+    });
+
     return {
-      chats: chats.map((chat) => ({
-        id: chat.id,
-        providerChatId: chat.providerChatId,
-        chatType: chat.chatType,
-        name: chat.name,
-        avatarUrl: chat.avatarUrl,
-        lastMessageAt: chat.lastMessageAt,
-        lastSyncedAt: chat.lastSyncedAt,
-        messageCount: chat._count.messages,
-        platform: {
-          id: chat.platformConfig.id,
-          name: chat.platformConfig.name,
-          type: chat.platformConfig.platform,
-        },
-        createdAt: chat.createdAt,
-        updatedAt: chat.updatedAt,
-      })),
+      chats: chats.map((chat) => {
+        // For individual chats, try to resolve identity name
+        let displayName = chat.name;
+        if (chat.chatType === ChatType.individual && !displayName) {
+          const key = `${chat.platformId}:${chat.providerChatId}`;
+          displayName = identityMap.get(key) || null;
+        }
+
+        return {
+          id: chat.id,
+          providerChatId: chat.providerChatId,
+          chatType: chat.chatType,
+          name: displayName,
+          avatarUrl: chat.avatarUrl,
+          lastMessageAt: chat.lastMessageAt,
+          lastSyncedAt: chat.lastSyncedAt,
+          messageCount: chat._count.messages,
+          platform: {
+            id: chat.platformConfig.id,
+            name: chat.platformConfig.name,
+            type: chat.platformConfig.platform,
+          },
+          createdAt: chat.createdAt,
+          updatedAt: chat.updatedAt,
+        };
+      }),
       pagination: {
         total,
         limit: query.limit || 50,
@@ -141,11 +169,34 @@ export class ChatsService {
       throw new NotFoundException(`Chat ${chatId} not found`);
     }
 
+    // For individual chats, try to resolve identity name
+    let displayName = chat.name;
+    if (chat.chatType === ChatType.individual && !displayName) {
+      const alias = await this.prisma.identityAlias.findFirst({
+        where: {
+          projectId,
+          platformId: chat.platformId,
+          providerUserId: chat.providerChatId,
+        },
+        include: {
+          identity: {
+            select: {
+              displayName: true,
+            },
+          },
+        },
+      });
+
+      if (alias?.identity?.displayName) {
+        displayName = alias.identity.displayName;
+      }
+    }
+
     return {
       id: chat.id,
       providerChatId: chat.providerChatId,
       chatType: chat.chatType,
-      name: chat.name,
+      name: displayName,
       avatarUrl: chat.avatarUrl,
       lastMessageAt: chat.lastMessageAt,
       lastSyncedAt: chat.lastSyncedAt,
