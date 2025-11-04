@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, useCallback } from 'react';
+import { useState, useRef, useEffect, useCallback, useMemo } from 'react';
 import {
   MessageSquare,
   Users,
@@ -11,6 +11,7 @@ import { Alert } from '../components/ui/Alert';
 import { useProjectContext } from '../contexts/ProjectContext';
 import { useChats, useSyncChatHistory, useSyncAllChats, useChatMessages } from '../hooks/useChats';
 import { usePlatforms } from '../hooks/usePlatforms';
+import { useIdentities } from '../hooks/useIdentities';
 import { useToast } from '../contexts/ToastContext';
 import { SyncHistoryModal } from '../components/chats/SyncHistoryModal';
 
@@ -48,10 +49,42 @@ export function Chats() {
   const { data: platformsData } = usePlatforms(selectedProjectId || undefined);
   const platforms = platformsData?.platforms || [];
 
+  // Fetch identities for display name resolution
+  const { data: identitiesData } = useIdentities(selectedProjectId || undefined);
+  const identities = identitiesData || [];
+
   const syncHistoryMutation = useSyncChatHistory(selectedProjectId || undefined);
   const syncAllChatsMutation = useSyncAllChats(selectedProjectId || undefined);
 
   const chats = chatsData?.chats || [];
+
+  // Create identity lookup map: platformId:providerUserId -> Identity
+  const identityMap = useMemo(() => {
+    const map = new Map<string, any>();
+    identities.forEach((identity: any) => {
+      identity.aliases?.forEach((alias: any) => {
+        const key = `${alias.platformId}:${alias.providerUserId}`;
+        map.set(key, identity);
+      });
+    });
+    return map;
+  }, [identities]);
+
+  // Helper function to get display name for a message
+  const getDisplayName = useCallback((message: any) => {
+    if (!message.platformId || !message.providerUserId) {
+      return message.userDisplay || message.providerUserId || 'Unknown';
+    }
+
+    const key = `${message.platformId}:${message.providerUserId}`;
+    const identity = identityMap.get(key);
+
+    if (identity?.displayName) {
+      return identity.displayName;
+    }
+
+    return message.userDisplay || message.providerUserId || 'Unknown';
+  }, [identityMap]);
 
   // Fetch messages for selected chat with infinite scroll
   const messageLimit = 50;
@@ -498,12 +531,12 @@ export function Chats() {
                           /* Received message - Left side */
                           <div className="flex items-start gap-3">
                             <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center flex-shrink-0 text-white font-semibold text-sm shadow-md">
-                              {message.userDisplay?.charAt(0)?.toUpperCase() || '?'}
+                              {getDisplayName(message).charAt(0)?.toUpperCase() || '?'}
                             </div>
                             <div className="flex-1 min-w-0">
                               <div className="flex items-baseline gap-2 mb-1">
                                 <span className="font-semibold text-sm text-gray-900">
-                                  {message.userDisplay || message.providerUserId}
+                                  {getDisplayName(message)}
                                 </span>
                                 <span className="text-xs text-gray-500">
                                   {new Date(messageTimestamp).toLocaleTimeString('en-US', {
