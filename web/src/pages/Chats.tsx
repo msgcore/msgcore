@@ -405,9 +405,16 @@ export function Chats() {
               ) : (
                 <div className="space-y-3">
                   {filteredMessages.map((message: any, index: number) => {
+                    // Get timestamp from either sentAt or receivedAt
+                    const messageTimestamp = message.sentAt || message.receivedAt || message.timestamp;
+                    const prevTimestamp = filteredMessages[index - 1]?.sentAt || filteredMessages[index - 1]?.receivedAt || filteredMessages[index - 1]?.timestamp;
+
                     const isFirstOfDay = index === 0 ||
-                      new Date(message.receivedAt).toDateString() !==
-                      new Date(filteredMessages[index - 1]?.receivedAt).toDateString();
+                      new Date(messageTimestamp).toDateString() !==
+                      new Date(prevTimestamp).toDateString();
+
+                    // Determine if message is from user (sent) or received
+                    const isSentByUser = message.type === 'sent' || message.fromMe || message.source === 'phone';
 
                     return (
                       <div key={message.id}>
@@ -415,7 +422,7 @@ export function Chats() {
                         {isFirstOfDay && (
                           <div className="flex items-center justify-center my-4">
                             <div className="bg-white px-4 py-1 rounded-full shadow-sm text-xs text-gray-600 font-medium">
-                              {new Date(message.receivedAt).toLocaleDateString('en-US', {
+                              {new Date(messageTimestamp).toLocaleDateString('en-US', {
                                 weekday: 'short',
                                 year: 'numeric',
                                 month: 'short',
@@ -426,13 +433,13 @@ export function Chats() {
                         )}
 
                         {/* Message bubble */}
-                        {message.fromMe ? (
+                        {isSentByUser ? (
                           /* Sent message - Right side */
                           <div className="flex items-start gap-3 justify-end">
                             <div className="flex-1 min-w-0 flex flex-col items-end">
                               <div className="flex items-baseline gap-2 mb-1">
                                 <span className="text-xs text-gray-500">
-                                  {new Date(message.receivedAt).toLocaleTimeString('en-US', {
+                                  {new Date(messageTimestamp).toLocaleTimeString('en-US', {
                                     hour: '2-digit',
                                     minute: '2-digit'
                                   })}
@@ -499,7 +506,7 @@ export function Chats() {
                                   {message.userDisplay || message.providerUserId}
                                 </span>
                                 <span className="text-xs text-gray-500">
-                                  {new Date(message.receivedAt).toLocaleTimeString('en-US', {
+                                  {new Date(messageTimestamp).toLocaleTimeString('en-US', {
                                     hour: '2-digit',
                                     minute: '2-digit'
                                   })}
