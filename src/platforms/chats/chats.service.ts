@@ -98,11 +98,13 @@ export class ChatsService {
 
     return {
       chats: chats.map((chat) => {
-        // For individual chats, try to resolve identity name
+        // For individual chats, prioritize identity displayName over chat.name
         let displayName = chat.name;
-        if (chat.chatType === ChatType.individual && !displayName) {
+        if (chat.chatType === ChatType.individual) {
           const key = `${chat.platformId}:${chat.providerChatId}`;
-          displayName = identityMap.get(key) || null;
+          const identityName = identityMap.get(key);
+          // Use identity name if available, otherwise fall back to chat.name
+          displayName = identityName || chat.name;
         }
 
         return {
@@ -169,9 +171,9 @@ export class ChatsService {
       throw new NotFoundException(`Chat ${chatId} not found`);
     }
 
-    // For individual chats, try to resolve identity name
+    // For individual chats, prioritize identity displayName over chat.name
     let displayName = chat.name;
-    if (chat.chatType === ChatType.individual && !displayName) {
+    if (chat.chatType === ChatType.individual) {
       const alias = await this.prisma.identityAlias.findFirst({
         where: {
           projectId,
@@ -187,6 +189,7 @@ export class ChatsService {
         },
       });
 
+      // Use identity name if available, otherwise fall back to chat.name
       if (alias?.identity?.displayName) {
         displayName = alias.identity.displayName;
       }
