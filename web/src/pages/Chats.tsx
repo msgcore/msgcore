@@ -243,7 +243,7 @@ export function Chats() {
     if (!newMessage.trim() || !selectedChat) return;
 
     try {
-      await sendMessageMutation.mutateAsync({
+      const response = await sendMessageMutation.mutateAsync({
         targets: [
           {
             type: selectedChat.chatType,
@@ -257,12 +257,38 @@ export function Chats() {
       });
 
       setNewMessage('');
-      toast.success('Message sent successfully');
+      toast.success('Message queued');
 
-      // Refetch messages after a short delay to allow backend processing
-      setTimeout(() => {
-        refetchMessages();
-      }, 1000);
+      // Poll for message status
+      const jobId = response.jobs[0]?.jobId;
+      if (jobId) {
+        const pollStatus = async () => {
+          const token = localStorage.getItem('msgcore_token');
+          const statusResponse = await fetch(
+            `${window.location.origin}/api/v1/projects/${selectedProjectId}/messages/status/${jobId}`,
+            {
+              headers: {
+                Authorization: `Bearer ${token}`,
+              },
+            },
+          );
+
+          if (statusResponse.ok) {
+            const status = await statusResponse.json();
+            if (status.status === 'completed' || status.status === 'failed') {
+              refetchMessages();
+              if (status.status === 'failed') {
+                toast.error('Message failed to send');
+              }
+              return;
+            }
+            // Poll again after 500ms
+            setTimeout(pollStatus, 500);
+          }
+        };
+
+        pollStatus();
+      }
     } catch (error) {
       toast.error(`Failed to send message: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
