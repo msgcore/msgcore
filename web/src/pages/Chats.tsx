@@ -244,11 +244,13 @@ export function Chats() {
 
     try {
       await sendMessageMutation.mutateAsync({
-        target: {
-          type: 'chat',
-          platformId: selectedChat.platform.id,
-          chatId: selectedChat.providerChatId,
-        },
+        targets: [
+          {
+            type: 'chat',
+            platformId: selectedChat.platform.id,
+            chatId: selectedChat.providerChatId,
+          },
+        ],
         content: {
           text: newMessage.trim(),
         },
@@ -410,11 +412,11 @@ export function Chats() {
       </div>
 
       {/* Main Content - Messages */}
-      <div className="flex-1 flex flex-col">
+      <div className="flex-1 flex flex-col overflow-hidden">
         {selectedChat ? (
           <>
             {/* Chat Header */}
-            <div className="px-6 py-4 border-b border-gray-200 bg-white flex items-center justify-between">
+            <div className="px-6 py-4 border-b border-gray-200 bg-white flex items-center justify-between flex-shrink-0">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-full bg-gradient-to-br from-green-400 to-green-600 flex items-center justify-center text-white font-semibold shadow-sm">
                   {selectedChat.name?.charAt(0)?.toUpperCase() || '?'}
@@ -450,11 +452,11 @@ export function Chats() {
               </div>
             </div>
 
-            {/* Messages Area */}
+            {/* Messages Area - Scrollable with flex-1 */}
             <div
               ref={messagesContainerRef}
               onScroll={handleScroll}
-              className="flex-1 overflow-y-auto bg-gray-50 px-6 py-4"
+              className="flex-1 overflow-y-auto bg-gray-50 px-6 py-4 min-h-0"
             >
               {messagesLoading && allMessages.length === 0 ? (
                 <div className="flex items-center justify-center h-full">
@@ -640,9 +642,10 @@ export function Chats() {
                   )}
                 </div>
               )}
+            </div>
 
-              {/* Message Input */}
-              <div className="border-t border-gray-200 bg-white p-4">
+            {/* Message Input - Fixed at bottom */}
+            <div className="border-t border-gray-200 bg-white p-4 flex-shrink-0">
                 <form onSubmit={handleSendMessage} className="flex items-center gap-3">
                   <input
                     type="text"
@@ -664,7 +667,6 @@ export function Chats() {
                     )}
                   </button>
                 </form>
-              </div>
             </div>
           </>
         ) : (
