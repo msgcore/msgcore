@@ -17,7 +17,7 @@ import { useSendMessage } from '../hooks/useMessages';
 import { useToast } from '../contexts/ToastContext';
 import { SyncHistoryModal } from '../components/chats/SyncHistoryModal';
 
-type ChatTypeFilter = 'all' | 'individual' | 'group' | 'channel';
+type ChatTypeFilter = 'all' | 'user' | 'group' | 'channel';
 
 export function Chats() {
   const { selectedProjectId } = useProjectContext();
@@ -246,9 +246,9 @@ export function Chats() {
       await sendMessageMutation.mutateAsync({
         targets: [
           {
-            type: 'chat',
+            type: selectedChat.chatType,
             platformId: selectedChat.platform.id,
-            chatId: selectedChat.providerChatId,
+            id: selectedChat.providerChatId,
           },
         ],
         content: {
@@ -349,7 +349,7 @@ export function Chats() {
               className="flex-1 px-2 py-1 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
             >
               <option value="all">All Types</option>
-              <option value="individual">Individual</option>
+              <option value="user">User</option>
               <option value="group">Group</option>
               <option value="channel">Channel</option>
             </select>

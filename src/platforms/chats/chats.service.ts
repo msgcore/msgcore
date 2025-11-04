@@ -77,7 +77,7 @@ export class ChatsService {
       this.prisma.chat.count({ where }),
     ]);
 
-    // Fetch all identities for this project to resolve names for individual chats
+    // Fetch all identities for this project to resolve names for user chats
     const identities = await this.prisma.identity.findMany({
       where: { projectId },
       include: {
@@ -98,9 +98,9 @@ export class ChatsService {
 
     return {
       chats: chats.map((chat) => {
-        // For individual chats, prioritize identity displayName over chat.name
+        // For user chats, prioritize identity displayName over chat.name
         let displayName = chat.name;
-        if (chat.chatType === ChatType.individual) {
+        if (chat.chatType === ChatType.USER) {
           const key = `${chat.platformId}:${chat.providerChatId}`;
           const identityName = identityMap.get(key);
           // Use identity name if available, otherwise fall back to chat.name
@@ -171,9 +171,9 @@ export class ChatsService {
       throw new NotFoundException(`Chat ${chatId} not found`);
     }
 
-    // For individual chats, prioritize identity displayName over chat.name
+    // For user chats, prioritize identity displayName over chat.name
     let displayName = chat.name;
-    if (chat.chatType === ChatType.individual) {
+    if (chat.chatType === ChatType.USER) {
       const alias = await this.prisma.identityAlias.findFirst({
         where: {
           projectId,

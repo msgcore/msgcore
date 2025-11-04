@@ -184,7 +184,7 @@ export class DynamicMessageProcessor
             platformId: target.platformId,
             providerChatId: target.id,
             chatType:
-              target.type === 'user' ? ChatType.individual : ChatType.channel,
+              target.type === 'user' ? ChatType.USER : ChatType.CHANNEL,
           },
           update: {
             lastMessageAt: new Date(),

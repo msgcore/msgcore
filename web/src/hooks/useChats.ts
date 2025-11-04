@@ -4,7 +4,7 @@ import { sdk } from '../shared/lib/sdk';
 export interface Chat {
   id: string;
   providerChatId: string;
-  chatType: 'individual' | 'group' | 'channel';
+  chatType: 'user' | 'group' | 'channel';
   name?: string;
   avatarUrl?: string;
   lastMessageAt?: string;
@@ -21,7 +21,7 @@ export interface Chat {
 
 export interface ListChatsParams {
   platformId?: string;
-  chatType?: 'individual' | 'group' | 'channel';
+  chatType?: 'user' | 'group' | 'channel';
   search?: string;
   limit?: number;
   offset?: number;

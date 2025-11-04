@@ -433,7 +433,7 @@ enum IdentityLinkMethod {
 }
 
 enum ChatType {
-  individual
+  user
   group
   channel
 }

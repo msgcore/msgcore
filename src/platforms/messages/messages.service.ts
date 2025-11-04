@@ -262,7 +262,7 @@ export class MessagesService {
   }): Promise<boolean> {
     try {
       // Determine chat type from providerChatId format
-      let chatType: ChatType = ChatType.individual;
+      let chatType: ChatType = ChatType.USER;
       if (data.providerChatId.includes('@g.us')) {
         chatType = ChatType.group;
       } else if (data.providerChatId.includes('@broadcast')) {
@@ -394,7 +394,7 @@ export class MessagesService {
   }): Promise<boolean> {
     try {
       // Determine chat type from providerChatId format
-      let chatType: ChatType = ChatType.individual;
+      let chatType: ChatType = ChatType.USER;
       if (data.providerChatId.includes('@g.us')) {
         chatType = ChatType.group;
       } else if (data.providerChatId.includes('@broadcast')) {
@@ -569,7 +569,7 @@ export class MessagesService {
   }): Promise<boolean> {
     try {
       // Determine chat type from targetChatId format
-      let chatType: ChatType = ChatType.individual;
+      let chatType: ChatType = ChatType.USER;
       if (data.targetChatId.includes('@g.us')) {
         chatType = ChatType.group;
       } else if (data.targetChatId.includes('@broadcast')) {
