@@ -241,7 +241,7 @@ export function Dashboard() {
                         {message.messageText || t('recentMessages.noText')}
                       </p>
                       <p className="text-xs text-gray-500">
-                        {message.platform} • {message.userDisplay || message.providerUserId} • {formatDateTime(message.receivedAt)}
+                        {message.platform} • {message.userDisplay || message.providerUserId} • {formatDateTime(message.timestamp)}
                       </p>
                     </div>
                   </div>

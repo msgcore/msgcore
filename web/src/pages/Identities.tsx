@@ -659,7 +659,7 @@ export function Identities() {
                             </span>
                           </div>
                           <span className="text-xs text-gray-500">
-                            {formatDateTime(msg.receivedAt)}
+                            {formatDateTime(msg.timestamp)}
                           </span>
                         </div>
                         <p className="text-sm text-gray-900 mb-1">

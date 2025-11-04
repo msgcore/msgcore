@@ -405,9 +405,9 @@ export function Chats() {
               ) : (
                 <div className="space-y-3">
                   {filteredMessages.map((message: any, index: number) => {
-                    // Get timestamp from either sentAt or receivedAt
-                    const messageTimestamp = message.sentAt || message.receivedAt || message.timestamp;
-                    const prevTimestamp = filteredMessages[index - 1]?.sentAt || filteredMessages[index - 1]?.receivedAt || filteredMessages[index - 1]?.timestamp;
+                    // Get timestamp
+                    const messageTimestamp = message.timestamp;
+                    const prevTimestamp = filteredMessages[index - 1]?.timestamp;
 
                     const isFirstOfDay = index === 0 ||
                       new Date(messageTimestamp).toDateString() !==

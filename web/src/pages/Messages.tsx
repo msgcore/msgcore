@@ -351,11 +351,7 @@ export function Messages() {
                                   </>
                                 )}
                                 <span>
-                                  {isReceived && message.receivedAt
-                                    ? formatDateTime(message.receivedAt)
-                                    : isSent && message.sentAt
-                                    ? formatDateTime(message.sentAt)
-                                    : formatDateTime(message.createdAt)}
+                                  {formatDateTime(message.timestamp)}
                                 </span>
                                 {message.errorMessage && (
                                   <>
