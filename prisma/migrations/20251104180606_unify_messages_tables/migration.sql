@@ -62,6 +62,7 @@ ALTER TABLE "messages" ADD CONSTRAINT "messages_project_id_fkey" FOREIGN KEY ("p
 
 -- Migrate data from received_messages
 -- For received messages that have a chat_id
+-- Use ON CONFLICT DO NOTHING to skip duplicates
 INSERT INTO "messages" (
     "id",
     "project_id",
@@ -105,7 +106,8 @@ SELECT
     NULL,  -- error_message (only for sent messages)
     rm.raw_data
 FROM received_messages rm
-WHERE rm.chat_id IS NOT NULL;
+WHERE rm.chat_id IS NOT NULL
+ON CONFLICT (platform_id, provider_message_id) DO NOTHING;
 
 -- Migrate data from sent_messages
 -- First, we need to find the chat_id by looking up the chat by provider_chat_id
@@ -151,7 +153,8 @@ SELECT
 FROM sent_messages sm
 INNER JOIN chats c ON c.project_id = sm.project_id
     AND c.platform_id = sm.platform_id
-    AND c.provider_chat_id = sm.target_chat_id;
+    AND c.provider_chat_id = sm.target_chat_id
+ON CONFLICT (platform_id, provider_message_id) DO NOTHING;
 
 -- Update received_reactions to add message_id and timestamp
 ALTER TABLE "received_reactions" ADD COLUMN "message_id" TEXT;
