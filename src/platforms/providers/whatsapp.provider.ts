@@ -746,7 +746,7 @@ export class WhatsAppProvider implements PlatformProvider, PlatformAdapter {
               reactionType: 'added',
             },
             orderBy: {
-              receivedAt: 'desc',
+              timestamp: 'desc',
             },
           });
           emoji = lastReaction?.emoji;

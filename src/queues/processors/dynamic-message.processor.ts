@@ -6,6 +6,12 @@ import {
   OnModuleInit,
 } from '@nestjs/common';
 import type { Queue, Job } from 'bullmq';
+import {
+  MessageDirection,
+  MessageSource,
+  MessageStatus,
+  ChatType,
+} from '@prisma/client';
 import { PlatformRegistry } from '../../platforms/services/platform-registry.service';
 import { makeEnvelope } from '../../platforms/utils/envelope.factory';
 import { PrismaService } from '../../prisma/prisma.service';
@@ -164,19 +170,41 @@ export class DynamicMessageProcessor
           );
         }
 
-        // Create sent message record now that platform is validated (just before sending)
-        const sentMessage = await this.prisma.sentMessage.create({
+        // Upsert chat record (required for chatId)
+        const chat = await this.prisma.chat.upsert({
+          where: {
+            projectId_platformId_providerChatId: {
+              projectId,
+              platformId: target.platformId,
+              providerChatId: target.id,
+            },
+          },
+          create: {
+            projectId,
+            platformId: target.platformId,
+            providerChatId: target.id,
+            chatType:
+              target.type === 'user' ? ChatType.individual : ChatType.channel,
+          },
+          update: {
+            lastMessageAt: new Date(),
+          },
+        });
+
+        // Create message record now that platform is validated (just before sending)
+        const sentMessage = await this.prisma.message.create({
           data: {
             projectId,
             platformId: target.platformId,
-            platform: platformConfig.platform, // Use platform type from existing lookup
+            chatId: chat.id,
+            direction: MessageDirection.sent,
+            source: MessageSource.api,
             jobId: job.id?.toString(),
-            targetChatId: target.id,
-            targetUserId: target.type === 'user' ? target.id : null,
-            targetType: target.type,
+            providerChatId: target.id,
+            providerUserId: target.type === 'user' ? target.id : 'system',
             messageText: message.content.text || null,
             messageContent: message.content,
-            status: 'pending',
+            status: MessageStatus.queued,
           },
         });
 
@@ -238,14 +266,14 @@ export class DynamicMessageProcessor
           `Message sent successfully to ${platformConfig.platform}:${target.type}:${target.id} (platformId: ${target.platformId}) - Provider Message ID: ${result.providerMessageId}`,
         );
 
-        // Update sent message status to 'sent' (using specific ID for safety)
+        // Update message status to 'sent' (using specific ID for safety)
         try {
-          const updatedMessage = await this.prisma.sentMessage.update({
+          const updatedMessage = await this.prisma.message.update({
             where: { id: sentMessageId },
             data: {
-              status: 'sent',
+              status: MessageStatus.sent,
               providerMessageId: result.providerMessageId,
-              sentAt: new Date(),
+              timestamp: new Date(),
             },
           });
 
@@ -256,16 +284,16 @@ export class DynamicMessageProcessor
             {
               message_id: updatedMessage.id,
               job_id: updatedMessage.jobId,
-              platform: updatedMessage.platform,
+              platform: platformConfig.platform,
               platform_id: updatedMessage.platformId,
               target: {
-                type: updatedMessage.targetType,
-                chat_id: updatedMessage.targetChatId,
-                user_id: updatedMessage.targetUserId,
+                type: target.type,
+                chat_id: updatedMessage.providerChatId,
+                user_id: updatedMessage.providerUserId,
               },
               text: updatedMessage.messageText,
-              source: 'api',
-              sent_at: updatedMessage.sentAt!.toISOString(),
+              source: 'api', // Messages sent via queue are always API-sourced
+              sent_at: updatedMessage.timestamp.toISOString(),
             },
           );
         } catch (error) {
@@ -306,13 +334,13 @@ export class DynamicMessageProcessor
           `Failed to send message to ${platformType}:${target.type}:${target.id} (platformId: ${target.platformId}): ${error.message} - ${errorType}`,
         );
 
-        // Update sent message status to 'failed' (using specific ID if available)
+        // Update message status to 'failed' (using specific ID if available)
         try {
           if (sentMessageId) {
-            const failedMessage = await this.prisma.sentMessage.update({
+            const failedMessage = await this.prisma.message.update({
               where: { id: sentMessageId },
               data: {
-                status: 'failed',
+                status: MessageStatus.failed,
                 errorMessage: error.message,
               },
             });
@@ -323,26 +351,26 @@ export class DynamicMessageProcessor
               WebhookEventType.MESSAGE_FAILED,
               {
                 job_id: failedMessage.jobId || job.id?.toString() || 'unknown',
-                platform: failedMessage.platform,
+                platform: platformConfig.platform,
                 platform_id: failedMessage.platformId,
                 target: {
-                  type: failedMessage.targetType,
-                  chat_id: failedMessage.targetChatId,
+                  type: target.type,
+                  chat_id: failedMessage.providerChatId,
                 },
                 error: error.message,
                 failed_at: new Date().toISOString(),
               },
             );
           } else {
-            // Fallback to updateMany if sentMessage wasn't created (early failures)
-            await this.prisma.sentMessage.updateMany({
+            // Fallback to updateMany if message wasn't created (early failures)
+            await this.prisma.message.updateMany({
               where: {
                 jobId: job.id?.toString(),
                 platformId: target.platformId,
-                targetChatId: target.id,
+                providerChatId: target.id,
               },
               data: {
-                status: 'failed',
+                status: MessageStatus.failed,
                 errorMessage: error.message,
               },
             });

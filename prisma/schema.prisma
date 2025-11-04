@@ -44,9 +44,8 @@ model Project {
   members            ProjectMember[]
   projectPlatforms   ProjectPlatform[]
   owner              User                 @relation(fields: [ownerId], references: [id], onDelete: Cascade)
-  receivedMessages   ReceivedMessage[]
+  messages           Message[]
   receivedReactions  ReceivedReaction[]
-  sentMessages       SentMessage[]
   webhooks           Webhook[]
   entitySchemas      EntitySchema[]
   analysisProfiles   AnalysisProfile[]
@@ -135,9 +134,8 @@ model ProjectPlatform {
   identityAliases      IdentityAlias[]
   platformLogs         PlatformLog[]
   project              Project            @relation(fields: [projectId], references: [id], onDelete: Cascade)
-  receivedMessages     ReceivedMessage[]
+  messages             Message[]
   receivedReactions    ReceivedReaction[]
-  sentMessages         SentMessage[]
 
   @@index([projectId])
   @@index([webhookToken])
@@ -175,7 +173,7 @@ model Chat {
   metadata          Json?
   createdAt         DateTime          @default(now()) @map("created_at")
   updatedAt         DateTime          @updatedAt @map("updated_at")
-  messages          ReceivedMessage[]
+  messages          Message[]
   platformConfig    ProjectPlatform   @relation(fields: [platformId], references: [id], onDelete: Cascade)
   project           Project           @relation(fields: [projectId], references: [id], onDelete: Cascade)
   extractedEntities ExtractedEntity[]
@@ -188,89 +186,64 @@ model Chat {
   @@map("chats")
 }
 
-model ReceivedMessage {
+model Message {
   id                String              @id @default(uuid())
   projectId         String              @map("project_id")
   platformId        String              @map("platform_id")
-  platform          String
-  chatId            String?             @map("chat_id")
-  providerMessageId String              @map("provider_message_id")
+  chatId            String              @map("chat_id")
+  direction         MessageDirection
+  source            MessageSource
+  providerMessageId String?             @map("provider_message_id")
   providerChatId    String              @map("provider_chat_id")
   providerUserId    String              @map("provider_user_id")
   userDisplay       String?             @map("user_display")
-  messageText       String?             @map("message_text")
+  messageText       String?             @map("message_text") @db.Text
   messageType       String              @default("text") @map("message_type")
-  fromMe            Boolean             @default(false) @map("from_me")
-  rawData           Json                @map("raw_data")
-  receivedAt        DateTime            @default(now()) @map("received_at")
+  messageContent    Json?               @map("message_content")
+  timestamp         DateTime            @default(now())
+  jobId             String?             @unique @map("job_id")
+  status            MessageStatus?
+  errorMessage      String?             @map("error_message") @db.Text
+  rawData           Json?               @map("raw_data")
   attachments       MessageAttachment[]
-  chat              Chat?               @relation(fields: [chatId], references: [id], onDelete: SetNull)
+  reactions         ReceivedReaction[]
+  chat              Chat                @relation(fields: [chatId], references: [id], onDelete: Cascade)
   platformConfig    ProjectPlatform     @relation(fields: [platformId], references: [id], onDelete: Cascade)
   project           Project             @relation(fields: [projectId], references: [id], onDelete: Cascade)
 
   @@unique([platformId, providerMessageId])
-  @@index([projectId])
-  @@index([platformId])
-  @@index([chatId])
-  @@index([receivedAt])
+  @@index([chatId, timestamp(sort: Desc)])
+  @@index([projectId, timestamp])
+  @@index([platformId, timestamp])
   @@index([providerChatId])
   @@index([providerUserId])
-  @@index([platformId, providerUserId])
-  @@map("received_messages")
+  @@index([direction])
+  @@index([source])
+  @@index([status])
+  @@index([jobId])
+  @@map("messages")
 }
 
 model MessageAttachment {
-  id        String          @id @default(uuid())
-  messageId String          @map("message_id")
+  id        String  @id @default(uuid())
+  messageId String  @map("message_id")
   type      String
   url       String
   filename  String?
   size      Int?
-  mimeType  String?         @map("mime_type")
-  message   ReceivedMessage @relation(fields: [messageId], references: [id], onDelete: Cascade)
+  mimeType  String? @map("mime_type")
+  message   Message @relation(fields: [messageId], references: [id], onDelete: Cascade)
 
   @@index([messageId])
   @@index([type])
   @@map("message_attachments")
 }
 
-model SentMessage {
-  id                String          @id @default(uuid())
-  projectId         String          @map("project_id")
-  platformId        String          @map("platform_id")
-  platform          String
-  jobId             String?         @map("job_id")
-  providerMessageId String?         @map("provider_message_id")
-  targetChatId      String          @map("target_chat_id")
-  targetUserId      String?         @map("target_user_id")
-  targetType        String          @map("target_type")
-  messageText       String?         @map("message_text") @db.Text
-  messageContent    Json?           @map("message_content")
-  status            String          @default("pending")
-  source            String          @default("api") @map("source")
-  errorMessage      String?         @map("error_message") @db.Text
-  sentAt            DateTime?       @map("sent_at")
-  createdAt         DateTime        @default(now()) @map("created_at")
-  platformConfig    ProjectPlatform @relation(fields: [platformId], references: [id], onDelete: Cascade)
-  project           Project         @relation(fields: [projectId], references: [id], onDelete: Cascade)
-
-  @@unique([jobId, platformId, targetChatId])
-  @@index([projectId])
-  @@index([platformId])
-  @@index([status])
-  @@index([createdAt])
-  @@index([targetChatId])
-  @@index([targetUserId])
-  @@index([jobId])
-  @@index([source])
-  @@map("sent_messages")
-}
-
 model ReceivedReaction {
   id                String          @id @default(uuid())
   projectId         String          @map("project_id")
   platformId        String          @map("platform_id")
-  platform          String
+  messageId         String?         @map("message_id")
   providerMessageId String          @map("provider_message_id")
   providerChatId    String          @map("provider_chat_id")
   providerUserId    String          @map("provider_user_id")
@@ -278,20 +251,21 @@ model ReceivedReaction {
   emoji             String          @db.VarChar(255)
   reactionType      ReactionType    @map("reaction_type")
   rawData           Json            @map("raw_data")
-  receivedAt        DateTime        @default(now()) @map("received_at")
+  timestamp         DateTime        @default(now())
+  message           Message?        @relation(fields: [messageId], references: [id], onDelete: Cascade)
   platformConfig    ProjectPlatform @relation(fields: [platformId], references: [id], onDelete: Cascade)
   project           Project         @relation(fields: [projectId], references: [id], onDelete: Cascade)
 
   @@unique([platformId, providerMessageId, providerUserId, emoji, reactionType])
   @@index([projectId])
   @@index([platformId])
-  @@index([receivedAt])
+  @@index([messageId])
+  @@index([timestamp])
   @@index([providerChatId])
   @@index([providerUserId])
   @@index([providerMessageId])
   @@index([reactionType])
   @@index([platformId, providerUserId])
-  @@index([projectId, providerMessageId, providerUserId, reactionType, receivedAt])
   @@map("received_reactions")
 }
 
@@ -462,6 +436,24 @@ enum ChatType {
   individual
   group
   channel
+}
+
+enum MessageDirection {
+  sent
+  received
+}
+
+enum MessageSource {
+  api
+  phone
+  webhook
+}
+
+enum MessageStatus {
+  queued
+  sent
+  delivered
+  failed
 }
 
 model EntitySchema {

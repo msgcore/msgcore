@@ -11,7 +11,14 @@ import { MessageQueue } from '../../queues/message.queue';
 import { PlatformsService } from '../platforms.service';
 import { PlatformRegistry } from '../services/platform-registry.service';
 import { SecurityUtil, AuthContext } from '../../common/utils/security.util';
-import { ReactionType, Prisma, ChatType } from '@prisma/client';
+import {
+  ReactionType,
+  Prisma,
+  ChatType,
+  MessageDirection,
+  MessageSource,
+  MessageStatus,
+} from '@prisma/client';
 import { WebhookDeliveryService } from '../../webhooks/services/webhook-delivery.service';
 import { WebhookEventType } from '../../webhooks/types/webhook-event.types';
 import { PlatformAttachment } from '../../messages/interfaces/message-attachment.interface';
@@ -68,33 +75,33 @@ export class MessagesService {
     }
 
     // Get actual delivery results from database
-    const deliveryResults = await this.prisma.sentMessage.findMany({
-      where: { jobId },
+    const deliveryResults = await this.prisma.message.findMany({
+      where: {
+        jobId,
+        direction: MessageDirection.sent,
+      },
       select: {
         id: true,
         platformId: true,
-        platform: true,
-        targetChatId: true,
-        targetUserId: true,
-        targetType: true,
+        providerChatId: true,
+        providerUserId: true,
         status: true,
         errorMessage: true,
         providerMessageId: true,
-        sentAt: true,
-        createdAt: true,
+        timestamp: true,
       },
     });
 
     // Calculate delivery summary
     const totalTargets = deliveryResults.length;
     const successfulDeliveries = deliveryResults.filter(
-      (r) => r.status === 'sent',
+      (r) => r.status === MessageStatus.sent || r.status === MessageStatus.delivered,
     ).length;
     const failedDeliveries = deliveryResults.filter(
-      (r) => r.status === 'failed',
+      (r) => r.status === MessageStatus.failed,
     ).length;
     const pendingDeliveries = deliveryResults.filter(
-      (r) => r.status === 'pending',
+      (r) => r.status === MessageStatus.queued,
     ).length;
 
     // Determine overall status
@@ -121,10 +128,10 @@ export class MessagesService {
         },
         results: deliveryResults,
         errors: deliveryResults
-          .filter((r) => r.status === 'failed' && r.errorMessage)
+          .filter((r) => r.status === MessageStatus.failed && r.errorMessage)
           .map((r) => ({
-            platform: r.platform,
-            target: `${r.targetType}:${r.targetChatId}`,
+            platformId: r.platformId,
+            target: `${r.providerChatId}`,
             error: r.errorMessage,
           })),
       },
@@ -288,7 +295,7 @@ export class MessagesService {
 
       // Check if message already exists (for conflict resolution during history sync)
       if (data.skipIfExists) {
-        const existing = await this.prisma.receivedMessage.findUnique({
+        const existing = await this.prisma.message.findUnique({
           where: {
             platformId_providerMessageId: {
               platformId: data.platformId,
@@ -297,18 +304,6 @@ export class MessagesService {
           },
         });
         if (existing) {
-          // If message exists but has no chatId, update it
-          if (!existing.chatId && chat.id) {
-            await this.prisma.receivedMessage.update({
-              where: { id: existing.id },
-              data: { chatId: chat.id },
-            });
-            this.logger.debug(
-              `Updated existing message with chatId: ${data.providerMessageId}`,
-            );
-            return true;
-          }
-
           this.logger.debug(
             `Skipping existing message: ${data.providerMessageId}`,
           );
@@ -316,20 +311,24 @@ export class MessagesService {
         }
       }
 
-      const storedMessage = await this.prisma.receivedMessage.create({
+      // Determine direction and source based on fromMe flag
+      const direction = MessageDirection.received;
+      const source = data.fromMe ? MessageSource.phone : MessageSource.webhook;
+
+      const storedMessage = await this.prisma.message.create({
         data: {
           projectId: data.projectId,
           platformId: data.platformId,
-          platform: data.platform,
           chatId: chat.id,
+          direction,
+          source,
           providerMessageId: data.providerMessageId,
           providerChatId: data.providerChatId,
           providerUserId: data.providerUserId,
           userDisplay: data.userDisplay,
           messageText: data.messageText,
           messageType: data.messageType,
-          fromMe: data.fromMe || false,
-          ...(data.receivedAt && { receivedAt: data.receivedAt }),
+          timestamp: data.receivedAt || new Date(),
           rawData: data.rawData,
           ...(data.attachments && data.attachments.length > 0
             ? {
@@ -342,7 +341,7 @@ export class MessagesService {
       });
 
       this.logger.debug(
-        `Stored ${data.platform} message ${storedMessage.id} from ${data.userDisplay || data.providerUserId}`,
+        `Stored message ${storedMessage.id} from ${data.userDisplay || data.providerUserId}`,
       );
 
       // Deliver webhook notification for incoming message
@@ -358,7 +357,7 @@ export class MessagesService {
           user_display: data.userDisplay ?? null,
           text: data.messageText,
           message_type: data.messageType,
-          received_at: storedMessage.receivedAt.toISOString(),
+          received_at: storedMessage.timestamp.toISOString(),
         },
       );
 
@@ -394,11 +393,43 @@ export class MessagesService {
     rawData: any;
   }): Promise<boolean> {
     try {
-      const storedButton = await this.prisma.receivedMessage.create({
+      // Determine chat type from providerChatId format
+      let chatType: ChatType = ChatType.individual;
+      if (data.providerChatId.includes('@g.us')) {
+        chatType = ChatType.group;
+      } else if (data.providerChatId.includes('@broadcast')) {
+        chatType = ChatType.channel;
+      }
+
+      // Upsert chat first to ensure we have a valid chatId
+      const chat = await this.prisma.chat.upsert({
+        where: {
+          projectId_platformId_providerChatId: {
+            projectId: data.projectId,
+            platformId: data.platformId,
+            providerChatId: data.providerChatId,
+          },
+        },
+        create: {
+          projectId: data.projectId,
+          platformId: data.platformId,
+          providerChatId: data.providerChatId,
+          chatType,
+          name: null,
+          lastMessageAt: new Date(),
+        },
+        update: {
+          lastMessageAt: new Date(),
+        },
+      });
+
+      const storedButton = await this.prisma.message.create({
         data: {
           projectId: data.projectId,
           platformId: data.platformId,
-          platform: data.platform,
+          chatId: chat.id,
+          direction: MessageDirection.received,
+          source: MessageSource.webhook,
           providerMessageId: data.providerMessageId,
           providerChatId: data.providerChatId,
           providerUserId: data.providerUserId,
@@ -410,7 +441,7 @@ export class MessagesService {
       });
 
       this.logger.debug(
-        `Stored ${data.platform} button click ${storedButton.id} from ${data.userDisplay || data.providerUserId}`,
+        `Stored button click ${storedButton.id} from ${data.userDisplay || data.providerUserId}`,
       );
 
       // Deliver webhook notification for button click
@@ -425,7 +456,7 @@ export class MessagesService {
           user_id: data.providerUserId,
           user_display: data.userDisplay ?? null,
           button_value: data.buttonValue,
-          clicked_at: storedButton.receivedAt.toISOString(),
+          clicked_at: storedButton.timestamp.toISOString(),
         },
       );
 
@@ -466,7 +497,6 @@ export class MessagesService {
         data: {
           projectId: data.projectId,
           platformId: data.platformId,
-          platform: data.platform,
           providerMessageId: data.providerMessageId,
           providerChatId: data.providerChatId,
           providerUserId: data.providerUserId,
@@ -498,7 +528,7 @@ export class MessagesService {
           user_id: data.providerUserId,
           user_display: data.userDisplay ?? null,
           emoji: data.emoji,
-          timestamp: storedReaction.receivedAt.toISOString(),
+          timestamp: storedReaction.timestamp.toISOString(),
           raw: {
             original_message_id: data.providerMessageId,
           },
@@ -548,7 +578,7 @@ export class MessagesService {
 
       // Upsert chat first (create or update lastMessageAt)
       // This ensures chats are created when you send messages from your phone
-      await this.prisma.chat.upsert({
+      const chat = await this.prisma.chat.upsert({
         where: {
           projectId_platformId_providerChatId: {
             projectId: data.projectId,
@@ -569,27 +599,35 @@ export class MessagesService {
         },
       });
 
-      const storedMessage = await this.prisma.sentMessage.create({
+      const storedMessage = await this.prisma.message.create({
         data: {
           projectId: data.projectId,
           platformId: data.platformId,
-          platform: data.platform,
+          chatId: chat.id,
+          direction: MessageDirection.sent,
+          source: MessageSource.phone,
           providerMessageId: data.providerMessageId,
-          targetChatId: data.targetChatId,
-          targetUserId: data.targetUserId,
-          targetType: data.targetType,
+          providerChatId: data.targetChatId,
+          providerUserId: data.targetUserId || '',
           messageText: data.messageText,
           messageContent: data.messageContent
             ? JSON.parse(JSON.stringify(data.messageContent))
             : undefined,
-          status: 'sent',
-          source: 'phone',
-          sentAt: new Date(),
+          status: MessageStatus.sent,
+          timestamp: new Date(),
+          rawData: data.rawData,
+          ...(data.attachments && data.attachments.length > 0
+            ? {
+                attachments: {
+                  create: data.attachments,
+                },
+              }
+            : {}),
         },
       });
 
       this.logger.debug(
-        `Stored phone-sent ${data.platform} message ${storedMessage.id} to ${data.targetChatId}`,
+        `Stored phone-sent message ${storedMessage.id} to ${data.targetChatId}`,
       );
 
       // Deliver webhook notification for phone-sent message
@@ -608,7 +646,7 @@ export class MessagesService {
           },
           text: data.messageText,
           source: 'phone',
-          sent_at: storedMessage.sentAt ? storedMessage.sentAt.toISOString() : new Date().toISOString(),
+          sent_at: storedMessage.timestamp.toISOString(),
         },
       );
 
@@ -670,45 +708,29 @@ export class MessagesService {
   }
 
   /**
-   * Helper: Find message in DB and determine if it's from us (optimized with Promise.all)
+   * Helper: Find message in DB and determine if it's from us
    */
   private async findMessageAndDetermineOrigin(
     messageId: string,
     platformId: string,
   ): Promise<{ chatId: string; fromMe: boolean }> {
-    // Optimize: Query both tables in parallel
-    const [receivedMessage, sentMessage] = await Promise.all([
-      this.prisma.receivedMessage.findFirst({
-        where: {
-          providerMessageId: messageId,
-          platformId: platformId,
-        },
-      }),
-      this.prisma.sentMessage.findFirst({
-        where: {
-          providerMessageId: messageId,
-          platformId: platformId,
-        },
-      }),
-    ]);
+    const message = await this.prisma.message.findFirst({
+      where: {
+        providerMessageId: messageId,
+        platformId: platformId,
+      },
+    });
 
-    if (receivedMessage) {
-      return {
-        chatId: receivedMessage.providerChatId,
-        fromMe: false,
-      };
+    if (!message) {
+      throw new NotFoundException(
+        `Message ${messageId} not found on platform ${platformId}`,
+      );
     }
 
-    if (sentMessage) {
-      return {
-        chatId: sentMessage.targetChatId,
-        fromMe: true,
-      };
-    }
-
-    throw new NotFoundException(
-      `Message ${messageId} not found on platform ${platformId}`,
-    );
+    return {
+      chatId: message.providerChatId,
+      fromMe: message.direction === MessageDirection.sent,
+    };
   }
 
   private async getProject(projectId: string) {

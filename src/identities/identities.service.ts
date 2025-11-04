@@ -538,15 +538,16 @@ export class IdentitiesService {
     }
 
     // Get messages from all aliases (dynamic resolution)
-    const messages = await this.prisma.receivedMessage.findMany({
+    const messages = await this.prisma.message.findMany({
       where: {
         projectId: project.id,
+        direction: 'received',
         OR: identity.aliases.map((alias) => ({
           platformId: alias.platformId,
           providerUserId: alias.providerUserId,
         })),
       },
-      orderBy: { receivedAt: 'desc' },
+      orderBy: { timestamp: 'desc' },
     });
 
     return messages;
@@ -594,7 +595,7 @@ export class IdentitiesService {
           providerUserId: alias.providerUserId,
         })),
       },
-      orderBy: { receivedAt: 'desc' },
+      orderBy: { timestamp: 'desc' },
     });
 
     return reactions;

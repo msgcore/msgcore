@@ -422,9 +422,12 @@ export class AnalysisRunService {
       where.AND = andConditions;
     }
 
-    return this.prisma.receivedMessage.findMany({
-      where,
-      orderBy: { receivedAt: 'asc' },
+    return this.prisma.message.findMany({
+      where: {
+        ...where,
+        direction: 'received',
+      },
+      orderBy: { timestamp: 'asc' },
       take: 10000, // Increased limit since we're filtering better
     });
   }

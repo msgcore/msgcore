@@ -2,6 +2,7 @@ import { Injectable, NotFoundException, Logger } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { QueryMessagesDto } from './dto/query-messages.dto';
 import { SecurityUtil, AuthContext } from '../common/utils/security.util';
+import { MessageDirection, MessageSource, MessageStatus } from '@prisma/client';
 
 /**
  * Identity information returned from identity resolution
@@ -157,58 +158,36 @@ export class MessagesService {
       'message retrieval',
     );
 
-    // Build where clause for received messages
-    const receivedWhere: any = {
-      projectId: project.id,
-    };
-
-    // Build where clause for sent messages
-    const sentWhere: any = {
+    // Build where clause for unified message table
+    const where: any = {
       projectId: project.id,
     };
 
     if (query.platformId) {
-      receivedWhere.platformId = query.platformId;
-      sentWhere.platformId = query.platformId;
+      where.platformId = query.platformId;
     }
 
     if (query.chatId) {
-      receivedWhere.providerChatId = query.chatId;
-      sentWhere.targetChatId = query.chatId;
+      where.providerChatId = query.chatId;
     }
 
     if (query.userId) {
-      receivedWhere.providerUserId = query.userId;
-      sentWhere.targetUserId = query.userId;
+      where.providerUserId = query.userId;
     }
 
     if (query.startDate || query.endDate) {
-      receivedWhere.receivedAt = {};
-      sentWhere.OR = [];
+      where.timestamp = {};
       if (query.startDate) {
-        receivedWhere.receivedAt.gte = new Date(query.startDate);
-        sentWhere.OR.push(
-          { sentAt: { gte: new Date(query.startDate) } },
-          { AND: [{ sentAt: null }, { createdAt: { gte: new Date(query.startDate) } }] },
-        );
+        where.timestamp.gte = new Date(query.startDate);
       }
       if (query.endDate) {
-        receivedWhere.receivedAt.lte = new Date(query.endDate);
-        sentWhere.OR.push(
-          { sentAt: { lte: new Date(query.endDate) } },
-          { AND: [{ sentAt: null }, { createdAt: { lte: new Date(query.endDate) } }] },
-        );
-      }
-      // If we have both filters, combine them properly
-      if (!sentWhere.OR.length) {
-        delete sentWhere.OR;
+        where.timestamp.lte = new Date(query.endDate);
       }
     }
 
-    // Build select clause for received messages
-    const receivedSelect = {
+    // Build select clause
+    const select = {
       id: true,
-      platform: true,
       platformId: true,
       providerMessageId: true,
       providerChatId: true,
@@ -216,97 +195,45 @@ export class MessagesService {
       userDisplay: true,
       messageText: true,
       messageType: true,
-      receivedAt: true,
+      messageContent: true,
+      timestamp: true,
+      direction: true,
+      status: true,
+      errorMessage: true,
       attachments: true,
       platformConfig: {
         select: {
           name: true,
+          platform: true,
         },
       },
       ...(query.raw === true && { rawData: true }),
     };
 
-    // Build select clause for sent messages
-    const sentSelect = {
-      id: true,
-      platform: true,
-      platformId: true,
-      providerMessageId: true,
-      targetChatId: true,
-      targetUserId: true,
-      targetType: true,
-      messageText: true,
-      messageContent: true,
-      status: true,
-      errorMessage: true,
-      sentAt: true,
-      createdAt: true,
-      platformConfig: {
-        select: {
-          name: true,
-        },
-      },
-    };
-
-    // For efficient pagination, we need to fetch enough records from each table
-    // to ensure we have enough after merging and sorting
-    const fetchLimit = query.offset! + query.limit!;
-
-    // Get both received and sent messages
-    const [receivedMessages, sentMessages, receivedTotal, sentTotal] = await Promise.all([
-      this.prisma.receivedMessage.findMany({
-        where: receivedWhere,
-        select: receivedSelect,
-        orderBy: { receivedAt: query.order },
-        take: fetchLimit,
+    // Get messages from unified table
+    const [messages, total] = await Promise.all([
+      this.prisma.message.findMany({
+        where,
+        select,
+        orderBy: { timestamp: query.order },
+        take: query.limit,
+        skip: query.offset,
       }),
-      this.prisma.sentMessage.findMany({
-        where: sentWhere,
-        select: sentSelect,
-        orderBy: [
-          { sentAt: query.order },
-          { createdAt: query.order },
-        ],
-        take: fetchLimit,
-      }),
-      this.prisma.receivedMessage.count({ where: receivedWhere }),
-      this.prisma.sentMessage.count({ where: sentWhere }),
+      this.prisma.message.count({ where }),
     ]);
 
-    // Transform received messages to unified format
-    const unifiedReceived = receivedMessages.map((msg) => ({
+    // Transform messages to include backward-compatible fields
+    const transformedMessages = messages.map((msg) => ({
       ...msg,
+      platform: msg.platformConfig?.platform,
       platformName: msg.platformConfig?.name,
-      direction: 'received' as const,
-      timestamp: msg.receivedAt,
       chatId: msg.providerChatId,
       userId: msg.providerUserId,
     }));
 
-    // Transform sent messages to unified format
-    const unifiedSent = sentMessages.map((msg) => ({
-      ...msg,
-      platformName: msg.platformConfig?.name,
-      direction: 'sent' as const,
-      timestamp: msg.sentAt || msg.createdAt,
-      chatId: msg.targetChatId,
-      userId: msg.targetUserId,
-    }));
-
-    // Merge and sort all messages
-    const allMessages = [...unifiedReceived, ...unifiedSent].sort((a, b) => {
-      const timeA = a.timestamp.getTime();
-      const timeB = b.timestamp.getTime();
-      return query.order === 'asc' ? timeA - timeB : timeB - timeA;
-    });
-
-    // Apply pagination after sorting
-    const total = receivedTotal + sentTotal;
-    const messages = allMessages.slice(query.offset, query.offset! + query.limit!);
-
     // Resolve identities for message users (senders for received, recipients for sent)
-    if (messages.length > 0) {
-      const usersToResolve = messages
+    if (transformedMessages.length > 0) {
+      const usersToResolve = transformedMessages
         .filter((m) => m.userId) // Filter out messages without userId
         .map((m) => ({
           platformId: m.platformId,
@@ -319,7 +246,7 @@ export class MessagesService {
       );
 
       // Attach identity to each message
-      messages.forEach((message) => {
+      transformedMessages.forEach((message) => {
         if (message.userId) {
           const userKey = `${encodeURIComponent(message.platformId)}:${encodeURIComponent(message.userId)}`;
           (message as any).identity = identityMap.get(userKey) || null;
@@ -330,13 +257,31 @@ export class MessagesService {
     }
 
     // If reactions requested, fetch them for received messages only
-    if (query.reactions && messages.length > 0) {
-      const receivedMessagesOnly = messages.filter((m) => m.direction === 'received');
+    if (query.reactions && transformedMessages.length > 0) {
+      const receivedMessagesOnly = transformedMessages.filter(
+        (m) => m.direction === MessageDirection.received,
+      );
 
       if (receivedMessagesOnly.length > 0) {
         const messageIds = receivedMessagesOnly
           .map((m) => m.providerMessageId)
-          .filter((id) => id); // Filter out null/undefined
+          .filter((id): id is string => id !== null && id !== undefined); // Filter out null/undefined
+
+        if (messageIds.length === 0) {
+          // No messages with provider IDs, skip reactions
+          transformedMessages.forEach((message) => {
+            (message as any).reactions = {};
+          });
+          return {
+            messages: transformedMessages,
+            pagination: {
+              total,
+              limit: query.limit!,
+              offset: query.offset!,
+              hasMore: query.offset! + query.limit! < total,
+            },
+          };
+        }
 
         // Get all reactions (both added and removed) to determine current state
         const allReactions = await this.prisma.receivedReaction.findMany({
@@ -345,78 +290,78 @@ export class MessagesService {
             platformId: { in: receivedMessagesOnly.map((m) => m.platformId) },
             providerMessageId: { in: messageIds },
           },
-        select: {
-          platformId: true,
-          providerMessageId: true,
-          providerUserId: true,
-          userDisplay: true,
-          emoji: true,
-          reactionType: true,
-          receivedAt: true,
-        },
-        orderBy: { receivedAt: 'desc' },
-      });
+          select: {
+            platformId: true,
+            providerMessageId: true,
+            providerUserId: true,
+            userDisplay: true,
+            emoji: true,
+            reactionType: true,
+            timestamp: true,
+          },
+          orderBy: { timestamp: 'desc' },
+        });
 
-      // Filter to only show reactions where the latest event is 'added'
-      const reactionKey = (r: any) =>
-        `${r.providerMessageId}:${r.providerUserId}:${r.emoji}`;
-      const latestReactions = new Map<string, (typeof allReactions)[0]>();
+        // Filter to only show reactions where the latest event is 'added'
+        const reactionKey = (r: any) =>
+          `${r.providerMessageId}:${r.providerUserId}:${r.emoji}`;
+        const latestReactions = new Map<string, (typeof allReactions)[0]>();
 
-      allReactions.forEach((reaction) => {
-        const key = reactionKey(reaction);
-        if (!latestReactions.has(key)) {
-          latestReactions.set(key, reaction);
-        }
-      });
-
-      // Only include reactions where latest state is 'added'
-      const reactions = Array.from(latestReactions.values()).filter(
-        (r) => r.reactionType === 'added',
-      );
-
-      // Batch resolve identities for all unique reaction users
-      const reactionIdentityMap = await this.batchResolveIdentities(
-        project.id,
-        reactions.map((r) => ({
-          platformId: r.platformId,
-          providerUserId: r.providerUserId,
-        })),
-      );
-
-      // Group reactions by message ID, then by emoji
-      const reactionsByMessage = reactions.reduce(
-        (acc, reaction) => {
-          if (!acc[reaction.providerMessageId]) {
-            acc[reaction.providerMessageId] = {};
+        allReactions.forEach((reaction) => {
+          const key = reactionKey(reaction);
+          if (!latestReactions.has(key)) {
+            latestReactions.set(key, reaction);
           }
-          if (!acc[reaction.providerMessageId][reaction.emoji]) {
-            acc[reaction.providerMessageId][reaction.emoji] = [];
-          }
-          // Resolve identity for reaction user
-          const userKey = `${encodeURIComponent(reaction.platformId)}:${encodeURIComponent(reaction.providerUserId)}`;
-          const identity = reactionIdentityMap.get(userKey) || null;
-          // Store user with identity info
-          acc[reaction.providerMessageId][reaction.emoji].push({
-            id: reaction.providerUserId,
-            name: reaction.userDisplay || reaction.providerUserId,
-            identity,
-          });
-          return acc;
-        },
-        {} as Record<string, Record<string, UserWithIdentity[]>>,
-      );
+        });
 
-      // Attach reactions to messages in clean format: { "👍": [{ id: "123", name: "John", identity: {...} }], "❤️": [...] }
-      messages.forEach((message) => {
-        (message as any).reactions = message.providerMessageId
-          ? reactionsByMessage[message.providerMessageId] || {}
-          : {};
-      });
+        // Only include reactions where latest state is 'added'
+        const reactions = Array.from(latestReactions.values()).filter(
+          (r) => r.reactionType === 'added',
+        );
+
+        // Batch resolve identities for all unique reaction users
+        const reactionIdentityMap = await this.batchResolveIdentities(
+          project.id,
+          reactions.map((r) => ({
+            platformId: r.platformId,
+            providerUserId: r.providerUserId,
+          })),
+        );
+
+        // Group reactions by message ID, then by emoji
+        const reactionsByMessage = reactions.reduce(
+          (acc, reaction) => {
+            if (!acc[reaction.providerMessageId]) {
+              acc[reaction.providerMessageId] = {};
+            }
+            if (!acc[reaction.providerMessageId][reaction.emoji]) {
+              acc[reaction.providerMessageId][reaction.emoji] = [];
+            }
+            // Resolve identity for reaction user
+            const userKey = `${encodeURIComponent(reaction.platformId)}:${encodeURIComponent(reaction.providerUserId)}`;
+            const identity = reactionIdentityMap.get(userKey) || null;
+            // Store user with identity info
+            acc[reaction.providerMessageId][reaction.emoji].push({
+              id: reaction.providerUserId,
+              name: reaction.userDisplay || reaction.providerUserId,
+              identity,
+            });
+            return acc;
+          },
+          {} as Record<string, Record<string, UserWithIdentity[]>>,
+        );
+
+        // Attach reactions to messages in clean format: { "👍": [{ id: "123", name: "John", identity: {...} }], "❤️": [...] }
+        transformedMessages.forEach((message) => {
+          (message as any).reactions = message.providerMessageId
+            ? reactionsByMessage[message.providerMessageId] || {}
+            : {};
+        });
       }
     }
 
     return {
-      messages,
+      messages: transformedMessages,
       pagination: {
         total,
         limit: query.limit!,
@@ -435,7 +380,7 @@ export class MessagesService {
       throw new NotFoundException('Project not found');
     }
 
-    const message = await this.prisma.receivedMessage.findUnique({
+    const message = await this.prisma.message.findUnique({
       where: {
         id: messageId,
       },
@@ -456,6 +401,15 @@ export class MessagesService {
       throw new NotFoundException('Message not found');
     }
 
+    // Initialize empty reactions if no provider message ID
+    if (!message.providerMessageId) {
+      return {
+        ...message,
+        identity: null,
+        reactions: {},
+      };
+    }
+
     // Fetch all reactions (both added and removed) to determine current state
     const allReactions = await this.prisma.receivedReaction.findMany({
       where: {
@@ -469,9 +423,9 @@ export class MessagesService {
         userDisplay: true,
         emoji: true,
         reactionType: true,
-        receivedAt: true,
+        timestamp: true,
       },
-      orderBy: { receivedAt: 'desc' },
+      orderBy: { timestamp: 'desc' },
     });
 
     // Filter to only show reactions where the latest event is 'added'
@@ -541,69 +495,102 @@ export class MessagesService {
       throw new NotFoundException('Project not found');
     }
 
-    const [totalMessages, platformStats, recentMessages] = await Promise.all([
-      // Total message count
-      this.prisma.receivedMessage.count({
-        where: { projectId: project.id },
-      }),
-      // Messages per platform
-      this.prisma.receivedMessage.groupBy({
-        by: ['platform'],
-        where: { projectId: project.id },
-        _count: true,
-      }),
-      // Recent messages (last 24 hours)
-      this.prisma.receivedMessage.count({
+    // Get received message stats
+    const [receivedCount, receivedPlatformStats, recentReceivedMessages] = await Promise.all([
+      // Total received message count
+      this.prisma.message.count({
         where: {
           projectId: project.id,
-          receivedAt: {
+          direction: MessageDirection.received,
+        },
+      }),
+      // Received messages per platform
+      this.prisma.message.groupBy({
+        by: ['platformId'],
+        where: {
+          projectId: project.id,
+          direction: MessageDirection.received,
+        },
+        _count: true,
+      }),
+      // Recent received messages (last 24 hours)
+      this.prisma.message.count({
+        where: {
+          projectId: project.id,
+          direction: MessageDirection.received,
+          timestamp: {
             gte: new Date(Date.now() - 24 * 60 * 60 * 1000),
           },
         },
       }),
     ]);
 
-    // Get unique users and chats
+    // Get unique users and chats from received messages
     const [uniqueUsers, uniqueChats] = await Promise.all([
-      this.prisma.receivedMessage.findMany({
-        where: { projectId: project.id },
+      this.prisma.message.findMany({
+        where: {
+          projectId: project.id,
+          direction: MessageDirection.received,
+        },
         select: { providerUserId: true },
         distinct: ['providerUserId'],
       }),
-      this.prisma.receivedMessage.findMany({
-        where: { projectId: project.id },
+      this.prisma.message.findMany({
+        where: {
+          projectId: project.id,
+          direction: MessageDirection.received,
+        },
         select: { providerChatId: true },
         distinct: ['providerChatId'],
       }),
     ]);
 
+    // Get platform info for stats
+    const platforms = await this.prisma.projectPlatform.findMany({
+      where: {
+        id: { in: receivedPlatformStats.map((s) => s.platformId) },
+      },
+      select: {
+        id: true,
+        platform: true,
+      },
+    });
+
+    const platformMap = new Map(platforms.map((p) => [p.id, p.platform]));
+
     // Get sent message stats
-    const [totalSentMessages, sentPlatformStats] = await Promise.all([
-      this.prisma.sentMessage.count({
-        where: { projectId: project.id },
+    const [sentCount, sentPlatformStats] = await Promise.all([
+      this.prisma.message.count({
+        where: {
+          projectId: project.id,
+          direction: MessageDirection.sent,
+        },
       }),
-      this.prisma.sentMessage.groupBy({
-        by: ['platform', 'status'],
-        where: { projectId: project.id },
+      this.prisma.message.groupBy({
+        by: ['platformId', 'status'],
+        where: {
+          projectId: project.id,
+          direction: MessageDirection.sent,
+        },
         _count: true,
       }),
     ]);
 
     return {
       received: {
-        totalMessages,
-        recentMessages,
+        totalMessages: receivedCount,
+        recentMessages: recentReceivedMessages,
         uniqueUsers: uniqueUsers.length,
         uniqueChats: uniqueChats.length,
-        byPlatform: platformStats.map((stat) => ({
-          platform: stat.platform,
+        byPlatform: receivedPlatformStats.map((stat) => ({
+          platform: platformMap.get(stat.platformId) || 'unknown',
           count: stat._count,
         })),
       },
       sent: {
-        totalMessages: totalSentMessages,
+        totalMessages: sentCount,
         byPlatformAndStatus: sentPlatformStats.map((stat) => ({
-          platform: stat.platform,
+          platform: platformMap.get(stat.platformId) || 'unknown',
           status: stat.status,
           count: stat._count,
         })),
@@ -623,10 +610,10 @@ export class MessagesService {
     const cutoffDate = new Date();
     cutoffDate.setDate(cutoffDate.getDate() - daysBefore);
 
-    const deleted = await this.prisma.receivedMessage.deleteMany({
+    const deleted = await this.prisma.message.deleteMany({
       where: {
         projectId: project.id,
-        receivedAt: {
+        timestamp: {
           lt: cutoffDate,
         },
       },
@@ -653,10 +640,22 @@ export class MessagesService {
 
     const where: any = {
       projectId: project.id,
+      direction: MessageDirection.sent,
     };
 
     if (query.platform) {
-      where.platform = query.platform;
+      // Need to look up platform by name
+      const platformConfig = await this.prisma.projectPlatform.findFirst({
+        where: {
+          projectId: project.id,
+          platform: query.platform,
+        },
+        select: { id: true },
+      });
+
+      if (platformConfig) {
+        where.platformId = platformConfig.id;
+      }
     }
 
     if (query.status) {
@@ -667,35 +666,47 @@ export class MessagesService {
     const offset = parseInt(query.offset) || 0;
 
     const [messages, total] = await Promise.all([
-      this.prisma.sentMessage.findMany({
+      this.prisma.message.findMany({
         where,
-        orderBy: { createdAt: 'desc' },
+        orderBy: { timestamp: 'desc' },
         take: limit,
         skip: offset,
         select: {
           id: true,
           platformId: true,
-          platform: true,
           jobId: true,
           providerMessageId: true,
-          targetChatId: true,
-          targetUserId: true,
-          targetType: true,
+          providerChatId: true,
+          providerUserId: true,
           messageText: true,
           messageContent: true,
           status: true,
           errorMessage: true,
-          sentAt: true,
-          createdAt: true,
+          timestamp: true,
+          platformConfig: {
+            select: {
+              platform: true,
+            },
+          },
         },
       }),
-      this.prisma.sentMessage.count({ where }),
+      this.prisma.message.count({ where }),
     ]);
 
+    // Transform to include backward-compatible fields
+    const transformedMessages = messages.map((msg) => ({
+      ...msg,
+      platform: msg.platformConfig?.platform,
+      targetChatId: msg.providerChatId,
+      targetUserId: msg.providerUserId,
+      sentAt: msg.timestamp,
+      createdAt: msg.timestamp,
+    }));
+
     // Resolve identities for target users
-    if (messages.length > 0) {
-      const targetUsers = messages
-        .filter((m) => m.targetType === 'user' && m.targetUserId)
+    if (transformedMessages.length > 0) {
+      const targetUsers = transformedMessages
+        .filter((m) => m.targetUserId)
         .map((m) => ({
           platformId: m.platformId,
           providerUserId: m.targetUserId!,
@@ -707,8 +718,8 @@ export class MessagesService {
       );
 
       // Attach identity to each message
-      messages.forEach((message) => {
-        if (message.targetType === 'user' && message.targetUserId) {
+      transformedMessages.forEach((message) => {
+        if (message.targetUserId) {
           const userKey = `${encodeURIComponent(message.platformId)}:${encodeURIComponent(message.targetUserId)}`;
           (message as any).targetIdentity = identityMap.get(userKey) || null;
         } else {
@@ -718,7 +729,7 @@ export class MessagesService {
     }
 
     return {
-      messages,
+      messages: transformedMessages,
       pagination: {
         total,
         limit,
