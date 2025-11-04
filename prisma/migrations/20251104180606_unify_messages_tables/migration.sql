@@ -183,12 +183,13 @@ CREATE INDEX "received_reactions_timestamp_idx" ON "received_reactions"("timesta
 -- Add FK from received_reactions to messages
 ALTER TABLE "received_reactions" ADD CONSTRAINT "received_reactions_message_id_fkey" FOREIGN KEY ("message_id") REFERENCES "messages"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
--- Drop FK from message_attachments to old table
-ALTER TABLE "message_attachments" DROP CONSTRAINT IF EXISTS "message_attachments_message_id_fkey";
+-- Drop old tables (CASCADE will drop the FK constraint from message_attachments)
+DROP TABLE IF EXISTS "received_messages" CASCADE;
+DROP TABLE IF EXISTS "sent_messages" CASCADE;
+
+-- Delete orphaned attachments (messages that weren't migrated, probably had chatId=NULL)
+DELETE FROM "message_attachments"
+WHERE message_id NOT IN (SELECT id FROM messages);
 
 -- Add FK from message_attachments to new messages table
 ALTER TABLE "message_attachments" ADD CONSTRAINT "message_attachments_message_id_fkey" FOREIGN KEY ("message_id") REFERENCES "messages"("id") ON DELETE CASCADE ON UPDATE CASCADE;
-
--- Drop old tables
-DROP TABLE IF EXISTS "received_messages" CASCADE;
-DROP TABLE IF EXISTS "sent_messages" CASCADE;
