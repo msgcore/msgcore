@@ -15,13 +15,14 @@ npm install @msgcore/sdk
 ```typescript
 import { MsgCore } from '@msgcore/sdk';
 
-const gk = new MsgCore({
+const msc = new MsgCore({
   apiUrl: 'https://api.msgcore.dev',
   apiKey: 'msc_live_your_api_key_here',
+  defaultProject: 'my-project', // optional: sets default project for all operations
 });
 
 // Send a message
-const result = await gk.messages.send({
+const result = await msc.messages.send({
   targets: [{ platformId: 'platform-id', type: 'user', id: '123' }],
   content: { text: 'Hello from MsgCore!' },
 });
@@ -44,7 +45,7 @@ const result = await gk.messages.send({
 ### API Key (Recommended)
 
 ```typescript
-const gk = new MsgCore({
+const msc = new MsgCore({
   apiUrl: 'https://api.msgcore.dev',
   apiKey: 'msc_live_your_api_key_here',
   defaultProject: 'my-project', // optional
@@ -54,9 +55,10 @@ const gk = new MsgCore({
 ### JWT Token
 
 ```typescript
-const gk = new MsgCore({
+const msc = new MsgCore({
   apiUrl: 'https://api.msgcore.dev',
   jwtToken: 'your-jwt-token',
+  defaultProject: 'my-project', // optional
 });
 ```
 
@@ -66,7 +68,7 @@ const gk = new MsgCore({
 import { MsgCoreError, AuthenticationError, RateLimitError } from '@msgcore/sdk';
 
 try {
-  await gk.messages.send({ ... });
+  await msc.messages.send({ ... });
 } catch (error) {
   if (error instanceof AuthenticationError) {
     console.error('Invalid credentials');

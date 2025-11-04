@@ -762,32 +762,32 @@ ${this.generateSDKExample(contract)}
 
     // No params, no input
     if (pathParams.length === 0 && !hasInput) {
-      return `await gk.${category}.${methodName}();`;
+      return `await msc.${category}.${methodName}();`;
     }
 
     // Only project param, no other params, no input
     if (hasProject && otherParams.length === 0 && !hasInput) {
-      return `await gk.${category}.${methodName}();`;
+      return `await msc.${category}.${methodName}();`;
     }
 
     // Only project param, no other params, with input
     if (hasProject && otherParams.length === 0 && hasInput) {
-      return `await gk.${category}.${methodName}(data);`;
+      return `await msc.${category}.${methodName}(data);`;
     }
 
     // Other params (not project), no input
     if (otherParams.length > 0 && !hasInput) {
       const paramList = otherParams.map((p) => `'${p}'`).join(', ');
-      return `await gk.${category}.${methodName}(${paramList});`;
+      return `await msc.${category}.${methodName}(${paramList});`;
     }
 
     // Other params (not project), with input
     if (otherParams.length > 0 && hasInput) {
       const paramList = otherParams.map((p) => `'${p}'`).join(', ');
-      return `await gk.${category}.${methodName}(${paramList}, data);`;
+      return `await msc.${category}.${methodName}(${paramList}, data);`;
     }
 
-    return `await gk.${category}.${methodName}(data);`;
+    return `await msc.${category}.${methodName}(data);`;
   }
 }
 
