@@ -6,12 +6,14 @@ import {
   Search,
   RefreshCw,
   Loader2,
+  Send,
 } from 'lucide-react';
 import { Alert } from '../components/ui/Alert';
 import { useProjectContext } from '../contexts/ProjectContext';
 import { useChats, useSyncChatHistory, useSyncAllChats, useChatMessages } from '../hooks/useChats';
 import { usePlatforms } from '../hooks/usePlatforms';
 import { useIdentities } from '../hooks/useIdentities';
+import { useSendMessage } from '../hooks/useMessages';
 import { useToast } from '../contexts/ToastContext';
 import { SyncHistoryModal } from '../components/chats/SyncHistoryModal';
 
@@ -31,6 +33,7 @@ export function Chats() {
   const [allMessages, setAllMessages] = useState<any[]>([]);
   const [hasMore, setHasMore] = useState(true);
   const [isInitialLoad, setIsInitialLoad] = useState(true);
+  const [newMessage, setNewMessage] = useState('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
 
@@ -55,6 +58,7 @@ export function Chats() {
 
   const syncHistoryMutation = useSyncChatHistory(selectedProjectId || undefined);
   const syncAllChatsMutation = useSyncAllChats(selectedProjectId || undefined);
+  const sendMessageMutation = useSendMessage(selectedProjectId || undefined);
 
   const chats = chatsData?.chats || [];
 
@@ -229,6 +233,36 @@ export function Chats() {
     } catch (error) {
       toast.error(`Failed to sync: ${error instanceof Error ? error.message : 'Unknown error'}`);
       throw error;
+    }
+  };
+
+  // Handle send message
+  const handleSendMessage = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (!newMessage.trim() || !selectedChat) return;
+
+    try {
+      await sendMessageMutation.mutateAsync({
+        target: {
+          type: 'chat',
+          platformId: selectedChat.platform.id,
+          chatId: selectedChat.providerChatId,
+        },
+        content: {
+          text: newMessage.trim(),
+        },
+      });
+
+      setNewMessage('');
+      toast.success('Message sent successfully');
+
+      // Refetch messages after a short delay to allow backend processing
+      setTimeout(() => {
+        refetchMessages();
+      }, 1000);
+    } catch (error) {
+      toast.error(`Failed to send message: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   };
 
@@ -606,6 +640,31 @@ export function Chats() {
                   )}
                 </div>
               )}
+
+              {/* Message Input */}
+              <div className="border-t border-gray-200 bg-white p-4">
+                <form onSubmit={handleSendMessage} className="flex items-center gap-3">
+                  <input
+                    type="text"
+                    value={newMessage}
+                    onChange={(e) => setNewMessage(e.target.value)}
+                    placeholder="Type a message..."
+                    className="flex-1 px-4 py-3 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                    disabled={sendMessageMutation.isPending}
+                  />
+                  <button
+                    type="submit"
+                    disabled={!newMessage.trim() || sendMessageMutation.isPending}
+                    className="bg-green-500 hover:bg-green-600 text-white rounded-full p-3 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center"
+                  >
+                    {sendMessageMutation.isPending ? (
+                      <Loader2 className="h-5 w-5 animate-spin" />
+                    ) : (
+                      <Send className="h-5 w-5" />
+                    )}
+                  </button>
+                </form>
+              </div>
             </div>
           </>
         ) : (
