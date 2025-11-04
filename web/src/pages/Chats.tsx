@@ -414,7 +414,7 @@ export function Chats() {
                       new Date(prevTimestamp).toDateString();
 
                     // Determine if message is from user (sent) or received
-                    const isSentByUser = message.type === 'sent' || message.fromMe || message.source === 'phone';
+                    const isSentByUser = message.direction === 'sent';
 
                     return (
                       <div key={message.id}>

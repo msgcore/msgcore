@@ -1870,7 +1870,7 @@ export class WhatsAppProvider implements PlatformProvider, PlatformAdapter {
           }
 
           // Extract message timestamp
-          let receivedAt: Date | undefined;
+          let timestamp: Date | undefined;
           if (msg.messageTimestamp) {
             let timestampSeconds: number | undefined;
             if (typeof msg.messageTimestamp === 'number') {
@@ -1880,7 +1880,7 @@ export class WhatsAppProvider implements PlatformProvider, PlatformAdapter {
               timestampSeconds = msg.messageTimestamp.low;
             }
             if (timestampSeconds) {
-              receivedAt = new Date(timestampSeconds * 1000);
+              timestamp = new Date(timestampSeconds * 1000);
             }
           }
 
@@ -1897,7 +1897,7 @@ export class WhatsAppProvider implements PlatformProvider, PlatformAdapter {
             messageText,
             messageType: 'text',
             fromMe: msg.key?.fromMe || false,
-            receivedAt,
+            timestamp,
             attachments:
               normalizedAttachments.length > 0
                 ? normalizedAttachments

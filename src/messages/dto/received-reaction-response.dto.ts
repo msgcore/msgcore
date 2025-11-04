@@ -14,5 +14,5 @@ export class ReceivedReactionResponse {
   emoji: string;
   reactionType: 'added' | 'removed';
   rawData: Record<string, any>;
-  receivedAt: Date;
+  timestamp: Date;
 }

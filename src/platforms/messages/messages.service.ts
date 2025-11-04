@@ -255,7 +255,7 @@ export class MessagesService {
     messageText: string | null;
     messageType: string;
     fromMe?: boolean;
-    receivedAt?: Date;
+    timestamp?: Date;
     rawData: any;
     attachments?: PlatformAttachment[];
     skipIfExists?: boolean;
@@ -328,7 +328,7 @@ export class MessagesService {
           userDisplay: data.userDisplay,
           messageText: data.messageText,
           messageType: data.messageType,
-          timestamp: data.receivedAt || new Date(),
+          timestamp: data.timestamp || new Date(),
           rawData: data.rawData,
           ...(data.attachments && data.attachments.length > 0
             ? {
