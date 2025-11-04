@@ -276,8 +276,8 @@ export class AnalysisRunService {
         // Build conversation context
         const conversationText = chatMessages
           .map((msg, idx) => {
-            const timestamp = new Date(msg.receivedAt).toISOString();
-            const sender = msg.fromMe ? 'Agent' : (msg.userDisplay || 'User');
+            const timestamp = new Date(msg.timestamp).toISOString();
+            const sender = msg.direction === 'sent' && msg.source === 'phone' ? 'Agent' : (msg.userDisplay || 'User');
             return `[${timestamp}] ${sender}: ${msg.messageText || ''}`;
           })
           .join('\n');
@@ -410,7 +410,7 @@ export class AnalysisRunService {
     // Filter by date range if specified
     if (dateRangeStart && dateRangeEnd) {
       andConditions.push({
-        receivedAt: {
+        timestamp: {
           gte: new Date(dateRangeStart),
           lte: new Date(dateRangeEnd),
         },

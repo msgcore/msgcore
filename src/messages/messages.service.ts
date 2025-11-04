@@ -175,6 +175,10 @@ export class MessagesService {
       where.providerUserId = query.userId;
     }
 
+    if (query.direction) {
+      where.direction = query.direction;
+    }
+
     if (query.startDate || query.endDate) {
       where.timestamp = {};
       if (query.startDate) {
@@ -625,117 +629,4 @@ export class MessagesService {
     };
   }
 
-  async getSentMessages(
-    projectId: string,
-    query: any,
-    authContext: AuthContext,
-  ) {
-    // SECURITY: Get project and validate access
-    const project = await SecurityUtil.getProjectWithAccess(
-      this.prisma,
-      projectId,
-      authContext,
-      'sent message retrieval',
-    );
-
-    const where: any = {
-      projectId: project.id,
-      direction: MessageDirection.sent,
-    };
-
-    if (query.platform) {
-      // Need to look up platform by name
-      const platformConfig = await this.prisma.projectPlatform.findFirst({
-        where: {
-          projectId: project.id,
-          platform: query.platform,
-        },
-        select: { id: true },
-      });
-
-      if (platformConfig) {
-        where.platformId = platformConfig.id;
-      }
-    }
-
-    if (query.status) {
-      where.status = query.status;
-    }
-
-    const limit = parseInt(query.limit) || 50;
-    const offset = parseInt(query.offset) || 0;
-
-    const [messages, total] = await Promise.all([
-      this.prisma.message.findMany({
-        where,
-        orderBy: { timestamp: 'desc' },
-        take: limit,
-        skip: offset,
-        select: {
-          id: true,
-          platformId: true,
-          jobId: true,
-          providerMessageId: true,
-          providerChatId: true,
-          providerUserId: true,
-          messageText: true,
-          messageContent: true,
-          status: true,
-          errorMessage: true,
-          timestamp: true,
-          platformConfig: {
-            select: {
-              platform: true,
-            },
-          },
-        },
-      }),
-      this.prisma.message.count({ where }),
-    ]);
-
-    // Transform to include backward-compatible fields
-    const transformedMessages = messages.map((msg) => ({
-      ...msg,
-      platform: msg.platformConfig?.platform,
-      targetChatId: msg.providerChatId,
-      targetUserId: msg.providerUserId,
-      sentAt: msg.timestamp,
-      createdAt: msg.timestamp,
-    }));
-
-    // Resolve identities for target users
-    if (transformedMessages.length > 0) {
-      const targetUsers = transformedMessages
-        .filter((m) => m.targetUserId)
-        .map((m) => ({
-          platformId: m.platformId,
-          providerUserId: m.targetUserId!,
-        }));
-
-      const identityMap = await this.batchResolveIdentities(
-        project.id,
-        targetUsers,
-      );
-
-      // Attach identity to each message
-      transformedMessages.forEach((message) => {
-        if (message.targetUserId) {
-          const userKey = `${encodeURIComponent(message.platformId)}:${encodeURIComponent(message.targetUserId)}`;
-          (message as any).targetIdentity = identityMap.get(userKey) || null;
-        } else {
-          (message as any).targetIdentity = null;
-        }
-      });
-    }
-
-    return {
-      messages: transformedMessages,
-      pagination: {
-        total,
-        limit,
-        offset,
-        hasMore: offset + limit < total,
-      },
-    };
-  }
 }

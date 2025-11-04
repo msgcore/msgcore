@@ -3,13 +3,13 @@ export class SentMessageResponse {
   platform: string;
   jobId: string | null;
   providerMessageId: string | null;
-  targetChatId: string;
-  targetUserId: string | null;
-  targetType: string;
+  providerChatId: string; // Unified field (was targetChatId)
+  providerUserId: string | null; // Unified field (was targetUserId)
   messageText: string | null;
   messageContent: Record<string, unknown> | null;
   status: string;
   errorMessage: string | null;
-  sentAt: Date | null;
-  createdAt: Date;
+  timestamp: Date; // Unified field (was sentAt/createdAt)
+  direction: string; // Always 'sent'
+  source: string; // 'api' | 'phone'
 }

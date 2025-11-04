@@ -7,7 +7,9 @@ export class ReceivedMessageResponse {
   userDisplay: string | null;
   messageText: string | null;
   messageType: string;
-  receivedAt: Date;
+  timestamp: Date; // Unified field (was receivedAt)
+  direction: string; // 'sent' | 'received'
+  source: string; // 'api' | 'phone' | 'webhook'
   rawData: any;
   platformConfig?: {
     id: string;

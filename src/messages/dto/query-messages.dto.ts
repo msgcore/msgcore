@@ -61,4 +61,8 @@ export class QueryMessagesDto {
   @Type(() => Boolean)
   @IsBoolean()
   reactions?: boolean = false;
+
+  @IsOptional()
+  @IsEnum(['sent', 'received'])
+  direction?: 'sent' | 'received';
 }

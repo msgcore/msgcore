@@ -33,7 +33,7 @@ export class MessagesController {
   @RequireScopes(ApiScope.MESSAGES_READ)
   @SdkContract({
     command: 'messages list',
-    description: 'List received messages for a project',
+    description: 'List messages for a project (sent and received)',
     category: 'Messages',
     requiredScopes: [ApiScope.MESSAGES_READ],
     inputType: 'QueryMessagesDto',
@@ -50,6 +50,11 @@ export class MessagesController {
       userId: {
         description: 'Filter by user ID',
         type: 'string',
+      },
+      direction: {
+        description: 'Filter by message direction',
+        type: 'string',
+        choices: ['sent', 'received'],
       },
       startDate: {
         description: 'Filter messages after this date (ISO 8601)',
@@ -88,8 +93,16 @@ export class MessagesController {
     },
     examples: [
       {
-        description: 'Get latest 50 messages',
+        description: 'Get all messages (sent + received)',
         command: 'msgcore messages list',
+      },
+      {
+        description: 'Get only received messages',
+        command: 'msgcore messages list --direction received',
+      },
+      {
+        description: 'Get only sent messages',
+        command: 'msgcore messages list --direction sent',
       },
       {
         description: 'Get messages from specific platform instance',
@@ -137,50 +150,6 @@ export class MessagesController {
     return this.messagesService.getMessageStats(project);
   }
 
-  @Get('sent')
-  @RequireScopes(ApiScope.MESSAGES_READ)
-  @SdkContract({
-    command: 'messages sent',
-    description: 'List sent messages for a project',
-    category: 'Messages',
-    requiredScopes: [ApiScope.MESSAGES_READ],
-    outputType: 'SentMessageListResponse',
-    options: {
-      platform: { description: 'Filter by platform', type: 'string' },
-      status: {
-        description: 'Filter by status (pending, sent, failed)',
-        type: 'string',
-        choices: ['pending', 'sent', 'failed'],
-      },
-      limit: {
-        description: 'Number of messages to return',
-        type: 'number',
-        default: 50,
-      },
-      offset: {
-        description: 'Number of messages to skip',
-        type: 'number',
-        default: 0,
-      },
-    },
-    examples: [
-      {
-        description: 'Get sent messages',
-        command: 'msgcore messages sent',
-      },
-      {
-        description: 'Get failed messages',
-        command: 'msgcore messages sent --status failed',
-      },
-    ],
-  })
-  async getSentMessages(
-    @Param('project') project: string,
-    @Query() query: any,
-    @AuthContextParam() authContext: AuthContext,
-  ) {
-    return this.messagesService.getSentMessages(project, query, authContext);
-  }
 
   @Get(':messageId')
   @RequireScopes(ApiScope.MESSAGES_READ)
