@@ -327,9 +327,6 @@ export class WhatsAppBaileysProvider
       const messages: WAMessage[] = m.messages;
 
       for (const msg of messages) {
-        // Skip our own messages
-        if (msg.key.fromMe) continue;
-
         // Skip protocol messages (receipts, etc.) - they don't have message content
         if (!msg.message) {
           this.logger.debug(
