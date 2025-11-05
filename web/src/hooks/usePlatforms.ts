@@ -61,7 +61,7 @@ export function useRegisterWebhook(projectId?: string) {
 export function usePlatformQRCode(platformId: string, projectId?: string) {
   return useQuery({
     queryKey: ['platform-qr', platformId, projectId],
-    queryFn: () => sdk.platforms.getQrCode(platformId, { project: projectId }),
+    queryFn: () => sdk.platforms.qrCode(platformId, { project: projectId }),
     enabled: !!platformId && !!projectId,
   });
 }
