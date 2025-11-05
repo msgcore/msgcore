@@ -312,7 +312,7 @@ export class MessagesService {
       }
 
       // Determine direction and source based on fromMe flag
-      const direction = MessageDirection.received;
+      const direction = data.fromMe ? MessageDirection.sent : MessageDirection.received;
       const source = data.fromMe ? MessageSource.phone : MessageSource.webhook;
 
       const storedMessage = await this.prisma.message.create({

@@ -361,6 +361,7 @@ export class WhatsAppBaileysProvider
             userDisplay: msg.pushName || 'WhatsApp User',
             messageText,
             messageType: 'text',
+            fromMe: msg.key.fromMe || false,
             attachments: normalizedAttachments,
             rawData: { ...msg, platformId },
           });
