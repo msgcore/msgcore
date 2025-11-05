@@ -5,14 +5,13 @@ import {
   IsObject,
   IsArray,
   ValidateNested,
-  IsUUID,
   MinLength,
   MaxLength,
 } from 'class-validator';
 import { Type } from 'class-transformer';
 
 export class IdentityAliasDto {
-  @IsUUID()
+  @IsString()
   platformId: string;
 
   @IsString()

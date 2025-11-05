@@ -1,13 +1,12 @@
 import {
   IsString,
-  IsUUID,
   IsOptional,
   MinLength,
   MaxLength,
 } from 'class-validator';
 
 export class AddAliasDto {
-  @IsUUID()
+  @IsString()
   platformId: string;
 
   @IsString()
