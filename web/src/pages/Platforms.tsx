@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Plus, Settings, Trash2, CheckCircle, XCircle, Loader2, AlertCircle, RefreshCw, Wifi, Radio, Globe, Copy, CheckCheck } from 'lucide-react';
 import { FaWhatsapp, FaDiscord, FaTelegram, FaSlack, FaEnvelope, FaSms } from 'react-icons/fa';
+import { QRCodeSVG } from 'qrcode.react';
 import { Card, CardContent, CardHeader } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
 import { Badge } from '../components/ui/Badge';
@@ -11,7 +12,7 @@ import { Input } from '../components/ui/Input';
 import { formatDateTime } from '../lib/utils';
 import { generateSlug, getSlugValidationError } from '../lib/slug';
 import { useProjectContext } from '../contexts/ProjectContext';
-import { usePlatforms, useDeletePlatform, useConfigurePlatform, useUpdatePlatform, useSupportedPlatforms } from '../hooks/usePlatforms';
+import { usePlatforms, useDeletePlatform, useConfigurePlatform, useUpdatePlatform, useSupportedPlatforms, usePlatformQRCode } from '../hooks/usePlatforms';
 import { useConfirm } from '../hooks/useConfirm';
 import { useToast } from '../contexts/ToastContext';
 
@@ -49,6 +50,15 @@ export function Platforms() {
   });
   const [customIdManuallyEdited, setCustomIdManuallyEdited] = useState(false);
   const [idValidationError, setIdValidationError] = useState<string | null>(null);
+
+  // QR Code polling for WhatsApp platforms
+  const isWhatsAppPlatform = editingPlatform && (editingPlatform.platform === 'whatsapp-evo' || editingPlatform.platform === 'whatsapp-baileys');
+  const { data: qrCodeData } = usePlatformQRCode(
+    editingPlatform?.id || '',
+    selectedProjectId || ''
+  );
+  const qrCode = qrCodeData?.qrCode || null;
+  const connectionState = qrCodeData?.connectionState || 'close';
 
   // Auto-generate ID from name when creating new platform (not editing)
   useEffect(() => {
@@ -89,6 +99,7 @@ export function Platforms() {
     switch (type) {
       case 'whatsapp':
       case 'whatsapp-evo':
+      case 'whatsapp-baileys':
         return <FaWhatsapp className="w-8 h-8 text-green-500" />;
       case 'discord':
         return <FaDiscord className="w-8 h-8 text-indigo-500" />;
@@ -610,6 +621,43 @@ export function Platforms() {
                       </>
                     )}
                   </>
+                )}
+
+                {/* QR Code Section for WhatsApp platforms */}
+                {editingPlatform && (editingPlatform.platform === 'whatsapp-evo' || editingPlatform.platform === 'whatsapp-baileys') && (
+                  <div className="pt-4 border-t border-gray-200">
+                    <h3 className="text-sm font-medium text-gray-900 mb-3">WhatsApp Connection</h3>
+
+                    {connectionState === 'open' ? (
+                      <Alert variant="success" className="mb-3">
+                        <CheckCircle className="w-4 h-4" />
+                        <span>WhatsApp is connected and ready to use</span>
+                      </Alert>
+                    ) : connectionState === 'connecting' ? (
+                      <Alert variant="warning" className="mb-3">
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                        <span>Connecting to WhatsApp...</span>
+                      </Alert>
+                    ) : (
+                      <Alert variant="info" className="mb-3">
+                        <AlertCircle className="w-4 h-4" />
+                        <span>Scan the QR code with WhatsApp to connect</span>
+                      </Alert>
+                    )}
+
+                    {qrCode && connectionState !== 'open' && (
+                      <div className="flex justify-center p-4 bg-white border-2 border-gray-200 rounded-lg">
+                        <QRCodeSVG value={qrCode} size={256} />
+                      </div>
+                    )}
+
+                    {!qrCode && connectionState !== 'open' && (
+                      <div className="flex flex-col items-center justify-center p-8 bg-gray-50 border-2 border-dashed border-gray-300 rounded-lg">
+                        <Loader2 className="w-8 h-8 text-gray-400 animate-spin mb-2" />
+                        <p className="text-sm text-gray-500">Generating QR code...</p>
+                      </div>
+                    )}
+                  </div>
                 )}
 
                 {/* Configuration options */}

@@ -15,6 +15,7 @@ import { CredentialValidationService } from './services/credential-validation.se
 import { TelegramCredentialsValidator } from './validators/telegram-credentials.validator';
 import { DiscordCredentialsValidator } from './validators/discord-credentials.validator';
 import { WhatsAppCredentialsValidator } from './validators/whatsapp-credentials.validator';
+import { WhatsAppBaileysCredentialsValidator } from './validators/whatsapp-baileys-credentials.validator';
 import { EmailCredentialsValidator } from './validators/email-credentials.validator';
 import { PrismaModule } from '../prisma/prisma.module';
 import { WebhooksModule } from '../webhooks/webhooks.module';
@@ -26,6 +27,8 @@ import { MessageQueue } from '../queues/message.queue';
 import { DiscordProvider } from './providers/discord.provider';
 import { TelegramProvider } from './providers/telegram.provider';
 import { WhatsAppProvider } from './providers/whatsapp.provider';
+import { WhatsAppBaileysProvider } from './providers/whatsapp-baileys.provider';
+import { BaileysAuthStateService } from './providers/baileys-auth-state.service';
 import { EmailProvider } from './providers/email.provider';
 
 @Module({
@@ -63,7 +66,9 @@ import { EmailProvider } from './providers/email.provider';
     TelegramCredentialsValidator,
     DiscordCredentialsValidator,
     WhatsAppCredentialsValidator,
+    WhatsAppBaileysCredentialsValidator,
     EmailCredentialsValidator,
+    BaileysAuthStateService,
     MessageQueue,
     {
       provide: EVENT_BUS,
@@ -73,6 +78,7 @@ import { EmailProvider } from './providers/email.provider';
     DiscordProvider,
     TelegramProvider,
     WhatsAppProvider,
+    WhatsAppBaileysProvider,
     EmailProvider,
   ],
   exports: [

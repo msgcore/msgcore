@@ -599,9 +599,12 @@ export class PlatformsService {
     }
 
     const platformType = platform.platform as PlatformType;
-    if (platformType !== PlatformType.WHATSAPP_EVO) {
+    if (
+      platformType !== PlatformType.WHATSAPP_EVO &&
+      platformType !== PlatformType.WHATSAPP_BAILEYS
+    ) {
       throw new BadRequestException(
-        'QR code is only available for WhatsApp Evolution API platforms',
+        'QR code is only available for WhatsApp platforms (Evolution API or Baileys)',
       );
     }
 
@@ -610,9 +613,7 @@ export class PlatformsService {
     }
 
     // Get WhatsApp provider from registry
-    const whatsappProvider = this.platformRegistry.getProvider(
-      PlatformType.WHATSAPP_EVO,
-    );
+    const whatsappProvider = this.platformRegistry.getProvider(platformType);
     if (!whatsappProvider) {
       throw new NotFoundException('WhatsApp provider not available');
     }

@@ -575,3 +575,15 @@ model ExtractedEntity {
   @@index([runId])
   @@map("extracted_entities")
 }
+
+model BaileysAuthState {
+  id            String   @id @default(uuid())
+  connectionKey String   @unique @map("connection_key") // "projectId:platformId"
+  creds         String   // Encrypted auth credentials (JSON)
+  keys          String   // Encrypted signal protocol keys (JSON)
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @updatedAt @map("updated_at")
+
+  @@index([connectionKey])
+  @@map("baileys_auth_states")
+}
