@@ -7,6 +7,7 @@ import { PlatformType } from '../../common/enums/platform-type.enum';
 import { TelegramCredentialsValidator } from '../validators/telegram-credentials.validator';
 import { DiscordCredentialsValidator } from '../validators/discord-credentials.validator';
 import { WhatsAppCredentialsValidator } from '../validators/whatsapp-credentials.validator';
+import { WhatsAppBaileysCredentialsValidator } from '../validators/whatsapp-baileys-credentials.validator';
 import { EmailCredentialsValidator } from '../validators/email-credentials.validator';
 
 @Injectable()
@@ -17,12 +18,14 @@ export class CredentialValidationService {
     private readonly telegramValidator: TelegramCredentialsValidator,
     private readonly discordValidator: DiscordCredentialsValidator,
     private readonly whatsappValidator: WhatsAppCredentialsValidator,
+    private readonly whatsappBaileysValidator: WhatsAppBaileysCredentialsValidator,
     private readonly emailValidator: EmailCredentialsValidator,
   ) {
     // Register platform validators
     this.validators.set(PlatformType.TELEGRAM, this.telegramValidator);
     this.validators.set(PlatformType.DISCORD, this.discordValidator);
     this.validators.set(PlatformType.WHATSAPP_EVO, this.whatsappValidator);
+    this.validators.set(PlatformType.WHATSAPP_BAILEYS, this.whatsappBaileysValidator);
     this.validators.set(PlatformType.EMAIL, this.emailValidator);
 
     // Log registered validators for debugging
