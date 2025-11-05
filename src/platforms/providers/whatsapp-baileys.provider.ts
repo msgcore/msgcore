@@ -330,12 +330,28 @@ export class WhatsAppBaileysProvider
         // Skip our own messages
         if (msg.key.fromMe) continue;
 
+        // Skip protocol messages (receipts, etc.) - they don't have message content
+        if (!msg.message) {
+          this.logger.debug(
+            `Skipping protocol message (no content): ${msg.key.id}`,
+          );
+          continue;
+        }
+
         try {
           const chatId = msg.key.remoteJid || '';
           const chatType = isJidGroup(chatId) ? ChatType.group : ChatType.user;
           const userId = msg.key.participant || chatId;
           const messageText = this.extractMessageText(msg);
           const normalizedAttachments = await this.normalizeAttachments(msg);
+
+          // Skip messages with no text AND no attachments (empty messages)
+          if (!messageText && (!normalizedAttachments || normalizedAttachments.length === 0)) {
+            this.logger.debug(
+              `Skipping empty message (no text or attachments): ${msg.key.id}`,
+            );
+            continue;
+          }
 
           // Store in database
           await this.messagesService.storeIncomingMessage({
