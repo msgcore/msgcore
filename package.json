@@ -78,6 +78,7 @@
     "rate-limiter-flexible": "^8.0.1",
     "reflect-metadata": "^0.2.2",
     "rxjs": "^7.8.2",
+    "stripe": "^19.3.0",
     "ts-morph": "^27.0.0",
     "uuid": "^13.0.0"
   },

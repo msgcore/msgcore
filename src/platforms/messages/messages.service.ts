@@ -22,6 +22,7 @@ import {
 import { WebhookDeliveryService } from '../../webhooks/services/webhook-delivery.service';
 import { WebhookEventType } from '../../webhooks/types/webhook-event.types';
 import { PlatformAttachment } from '../../messages/interfaces/message-attachment.interface';
+import { UsageTrackerService } from '../../billing/usage-tracker.service';
 
 @Injectable()
 export class MessagesService {
@@ -33,9 +34,10 @@ export class MessagesService {
     private readonly messageQueue: MessageQueue,
     private readonly platformRegistry: PlatformRegistry,
     private readonly webhookDeliveryService: WebhookDeliveryService,
+    private readonly usageTracker: UsageTrackerService,
   ) {}
 
-  async sendMessage(projectId: string, sendMessageDto: SendMessageDto) {
+  async sendMessage(projectId: string, sendMessageDto: SendMessageDto, authContext: AuthContext) {
     const targetCount = sendMessageDto.targets.length;
     const platformIds = sendMessageDto.targets.map((t) => t.platformId);
 
@@ -43,6 +45,19 @@ export class MessagesService {
 
     // Get project and validate platforms
     const project = await this.getProject(projectId);
+
+    // BILLING: Check message limits and increment counter
+    // Only check for JWT users (not API keys, as API keys are project-scoped)
+    if (authContext.authType === 'jwt' && authContext.user?.userId) {
+      // Check if user has exceeded their message limit (throws PaymentRequiredException)
+      await this.usageTracker.checkMessageLimit(authContext.user.userId);
+
+      // Increment message counter
+      await this.usageTracker.incrementMessageCount(authContext.user.userId);
+
+      this.logger.log(`Message limit checked and counter incremented for user ${authContext.user.userId}`);
+    }
+
     for (const target of sendMessageDto.targets) {
       await this.platformsService.validatePlatformConfigById(target.platformId);
     }

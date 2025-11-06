@@ -9,12 +9,19 @@ import { CreateProjectDto } from './dto/create-project.dto';
 import { UpdateProjectDto } from './dto/update-project.dto';
 import { CryptoUtil } from '../common/utils/crypto.util';
 import { ProjectRole } from '@prisma/client';
+import { TierLimitsService } from '../billing/tier-limits.service';
 
 @Injectable()
 export class ProjectsService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private tierLimitsService: TierLimitsService,
+  ) {}
 
   async create(createProjectDto: CreateProjectDto, ownerId: string) {
+    // BILLING: Check if user can create another project
+    await this.tierLimitsService.checkProjectLimit(ownerId);
+
     const id =
       createProjectDto.id || CryptoUtil.generateSlug(createProjectDto.name);
 

@@ -21,6 +21,7 @@ import {
   Settings,
   MessagesSquare,
   Sparkles,
+  CreditCard,
 } from 'lucide-react';
 import { cn, getInitials } from '../../lib/utils';
 
@@ -98,6 +99,11 @@ export function AppShell({ children }: AppShellProps) {
       label: t('nav.analysis'),
       icon: Sparkles,
       href: '/analysis',
+    },
+    {
+      label: t('nav.billing'),
+      icon: CreditCard,
+      href: '/billing',
     },
   ];
 

@@ -260,8 +260,9 @@ export class MessagesController {
   async sendMessage(
     @Param('project') project: string,
     @Body() sendMessageDto: SendMessageDto,
+    @AuthContextParam() authContext: AuthContext,
   ) {
-    return this.platformMessagesService.sendMessage(project, sendMessageDto);
+    return this.platformMessagesService.sendMessage(project, sendMessageDto, authContext);
   }
 
   @Get('status/:jobId')

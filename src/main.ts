@@ -9,7 +9,9 @@ import { ConfigService } from '@nestjs/config';
 import { CryptoUtil } from './common/utils/crypto.util';
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
+  const app = await NestFactory.create(AppModule, {
+    rawBody: true, // Enable raw body for webhook signature verification
+  });
   const configService = app.get(ConfigService);
 
   // Initialize encryption key on startup

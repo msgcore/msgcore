@@ -16,6 +16,7 @@ import { PrismaModule } from './prisma/prisma.module';
 import { ApiKeysModule } from './api-keys/api-keys.module';
 import { AuthModule } from './auth/auth.module';
 import { AppAuthGuard } from './common/guards/app-auth.guard';
+import { SubscriptionStatusGuard } from './billing/guards/subscription-status.guard';
 import { appConfig, configValidationSchema } from './config/app.config';
 import { PlatformsModule } from './platforms/platforms.module';
 import { QueuesModule } from './queues/queues.module';
@@ -27,6 +28,7 @@ import { IdentitiesModule } from './identities/identities.module';
 import { McpModule } from './mcp/mcp.module';
 import { ChatsModule } from './platforms/chats/chats.module';
 import { AnalysisModule } from './analysis/analysis.module';
+import { BillingModule } from './billing/billing.module';
 import { sentryConfig } from './config/sentry.config';
 
 @Module({
@@ -128,6 +130,7 @@ import { sentryConfig } from './config/sentry.config';
     McpModule,
     ChatsModule,
     AnalysisModule,
+    BillingModule,
 
     // Serve static frontend files (registered last so API routes take precedence)
     ServeStaticModule.forRoot({
@@ -143,6 +146,11 @@ import { sentryConfig } from './config/sentry.config';
     {
       provide: APP_GUARD,
       useClass: AppAuthGuard,
+    },
+    // Global Subscription Status Guard - blocks suspended/past due accounts
+    {
+      provide: APP_GUARD,
+      useClass: SubscriptionStatusGuard,
     },
     // Global Rate Limiting Guard
     {

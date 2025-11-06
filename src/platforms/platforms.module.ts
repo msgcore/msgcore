@@ -31,11 +31,14 @@ import { WhatsAppBaileysProvider } from './providers/whatsapp-baileys.provider';
 import { BaileysAuthStateService } from './providers/baileys-auth-state.service';
 import { EmailProvider } from './providers/email.provider';
 
+import { BillingModule } from '../billing/billing.module';
+
 @Module({
   imports: [
     PrismaModule,
     WebhooksModule,
     VoiceModule,
+    BillingModule,
     DiscoveryModule,
     BullModule.registerQueue({
       name: 'messages',

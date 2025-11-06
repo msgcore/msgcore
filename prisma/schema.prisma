@@ -8,18 +8,27 @@ datasource db {
 }
 
 model User {
-  id             String          @id @default(uuid())
-  auth0Id        String?         @unique @map("auth0_id")
-  email          String          @unique
-  name           String?
-  passwordHash   String?         @map("password_hash")
-  isAdmin        Boolean         @default(false) @map("is_admin")
-  createdAt      DateTime        @default(now()) @map("created_at")
-  updatedAt      DateTime        @updatedAt @map("updated_at")
-  apiKeysCreated ApiKey[]        @relation("ApiKeyCreator")
-  projectMembers ProjectMember[]
-  ownedProjects  Project[]
+  id                    String              @id @default(uuid())
+  auth0Id               String?             @unique @map("auth0_id")
+  email                 String              @unique
+  name                  String?
+  passwordHash          String?             @map("password_hash")
+  isAdmin               Boolean             @default(false) @map("is_admin")
+  subscriptionTier      SubscriptionTier    @default(FREE) @map("subscription_tier")
+  subscriptionStatus    SubscriptionStatus  @default(ACTIVE) @map("subscription_status")
+  stripeCustomerId      String?             @unique @map("stripe_customer_id")
+  stripeSubscriptionId  String?             @unique @map("stripe_subscription_id")
+  subscriptionStartedAt DateTime?           @map("subscription_started_at")
+  subscriptionEndsAt    DateTime?           @map("subscription_ends_at")
+  createdAt             DateTime            @default(now()) @map("created_at")
+  updatedAt             DateTime            @updatedAt @map("updated_at")
+  apiKeysCreated        ApiKey[]            @relation("ApiKeyCreator")
+  projectMembers        ProjectMember[]
+  ownedProjects         Project[]
+  messageUsage          MessageUsage[]
 
+  @@index([stripeCustomerId])
+  @@index([subscriptionTier])
   @@map("users")
 }
 
@@ -28,6 +37,7 @@ model Project {
   name               String
   description        String?
   environment        ProjectEnvironment   @default(development)
+  status             ProjectStatus        @default(ACTIVE)
   isDefault          Boolean              @default(false) @map("is_default")
   settings           Json?
   createdAt          DateTime             @default(now()) @map("created_at")
@@ -53,6 +63,7 @@ model Project {
   extractedEntities  ExtractedEntity[]
 
   @@index([ownerId])
+  @@index([status])
   @@map("projects")
 }
 
@@ -415,6 +426,11 @@ enum ProjectEnvironment {
   custom
 }
 
+enum ProjectStatus {
+  ACTIVE
+  SUSPENDED
+}
+
 enum ProjectRole {
   owner
   admin
@@ -454,6 +470,22 @@ enum MessageStatus {
   sent
   delivered
   failed
+}
+
+enum SubscriptionTier {
+  FREE
+  STARTER
+  PRO
+  BUSINESS
+  ENTERPRISE
+}
+
+enum SubscriptionStatus {
+  ACTIVE
+  CANCELED
+  PAST_DUE
+  TRIALING
+  UNPAID
 }
 
 model EntitySchema {
@@ -586,4 +618,20 @@ model BaileysAuthState {
 
   @@index([connectionKey])
   @@map("baileys_auth_states")
+}
+
+model MessageUsage {
+  id              String   @id @default(uuid())
+  userId          String   @map("user_id")
+  month           Int      // 1-12
+  year            Int      // 2024, 2025, etc.
+  messagesSent    Int      @default(0) @map("messages_sent")
+  messagesReceived Int      @default(0) @map("messages_received")
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, year, month])
+  @@index([userId, year, month])
+  @@map("message_usage")
 }

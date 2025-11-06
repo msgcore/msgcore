@@ -184,6 +184,121 @@ authContext: AuthContext; // Required, not optional
 - `DELETE /api/v1/projects/:id/webhooks/:webhookId` - Delete webhook
 - `GET /api/v1/projects/:id/webhooks/:webhookId/deliveries` - List delivery attempts
 
+### Billing & Subscriptions
+
+#### **Billing Endpoints**
+
+- `POST /api/v1/billing/checkout` - Create Stripe checkout session for subscription upgrade
+- `POST /api/v1/billing/portal` - Access Stripe customer portal for subscription management
+- `POST /api/v1/billing/webhook` - Stripe webhook handler (public, no auth required)
+- `GET /api/v1/billing/subscription` - Get current subscription details
+- `GET /api/v1/billing/usage` - Get usage statistics across all resources
+- `GET /api/v1/billing/suspension-info` - Get suspended projects information
+- `POST /api/v1/billing/sync` - Manually sync subscription from Stripe
+
+#### **Subscription Model**
+
+MsgCore uses **user-based subscriptions** (like GitHub, Notion) with tier limits:
+
+**Subscription Tiers:**
+
+| Tier | Projects | Messages/Month | Platforms/Project | History | Webhooks | Team Members | Price |
+|------|----------|----------------|-------------------|---------|----------|--------------|-------|
+| **FREE** | 1 | 1,000 | 2 | 7 days | 0 | 3 | $0 |
+| **STARTER** | 5 | 10,000 | Unlimited | 30 days | 5 | 10 | $19/mo or $190/yr |
+| **PRO** | Unlimited | 50,000 | Unlimited | 90 days | 25 | 50 | $49/mo or $490/yr |
+| **BUSINESS** | Unlimited | 250,000 | Unlimited | 365 days | 100 | 250 | Contact |
+| **ENTERPRISE** | Unlimited | Unlimited | Unlimited | Unlimited | Unlimited | Unlimited | Contact |
+
+**Key Features:**
+
+- **7-Day Free Trial**: All paid tiers include a 7-day trial with credit card required (managed by Stripe)
+- **User Pays, Members Collaborate**: Project owner pays for subscription, invited members collaborate for free
+- **Grace Period Downgrades**: When downgrading, excess projects become read-only (SUSPENDED) until user deletes them
+- **Usage Tracking**: Redis-based message counters with automatic monthly expiration
+- **Limit Enforcement**: HTTP 402 Payment Required exception with upgrade prompts
+
+#### **Billing Architecture**
+
+**Services:**
+
+- **TierLimitsService**: Central service for defining and enforcing tier limits
+  - Methods: `checkProjectLimit()`, `checkPlatformLimit()`, `checkWebhookLimit()`, `getUserUsage()`
+  - Throws `PaymentRequiredException` (HTTP 402) when limits exceeded
+
+- **StripeService**: Stripe integration for subscription management
+  - Methods: `createCheckoutSession()`, `createCustomerPortalSession()`, `handleWebhook()`, `syncSubscription()`
+  - Webhook handlers for: `checkout.session.completed`, `customer.subscription.*`, `invoice.payment_failed`
+
+- **UsageTrackerService**: Redis-based usage tracking
+  - Methods: `incrementMessageCount()`, `getMessageCount()`, `checkMessageLimit()`
+  - Redis key pattern: `usage:{userId}:{YYYY-MM}:messages`
+  - Auto-expire: 60 days TTL
+
+- **DowngradeHandlerService**: Project suspension on downgrade
+  - Methods: `handleDowngrade()`, `handleUpgrade()`, `getSuspensionInfo()`, `validateProjectAction()`
+  - Strategy: Keep oldest projects active, suspend newest on downgrade
+
+**Database Schema:**
+
+```prisma
+model User {
+  subscriptionTier      SubscriptionTier    @default(FREE)
+  subscriptionStatus    SubscriptionStatus  @default(ACTIVE)
+  stripeCustomerId      String?             @unique
+  stripeSubscriptionId  String?             @unique
+  subscriptionStartedAt DateTime?
+  subscriptionEndsAt    DateTime?
+}
+
+model Project {
+  status ProjectStatus @default(ACTIVE) // ACTIVE | SUSPENDED
+}
+
+enum SubscriptionTier {
+  FREE | STARTER | PRO | BUSINESS | ENTERPRISE
+}
+
+enum SubscriptionStatus {
+  ACTIVE | CANCELED | PAST_DUE | TRIALING | UNPAID
+}
+```
+
+**Usage Enforcement:**
+
+1. **Project Creation**: `ProjectsService.create()` calls `tierLimitsService.checkProjectLimit()` before creation
+2. **Platform Configuration**: `PlatformsService.create()` calls `tierLimitsService.checkPlatformLimit()` before adding platform
+3. **Message Sending**: `MessagesService.sendMessage()` calls `usageTracker.checkMessageLimit()` and `incrementMessageCount()` for JWT users
+4. **Account Suspension**: `SubscriptionStatusGuard` (global) blocks API access for SUSPENDED, PAST_DUE, CANCELED, UNPAID accounts
+   - Suspended users can still access `/api/v1/billing/*` endpoints via `@AllowSuspended()` decorator
+   - Works for both JWT users and API keys (checks project owner's subscription status)
+5. **Stripe Webhooks**: Public endpoint at `/api/v1/billing/webhook` processes subscription events with signature verification
+
+**Database Tables:**
+
+- `message_usage`: Tracks monthly message counts per user (userId, year, month, messagesSent, messagesReceived)
+- Auto-created via upsert when messages are sent
+- Used for persistent storage alongside Redis counters
+
+**Environment Variables:**
+
+```bash
+# Stripe Configuration
+STRIPE_SECRET_KEY=sk_test_...
+STRIPE_PUBLISHABLE_KEY=pk_test_...
+STRIPE_WEBHOOK_SECRET=whsec_...
+
+# Price IDs (8 total: 4 tiers × 2 intervals)
+STRIPE_PRICE_STARTER_MONTHLY=price_...
+STRIPE_PRICE_STARTER_ANNUAL=price_...
+STRIPE_PRICE_PRO_MONTHLY=price_...
+STRIPE_PRICE_PRO_ANNUAL=price_...
+STRIPE_PRICE_BUSINESS_MONTHLY=price_...
+STRIPE_PRICE_BUSINESS_ANNUAL=price_...
+STRIPE_PRICE_ENTERPRISE_MONTHLY=price_...
+STRIPE_PRICE_ENTERPRISE_ANNUAL=price_...
+```
+
 ## Platform Integrations
 
 ### **WhatsApp via Evolution API (whatsapp-evo)**

@@ -16,6 +16,7 @@ import { CredentialValidationService } from './services/credential-validation.se
 import { PlatformRegistry } from './services/platform-registry.service';
 import { PlatformLifecycleEvent } from './interfaces/platform-provider.interface';
 import { ProviderUtil } from './providers/provider.util';
+import { TierLimitsService } from '../billing/tier-limits.service';
 import TelegramBot = require('node-telegram-bot-api');
 
 @Injectable()
@@ -26,6 +27,7 @@ export class PlatformsService {
     private readonly prisma: PrismaService,
     private readonly credentialValidator: CredentialValidationService,
     private readonly platformRegistry: PlatformRegistry,
+    private readonly tierLimitsService: TierLimitsService,
   ) {}
 
   private getWebhookUrl(platform: string, webhookToken: string): string {
@@ -77,6 +79,9 @@ export class PlatformsService {
       authContext,
       'platform creation',
     );
+
+    // BILLING: Check if project can add more platforms
+    await this.tierLimitsService.checkPlatformLimit(projectId);
 
     // Note: Multiple instances of the same platform are now allowed per project
 

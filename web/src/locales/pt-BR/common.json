@@ -30,6 +30,8 @@
     "members": "Membros",
     "webhooks": "Webhooks",
     "identities": "Identidades",
+    "analysis": "Análise",
+    "billing": "Assinatura",
     "settings": "Configurações",
     "logout": "Sair"
   },

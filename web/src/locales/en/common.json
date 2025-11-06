@@ -30,6 +30,8 @@
     "members": "Members",
     "webhooks": "Webhooks",
     "identities": "Identities",
+    "analysis": "Analysis",
+    "billing": "Billing",
     "settings": "Settings",
     "logout": "Sign Out"
   },
