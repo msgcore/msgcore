@@ -18,17 +18,33 @@ export interface CustomerPortalResult {
 @Injectable()
 export class StripeService {
   private readonly logger = new Logger(StripeService.name);
-  private readonly stripe: Stripe;
+  private readonly stripe: Stripe | null;
   private readonly webhookSecret: string;
   private readonly priceIds: Record<string, string>;
+  private readonly billingEnabled: boolean;
 
   constructor(
     private readonly configService: ConfigService,
     private readonly prisma: PrismaService,
   ) {
+    this.billingEnabled = this.configService.get<string>('BILLING_ENABLED') === 'true';
+
+    if (!this.billingEnabled) {
+      this.logger.log('Billing is disabled. Stripe integration will not be initialized.');
+      this.stripe = null;
+      this.webhookSecret = '';
+      this.priceIds = {};
+      return;
+    }
+
     const secretKey = this.configService.get<string>('STRIPE_SECRET_KEY');
     if (!secretKey) {
-      throw new Error('STRIPE_SECRET_KEY is not configured');
+      this.logger.warn('STRIPE_SECRET_KEY is not configured. Billing features will be unavailable.');
+      this.stripe = null;
+      this.webhookSecret = '';
+      this.priceIds = {};
+      this.billingEnabled = false;
+      return;
     }
 
     this.stripe = new Stripe(secretKey, {
@@ -48,6 +64,24 @@ export class StripeService {
       'ENTERPRISE-monthly': this.configService.get<string>('STRIPE_PRICE_ENTERPRISE_MONTHLY') || '',
       'ENTERPRISE-annual': this.configService.get<string>('STRIPE_PRICE_ENTERPRISE_ANNUAL') || '',
     };
+
+    this.logger.log('Stripe integration initialized successfully.');
+  }
+
+  /**
+   * Check if billing is enabled
+   */
+  isBillingEnabled(): boolean {
+    return this.billingEnabled && this.stripe !== null;
+  }
+
+  /**
+   * Throw error if billing is disabled
+   */
+  private checkBillingEnabled(): void {
+    if (!this.isBillingEnabled()) {
+      throw new BadRequestException('Billing is not enabled on this instance');
+    }
   }
 
   /**
@@ -58,6 +92,8 @@ export class StripeService {
     tier: SubscriptionTier,
     interval: BillingInterval,
   ): Promise<CheckoutSessionResult> {
+    this.checkBillingEnabled();
+
     // Validate tier (cannot checkout for FREE tier)
     if (tier === 'FREE') {
       throw new BadRequestException('Cannot create checkout session for FREE tier');
@@ -140,6 +176,8 @@ export class StripeService {
    * Create a Stripe Customer Portal session for subscription management
    */
   async createCustomerPortalSession(userId: string): Promise<CustomerPortalResult> {
+    this.checkBillingEnabled();
+
     const user = await this.prisma.user.findUnique({ where: { id: userId } });
     if (!user) {
       throw new BadRequestException('User not found');
@@ -167,6 +205,8 @@ export class StripeService {
    * Handle incoming Stripe webhook events
    */
   async handleWebhook(rawBody: Buffer, signature: string): Promise<void> {
+    this.checkBillingEnabled();
+
     if (!this.webhookSecret) {
       throw new Error('STRIPE_WEBHOOK_SECRET is not configured');
     }
@@ -222,6 +262,8 @@ export class StripeService {
    * Sync subscription data from Stripe
    */
   async syncSubscription(userId: string): Promise<void> {
+    this.checkBillingEnabled();
+
     const user = await this.prisma.user.findUnique({ where: { id: userId } });
     if (!user || !user.stripeSubscriptionId) {
       return;

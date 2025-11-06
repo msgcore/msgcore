@@ -186,6 +186,20 @@ authContext: AuthContext; // Required, not optional
 
 ### Billing & Subscriptions
 
+**⚙️ Feature Flag: Billing is OPTIONAL and disabled by default**
+
+Set `BILLING_ENABLED=true` in your environment to enable billing features. When disabled:
+- All tier limits are bypassed (unlimited resources)
+- Subscription status checks are skipped
+- Stripe integration is not initialized
+- Billing endpoints return 400 Bad Request
+
+This allows MsgCore to run without Stripe configuration for:
+- Local development
+- Self-hosted deployments
+- Open-source usage
+- Testing environments
+
 #### **Billing Endpoints**
 
 - `POST /api/v1/billing/checkout` - Create Stripe checkout session for subscription upgrade

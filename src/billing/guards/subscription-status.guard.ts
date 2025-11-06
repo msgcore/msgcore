@@ -6,6 +6,7 @@ import {
   HttpStatus,
 } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
+import { ConfigService } from '@nestjs/config';
 import { PrismaService } from '../../prisma/prisma.service';
 import { SubscriptionStatus } from '@prisma/client';
 
@@ -16,15 +17,23 @@ import { SubscriptionStatus } from '@prisma/client';
  * - Applied globally via APP_GUARD in app.module.ts
  * - Use @Public() decorator to bypass for public endpoints (signup, login, etc.)
  * - Use @AllowSuspended() decorator to allow access even when subscription has issues (billing endpoints)
+ * - Automatically disabled if BILLING_ENABLED is not set to 'true'
  */
 @Injectable()
 export class SubscriptionStatusGuard implements CanActivate {
   constructor(
     private reflector: Reflector,
     private prisma: PrismaService,
+    private configService: ConfigService,
   ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
+    // Skip checks if billing is disabled
+    const billingEnabled = this.configService.get<string>('BILLING_ENABLED') === 'true';
+    if (!billingEnabled) {
+      return true;
+    }
+
     // Check if route is marked as @Public() or @AllowSuspended()
     const isPublic = this.reflector.getAllAndOverride<boolean>('isPublic', [
       context.getHandler(),

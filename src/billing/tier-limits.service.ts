@@ -1,4 +1,5 @@
 import { Injectable, HttpException, HttpStatus } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { PrismaService } from '../prisma/prisma.service';
 import { SubscriptionTier } from '@prisma/client';
 
@@ -83,7 +84,17 @@ export class PaymentRequiredException extends HttpException {
 
 @Injectable()
 export class TierLimitsService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private configService: ConfigService,
+  ) {}
+
+  /**
+   * Check if billing (and thus tier limits) are enabled
+   */
+  private isBillingEnabled(): boolean {
+    return this.configService.get<string>('BILLING_ENABLED') === 'true';
+  }
 
   getLimits(tier: SubscriptionTier): TierLimits {
     return TIER_LIMITS[tier];
@@ -108,6 +119,11 @@ export class TierLimitsService {
    * Throws PaymentRequiredException if limit exceeded
    */
   async checkProjectLimit(userId: string): Promise<void> {
+    // Skip check if billing is disabled
+    if (!this.isBillingEnabled()) {
+      return;
+    }
+
     const user = await this.prisma.user.findUnique({
       where: { id: userId },
       include: {
@@ -143,6 +159,11 @@ export class TierLimitsService {
    * Check if project can add more platforms
    */
   async checkPlatformLimit(projectId: string): Promise<void> {
+    // Skip check if billing is disabled
+    if (!this.isBillingEnabled()) {
+      return;
+    }
+
     const project = await this.prisma.project.findUnique({
       where: { id: projectId },
       include: {
@@ -181,6 +202,11 @@ export class TierLimitsService {
    * Check if project can add more webhooks
    */
   async checkWebhookLimit(projectId: string): Promise<void> {
+    // Skip check if billing is disabled
+    if (!this.isBillingEnabled()) {
+      return;
+    }
+
     const project = await this.prisma.project.findUnique({
       where: { id: projectId },
       include: {
@@ -277,6 +303,11 @@ export class TierLimitsService {
    * Check if user can send messages (enforce monthly quota)
    */
   async checkMessageQuota(userId: string): Promise<void> {
+    // Skip check if billing is disabled
+    if (!this.isBillingEnabled()) {
+      return;
+    }
+
     const now = new Date();
     const year = now.getFullYear();
     const month = now.getMonth() + 1; // JavaScript months are 0-indexed
