@@ -7,7 +7,7 @@ import {
 } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { PrismaService } from '../../prisma/prisma.service';
-import { SubscriptionStatus } from '../enums/subscription.enum';
+import { SubscriptionStatus } from '@prisma/client';
 
 /**
  * Guard that blocks API access for users with CANCELED, PAST_DUE, or UNPAID status

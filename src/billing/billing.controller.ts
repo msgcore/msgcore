@@ -206,8 +206,8 @@ export class BillingController {
       : null;
 
     return {
-      tier: user.subscriptionTier,
-      status: user.subscriptionStatus,
+      tier: user.subscriptionTier as any,
+      status: user.subscriptionStatus as any,
       startedAt: user.subscriptionStartedAt,
       endsAt: user.subscriptionEndsAt,
       stripeCustomerId: user.stripeCustomerId,
@@ -306,7 +306,7 @@ export class BillingController {
     }
 
     return {
-      tier: user.subscriptionTier,
+      tier: user.subscriptionTier as any,
       projects,
       platforms,
       messages,
