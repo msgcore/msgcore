@@ -116,7 +116,7 @@ export class StripeService {
 
     if (!customerId) {
       // Create new Stripe customer
-      const customer = await this.stripe.customers.create({
+      const customer = await this.stripe!.customers.create({
         email: user.email,
         name: user.name || undefined,
         metadata: {
@@ -138,7 +138,7 @@ export class StripeService {
     const baseUrl = this.configService.get<string>('MSGCORE_API_URL') || 'http://localhost:7890';
 
     // Create checkout session with 7-day trial
-    const session = await this.stripe.checkout.sessions.create({
+    const session = await this.stripe!.checkout.sessions.create({
       customer: customerId,
       mode: 'subscription',
       payment_method_types: ['card'],
@@ -189,7 +189,7 @@ export class StripeService {
 
     const baseUrl = this.configService.get<string>('MSGCORE_API_URL') || 'http://localhost:7890';
 
-    const session = await this.stripe.billingPortal.sessions.create({
+    const session = await this.stripe!.billingPortal.sessions.create({
       customer: user.stripeCustomerId,
       return_url: `${baseUrl}/billing`,
     });
@@ -215,7 +215,7 @@ export class StripeService {
 
     try {
       // Verify webhook signature
-      event = this.stripe.webhooks.constructEvent(rawBody, signature, this.webhookSecret);
+      event = this.stripe!.webhooks.constructEvent(rawBody, signature, this.webhookSecret);
     } catch (err) {
       this.logger.error(`Webhook signature verification failed: ${err.message}`);
       throw new BadRequestException('Invalid webhook signature');
@@ -269,7 +269,7 @@ export class StripeService {
       return;
     }
 
-    const subscription = await this.stripe.subscriptions.retrieve(user.stripeSubscriptionId);
+    const subscription = await this.stripe!.subscriptions.retrieve(user.stripeSubscriptionId);
     await this.updateUserSubscription(user.id, subscription);
   }
 
@@ -291,7 +291,7 @@ export class StripeService {
     }
 
     // Retrieve full subscription object
-    const subscription = await this.stripe.subscriptions.retrieve(subscriptionId);
+    const subscription = await this.stripe!.subscriptions.retrieve(subscriptionId);
     await this.updateUserSubscription(userId, subscription);
 
     this.logger.log(`Checkout completed for user ${userId}, subscription ${subscriptionId}`);
