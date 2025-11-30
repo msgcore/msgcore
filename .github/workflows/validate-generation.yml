@@ -36,10 +36,10 @@ jobs:
           npm run extract:contracts
 
           echo "📊 Contract extraction results:"
-          cat generated/contracts/extraction-summary.json
+          cat packages/contracts/extraction-summary.json
 
           # Validate contracts.json is valid JSON
-          jq . generated/contracts/contracts.json > /dev/null
+          jq . packages/contracts/contracts.json > /dev/null
           echo "✅ Contracts JSON is valid"
 
       - name: Validate SDK generation
@@ -48,13 +48,13 @@ jobs:
           npm run generate:sdk
 
           echo "📦 Generated SDK structure:"
-          ls -la generated/sdk/src/
+          ls -la packages/sdk/src/
 
           # Check for critical files
-          test -f generated/sdk/src/index.ts
-          test -f generated/sdk/src/client.ts
-          test -f generated/sdk/src/types.ts
-          test -f generated/sdk/package.json
+          test -f packages/sdk/src/index.ts
+          test -f packages/sdk/src/client.ts
+          test -f packages/sdk/src/types.ts
+          test -f packages/sdk/package.json
           echo "✅ SDK structure valid"
 
       - name: Validate CLI generation
@@ -63,12 +63,12 @@ jobs:
           npm run generate:cli
 
           echo "📦 Generated CLI structure:"
-          ls -la generated/cli/src/
+          ls -la packages/cli/src/
 
           # Check for critical files
-          test -f generated/cli/src/index.ts
-          test -f generated/cli/src/commands/projects.ts
-          test -f generated/cli/package.json
+          test -f packages/cli/src/index.ts
+          test -f packages/cli/src/commands/projects.ts
+          test -f packages/cli/package.json
           echo "✅ CLI structure valid"
 
       - name: Validate n8n generation
@@ -77,12 +77,12 @@ jobs:
           npm run generate:n8n
 
           echo "📦 Generated n8n structure:"
-          ls -la generated/n8n/
+          ls -la packages/n8n/
 
           # Check for critical files
-          test -f generated/n8n/nodes/MsgCore/MsgCore.node.ts
-          test -f generated/n8n/credentials/MsgCoreApi.credentials.ts
-          test -f generated/n8n/package.json
+          test -f packages/n8n/nodes/MsgCore/MsgCore.node.ts
+          test -f packages/n8n/credentials/MsgCoreApi.credentials.ts
+          test -f packages/n8n/package.json
           echo "✅ n8n structure valid"
 
       - name: Validate compilation
@@ -95,13 +95,13 @@ jobs:
           echo "🛡️ Verifying source protection..."
 
           # Check that no backend source is in generated packages
-          if grep -r "src/.*controller\|src/.*service\|src/.*module" generated/*/dist/ 2>/dev/null; then
+          if grep -r "src/.*controller\|src/.*service\|src/.*module" packages/*/dist/ 2>/dev/null; then
             echo "❌ SECURITY VIOLATION: Backend source found in generated packages!"
             exit 1
           fi
 
           # Check for sensitive imports
-          if grep -r "@nestjs\|prisma\|DiscoveryService" generated/*/dist/ 2>/dev/null; then
+          if grep -r "@nestjs\|prisma\|DiscoveryService" packages/*/dist/ 2>/dev/null; then
             echo "❌ SECURITY VIOLATION: Backend framework imports found!"
             exit 1
           fi
@@ -126,8 +126,8 @@ jobs:
           echo "📊 Contract-Driven Architecture Validation Summary"
           echo "=================================================="
 
-          CONTRACTS=$(jq '.totalContracts' generated/contracts/extraction-summary.json)
-          CONTROLLERS=$(jq '.contractsByController | keys | length' generated/contracts/extraction-summary.json)
+          CONTRACTS=$(jq '.totalContracts' packages/contracts/extraction-summary.json)
+          CONTROLLERS=$(jq '.contractsByController | keys | length' packages/contracts/extraction-summary.json)
 
           echo "✅ Contracts extracted: $CONTRACTS"
           echo "✅ Controllers covered: $CONTROLLERS"
@@ -145,8 +145,8 @@ jobs:
         with:
           name: generated-packages-${{ github.sha }}
           path: |
-            generated/contracts/
-            generated/sdk/dist/
-            generated/cli/dist/
-            generated/n8n/dist/
+            packages/contracts/
+            packages/sdk/dist/
+            packages/cli/dist/
+            packages/n8n/dist/
           retention-days: 30

@@ -207,7 +207,7 @@ await service.create(projectId, data); // Should include mockAuthContext
 
 ### Generated Code
 
-- **NEVER** accept edits to `generated/` directory
+- **NEVER** accept edits to `packages/` directory (except for contracts)
 - Generated code comes from `@SdkContract` decorators
 - Changes must be made in controllers, not generated files
 

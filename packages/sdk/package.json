@@ -1,0 +1,38 @@
+{
+  "name": "@msgcore/sdk",
+  "version": "1.1.0",
+  "description": "Official TypeScript SDK for MsgCore universal messaging gateway",
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "prepublishOnly": "npm run build"
+  },
+  "dependencies": {
+    "axios": "^1.12.2"
+  },
+  "peerDependencies": {
+    "typescript": ">=5.0.0"
+  },
+  "keywords": [
+    "msgcore",
+    "messaging",
+    "sdk",
+    "api-client"
+  ],
+  "author": "MsgCore",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/msgcore/msgcore.git",
+    "directory": "packages/sdk"
+  },
+  "homepage": "https://github.com/msgcore/msgcore/tree/main/packages/sdk",
+  "bugs": {
+    "url": "https://github.com/msgcore/msgcore/issues"
+  }
+}

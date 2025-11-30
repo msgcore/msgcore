@@ -65,7 +65,7 @@ async function extractContracts() {
     }
 
     // Create output directory
-    const outputDir = path.join(__dirname, '../generated/contracts');
+    const outputDir = path.join(__dirname, '../packages/contracts');
     await fs.mkdir(outputDir, { recursive: true });
 
     // Write contracts to JSON file

@@ -764,7 +764,7 @@ export function handleError(error: any): void {
           prepublishOnly: 'npm run build',
         },
         dependencies: {
-          '@msgcore/sdk': 'file:../sdk',
+          '@msgcore/sdk': `^${packageJson.version}`,
           commander: '^14.0.1',
           axios: '^1.12.2',
         },
@@ -777,11 +777,12 @@ export function handleError(error: any): void {
         license: 'MIT',
         repository: {
           type: 'git',
-          url: 'https://github.com/msgcore/msgcore-cli.git',
+          url: 'https://github.com/msgcore/msgcore.git',
+          directory: 'packages/cli',
         },
-        homepage: 'https://github.com/msgcore/msgcore-cli',
+        homepage: 'https://github.com/msgcore/msgcore/tree/main/packages/cli',
         bugs: {
-          url: 'https://github.com/msgcore/msgcore-cli/issues',
+          url: 'https://github.com/msgcore/msgcore/issues',
         },
       },
       null,
@@ -1373,9 +1374,9 @@ class McpStdioServer {
 async function main() {
   const contractsPath = path.join(
     __dirname,
-    '../../generated/contracts/contracts.json',
+    '../../packages/contracts/contracts.json',
   );
-  const outputDir = path.join(__dirname, '../../generated/cli');
+  const outputDir = path.join(__dirname, '../../packages/cli');
   const generator = new CLIGenerator();
   await generator.generateFromContracts(contractsPath, outputDir);
 }

@@ -449,9 +449,9 @@ async function main() {
   const generator = new OpenAPIGenerator();
   const contractsPath = path.join(
     __dirname,
-    '../../generated/contracts/contracts.json',
+    '../../packages/contracts/contracts.json',
   );
-  const outputDir = path.join(__dirname, '../../generated/openapi');
+  const outputDir = path.join(__dirname, '../../packages/openapi');
 
   await generator.generateFromContracts(contractsPath, outputDir);
 }

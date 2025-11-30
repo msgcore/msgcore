@@ -10,7 +10,7 @@ const execAsync = promisify(exec);
 describe('CLI Integration Tests (e2e)', () => {
   let app: INestApplication;
   const testOutputDir = path.join(__dirname, '../test-output/cli-integration');
-  const generatedCliDir = path.join(__dirname, '../generated/cli');
+  const generatedCliDir = path.join(__dirname, '../packages/cli');
 
   beforeAll(async () => {
     // Clean up test output

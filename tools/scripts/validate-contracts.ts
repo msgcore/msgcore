@@ -6,7 +6,7 @@ import * as path from 'path';
 async function validateContracts(): Promise<void> {
   const contractsPath = path.join(
     __dirname,
-    '../../generated/contracts/contracts.json',
+    '../../packages/contracts/contracts.json',
   );
   const exists = await fileExists(contractsPath);
   if (!exists) {

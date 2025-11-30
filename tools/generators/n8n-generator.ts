@@ -579,14 +579,18 @@ export class MsgCoreApi implements ICredentialType {
           'communication',
         ],
         license: 'MIT',
-        homepage: 'https://msgcore.dev',
+        homepage: 'https://github.com/msgcore/msgcore/tree/main/packages/n8n',
         author: {
           name: 'MsgCore',
           email: 'contact@msgcore.com',
         },
         repository: {
           type: 'git',
-          url: 'git+https://github.com/msgcore/n8n-nodes-msgcore.git',
+          url: 'https://github.com/msgcore/msgcore.git',
+          directory: 'packages/n8n',
+        },
+        bugs: {
+          url: 'https://github.com/msgcore/msgcore/issues',
         },
         main: 'index.js',
         scripts: {
@@ -840,9 +844,9 @@ async function main() {
   const generator = new N8NGenerator();
   const contractsPath = path.join(
     __dirname,
-    '../../generated/contracts/contracts.json',
+    '../../packages/contracts/contracts.json',
   );
-  const outputDir = path.join(__dirname, '../../generated/n8n');
+  const outputDir = path.join(__dirname, '../../packages/n8n');
 
   await generator.generateFromContracts(contractsPath, outputDir);
 }

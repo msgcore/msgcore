@@ -1,0 +1,21 @@
+{
+  "node": "n8n-nodes-msgcore.MsgCoreTrigger",
+  "nodeVersion": "1.0",
+  "codexVersion": "1.0",
+  "categories": [
+    "Communication",
+    "Trigger"
+  ],
+  "resources": {
+    "credentialDocumentation": [
+      {
+        "url": "https://docs.msgcore.dev/authentication"
+      }
+    ],
+    "primaryDocumentation": [
+      {
+        "url": "https://docs.msgcore.dev/webhooks"
+      }
+    ]
+  }
+}

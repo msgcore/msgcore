@@ -30,7 +30,7 @@ COPY tools ./tools
 RUN npm run extract:contracts && npm run generate:sdk
 
 # Build SDK (needed for frontend)
-WORKDIR /app/generated/sdk
+WORKDIR /app/packages/sdk
 RUN npm install && npm run build
 
 # Build backend
@@ -58,7 +58,7 @@ ENV MSGCORE_API_VERSION=$MSGCORE_API_VERSION
 ENV MSGCORE_ENV=$MSGCORE_ENV
 
 # Copy generated SDK from backend-builder
-COPY --from=backend-builder /app/generated/sdk ./generated/sdk
+COPY --from=backend-builder /app/packages/sdk ./packages/sdk
 
 # Copy web package files and install dependencies
 COPY web/package*.json ./web/
@@ -115,7 +115,7 @@ COPY --from=backend-deps /app/node_modules ./backend/node_modules
 # Copy built backend
 COPY --from=backend-builder /app/dist ./backend/dist
 COPY --from=backend-builder /app/prisma ./backend/prisma
-COPY --from=backend-builder /app/generated ./backend/generated
+COPY --from=backend-builder /app/packages ./backend/packages
 COPY --from=backend-builder /app/package*.json ./backend/
 
 # Copy built frontend for ServeStaticModule

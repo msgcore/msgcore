@@ -681,11 +681,12 @@ export const CONTRACTS_COUNT = ${contracts.length};
         license: 'MIT',
         repository: {
           type: 'git',
-          url: 'https://github.com/msgcore/msgcore-sdk.git',
+          url: 'https://github.com/msgcore/msgcore.git',
+          directory: 'packages/sdk',
         },
-        homepage: 'https://github.com/msgcore/msgcore-sdk',
+        homepage: 'https://github.com/msgcore/msgcore/tree/main/packages/sdk',
         bugs: {
-          url: 'https://github.com/msgcore/msgcore-sdk/issues',
+          url: 'https://github.com/msgcore/msgcore/issues',
         },
       },
       null,
@@ -796,9 +797,9 @@ async function main() {
   const generator = new SDKGenerator();
   const contractsPath = path.join(
     __dirname,
-    '../../generated/contracts/contracts.json',
+    '../../packages/contracts/contracts.json',
   );
-  const outputDir = path.join(__dirname, '../../generated/sdk');
+  const outputDir = path.join(__dirname, '../../packages/sdk');
 
   await generator.generateFromContracts(contractsPath, outputDir);
 }
