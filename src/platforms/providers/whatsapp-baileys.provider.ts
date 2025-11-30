@@ -363,7 +363,7 @@ export class WhatsAppBaileysProvider
             messageType: 'text',
             fromMe: msg.key.fromMe || false,
             attachments: normalizedAttachments,
-            rawData: { ...msg, platformId },
+            rawData: this.serializeRawData({ ...msg, platformId }),
           });
 
           // Create envelope and publish to event bus
@@ -613,6 +613,53 @@ export class WhatsAppBaileysProvider
   }
 
   /**
+   * Serialize raw message data for database storage.
+   * Converts non-JSON-serializable types (Uint8Array, Long objects) to plain values.
+   */
+  private serializeRawData(obj: unknown): unknown {
+    if (obj === null || obj === undefined) return obj;
+
+    // Handle Uint8Array - convert to base64 string
+    if (obj instanceof Uint8Array) {
+      return Buffer.from(obj).toString('base64');
+    }
+
+    // Handle Long/protobuf number objects with low/high
+    if (
+      typeof obj === 'object' &&
+      obj !== null &&
+      'low' in obj &&
+      'high' in obj &&
+      typeof (obj as { low: number }).low === 'number'
+    ) {
+      const longObj = obj as { low: number; high: number; unsigned?: boolean };
+      // Convert to number (safe for values < 2^53)
+      if (longObj.high === 0) {
+        return longObj.unsigned ? longObj.low >>> 0 : longObj.low;
+      }
+      // For larger values, convert to string to preserve precision
+      const value = BigInt(longObj.high) * BigInt(0x100000000) + BigInt(longObj.low >>> 0);
+      return value.toString();
+    }
+
+    // Handle arrays
+    if (Array.isArray(obj)) {
+      return obj.map((item) => this.serializeRawData(item));
+    }
+
+    // Handle plain objects
+    if (typeof obj === 'object') {
+      const result: Record<string, unknown> = {};
+      for (const [key, value] of Object.entries(obj)) {
+        result[key] = this.serializeRawData(value);
+      }
+      return result;
+    }
+
+    return obj;
+  }
+
+  /**
    * Normalize Baileys message attachments to MsgCore format
    *
    * NOTE: Currently stores attachment metadata only.
@@ -624,10 +671,9 @@ export class WhatsAppBaileysProvider
 
     const attachments: Array<{
       type: string;
-      mime: string;
+      mimeType: string;
       url?: string;
-      caption?: string;
-      fileName?: string;
+      filename?: string;
     }> = [];
 
     try {
@@ -635,9 +681,8 @@ export class WhatsAppBaileysProvider
       if (messageContent.imageMessage) {
         attachments.push({
           type: 'image',
-          mime: messageContent.imageMessage.mimetype || 'image/jpeg',
+          mimeType: messageContent.imageMessage.mimetype || 'image/jpeg',
           url: messageContent.imageMessage.url || undefined,
-          caption: messageContent.imageMessage.caption || undefined,
         });
       }
 
@@ -645,9 +690,8 @@ export class WhatsAppBaileysProvider
       if (messageContent.videoMessage) {
         attachments.push({
           type: 'video',
-          mime: messageContent.videoMessage.mimetype || 'video/mp4',
+          mimeType: messageContent.videoMessage.mimetype || 'video/mp4',
           url: messageContent.videoMessage.url || undefined,
-          caption: messageContent.videoMessage.caption || undefined,
         });
       }
 
@@ -656,7 +700,7 @@ export class WhatsAppBaileysProvider
         const isVoice = messageContent.audioMessage.ptt;
         attachments.push({
           type: isVoice ? 'voice' : 'audio',
-          mime: messageContent.audioMessage.mimetype || 'audio/ogg',
+          mimeType: messageContent.audioMessage.mimetype || 'audio/ogg',
           url: messageContent.audioMessage.url || undefined,
         });
       }
@@ -665,12 +709,11 @@ export class WhatsAppBaileysProvider
       if (messageContent.documentMessage) {
         attachments.push({
           type: 'document',
-          mime:
+          mimeType:
             messageContent.documentMessage.mimetype ||
             'application/octet-stream',
           url: messageContent.documentMessage.url || undefined,
-          fileName: messageContent.documentMessage.fileName || undefined,
-          caption: messageContent.documentMessage.caption || undefined,
+          filename: messageContent.documentMessage.fileName || undefined,
         });
       }
     } catch (error) {
