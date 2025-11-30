@@ -4,12 +4,13 @@
 
 All MsgCore packages (backend, SDK, CLI, n8n) use **synchronized versions** from the backend `package.json`.
 
-**Current Architecture:**
+**Architecture:**
 
 - 📦 Backend version → Single source of truth
 - 🔄 All generators import backend `package.json` version
 - ✅ CLI automatically references matching SDK version (`^x.y.z`)
 - 🎯 Version represents MsgCore API contract version
+- 📁 All packages live in `packages/` directory (monorepo with npm workspaces)
 
 ## Version Bump Process
 
@@ -32,9 +33,15 @@ npm version major
 
 - ✅ Backend `package.json` version updated
 - ✅ Git commit created automatically with new version tag
-- ⚠️ **Note:** Packages are NOT auto-regenerated. Run `npm run generate:all` separately if needed
+- ⚠️ **Note:** Packages are NOT auto-regenerated. Run `npm run generate:all` separately
 
-### 2. Verify Coordinated Versions
+### 2. Regenerate Packages
+
+```bash
+npm run generate:all
+```
+
+### 3. Verify Coordinated Versions
 
 Check all packages have the same version:
 
@@ -51,40 +58,30 @@ CLI: 1.2.2
 n8n: 1.2.2
 ```
 
-### 3. Commit and Push
+### 4. Commit and Push
 
 ```bash
-# The version:* scripts already create a commit
+git add .
+git commit -m "chore: regenerate packages for v1.2.2"
 git push origin main --tags
 ```
 
-### 4. Publish Packages
+### 5. Publish Packages
 
-#### **Option A: Manual Publish**
+Publish each package individually as needed:
 
 ```bash
-# Publish SDK
-cd generated/sdk
-npm publish
+# Publish SDK first (CLI depends on it)
+npm run publish:sdk
 
-# Publish CLI
-cd ../cli
-npm publish
+# Then publish CLI
+npm run publish:cli
 
-# Publish n8n
-cd ../n8n
-npm publish
+# n8n is independent
+npm run publish:n8n
 ```
 
-#### **Option B: Automated Multi-Repo Publish**
-
-1. Go to GitHub Actions
-2. Run **Multi-Repo Package Publishing** workflow
-3. Select which packages to publish (SDK, CLI, n8n)
-4. Workflow automatically:
-   - Creates PRs in each package repository
-   - Uses Claude Code to generate changelogs
-   - Publishes to npm after PR merge
+**Important:** Always publish SDK before CLI if both have changes, since CLI depends on SDK.
 
 ## Semantic Versioning Rules
 
@@ -154,10 +151,17 @@ git merge feat/new-platform
 # 4. Bump version (minor for new feature)
 npm version minor
 
-# 5. Push with tags
+# 5. Regenerate packages
+npm run generate:all
+
+# 6. Commit and push
+git add .
+git commit -m "chore: regenerate packages"
 git push origin main --tags
 
-# 6. Trigger publish workflow
+# 7. Publish packages
+npm run publish:sdk
+npm run publish:cli
 ```
 
 ### Pre-Release Versions
@@ -188,7 +192,10 @@ git commit -m "fix: resolve critical message delivery bug"
 # 3. Bump patch version
 npm version patch
 
-# 4. Push and publish
+# 4. Regenerate and push
+npm run generate:all
+git add .
+git commit -m "chore: regenerate packages"
 git push origin hotfix/critical-bug --tags
 ```
 
@@ -200,7 +207,7 @@ git push origin hotfix/critical-bug --tags
 # Backend version
 node -p "require('./package.json').version"
 
-# All generated versions
+# All package versions
 npm run version:check
 ```
 
@@ -264,25 +271,25 @@ npm run generate:all
 - [ ] Version bumped appropriately (patch/minor/major)
 - [ ] All packages regenerated (`npm run generate:all`)
 - [ ] Versions verified (`npm run version:check`)
-- [ ] CHANGELOG updated (if maintained manually)
 - [ ] Committed and pushed with tags
-- [ ] Multi-repo publish workflow triggered
-- [ ] Package PRs reviewed and merged
-- [ ] Published to npm
-- [ ] GitHub releases created
+- [ ] SDK published (`npm run publish:sdk`)
+- [ ] CLI published (`npm run publish:cli`)
+- [ ] n8n published (`npm run publish:n8n`) - if needed
 
-## Version History
+## Package Scripts Reference
 
-| Version | Date       | Type  | Description                           |
-| ------- | ---------- | ----- | ------------------------------------- |
-| 1.2.1   | 2024-10-02 | Minor | Coordinated versioning implementation |
-| 1.2.0   | 2024-09-XX | Minor | Template-based generator system       |
-| 1.1.0   | 2024-09-XX | Minor | n8n node generator added              |
-| 1.0.0   | 2024-08-XX | Major | Initial contract-driven architecture  |
+| Script | Description |
+|--------|-------------|
+| `npm run generate:all` | Extract contracts and regenerate all packages |
+| `npm run version:check` | Verify all package versions match |
+| `npm run build:sdk` | Build SDK package |
+| `npm run build:cli` | Build CLI package |
+| `npm run build:n8n` | Build n8n package |
+| `npm run publish:sdk` | Build and publish SDK to npm |
+| `npm run publish:cli` | Build and publish CLI to npm |
+| `npm run publish:n8n` | Build and publish n8n to npm |
 
 ## Links
 
 - [CLAUDE.md](./CLAUDE.md) - Complete technical architecture and contract system
 - [CONTRIBUTING.md](./CONTRIBUTING.md) - Development workflow and release process
-- [SEMANTIC_PLAYBOOK.md](./SEMANTIC_PLAYBOOK.md) - Development conventions
-- [.github/workflows/multi-repo-publish.yml](./.github/workflows/multi-repo-publish.yml) - Automated publish workflow

@@ -829,10 +829,10 @@ Backend Controllers (@SdkContract decorators)
 # 1. Add @SdkContract decorators to controllers
 # 2. Regenerate all packages (quintuple generation)
 npm run generate:all
-# 3. Test and publish all packages
-cd generated/sdk && npm publish
-cd ../cli && npm publish
-cd ../n8n && npm publish
+# 3. Build and publish packages individually
+npm run publish:sdk
+npm run publish:cli
+npm run publish:n8n
 # 4. OpenAPI available at /docs/openapi.json
 ```
 

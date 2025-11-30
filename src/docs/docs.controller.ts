@@ -12,7 +12,7 @@ export class DocsController {
     try {
       const openApiPath = path.join(
         process.cwd(),
-        'generated/openapi/openapi.json',
+        'packages/openapi/openapi.json',
       );
 
       if (!fs.existsSync(openApiPath)) {
@@ -45,7 +45,7 @@ export class DocsController {
     try {
       const openApiPath = path.join(
         process.cwd(),
-        'generated/openapi/openapi.yaml',
+        'packages/openapi/openapi.yaml',
       );
 
       if (!fs.existsSync(openApiPath)) {

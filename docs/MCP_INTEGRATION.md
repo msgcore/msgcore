@@ -313,7 +313,7 @@ The MsgCore CLI includes an MCP stdio server for seamless integration with Claud
 npm install -g @msgcore/cli
 
 # Or use locally
-cd generated/cli
+cd packages/cli
 npm install
 npm run build
 npm link

@@ -36,7 +36,7 @@ jobs:
           echo "🧪 Testing generated package compilation..."
 
           # Test that generated packages can be imported
-          cd generated/sdk && node -e "const { MsgCore } = require('./dist/index.js'); console.log('✅ SDK import successful');"
+          cd packages/sdk && node -e "const { MsgCore } = require('./dist/index.js'); console.log('✅ SDK import successful');"
           cd ../cli && node -e "console.log('✅ CLI executable ready');"
 
       - name: Validate package structure
@@ -44,18 +44,18 @@ jobs:
           echo "📦 Validating package structures..."
 
           # Validate SDK package
-          test -f generated/sdk/package.json
-          test -f generated/sdk/dist/index.js
-          test -f generated/sdk/dist/index.d.ts
-          test -f generated/sdk/dist/client.js
-          test -f generated/sdk/dist/types.js
+          test -f packages/sdk/package.json
+          test -f packages/sdk/dist/index.js
+          test -f packages/sdk/dist/index.d.ts
+          test -f packages/sdk/dist/client.js
+          test -f packages/sdk/dist/types.js
           echo "✅ SDK package structure valid"
 
           # Validate CLI package
-          test -f generated/cli/package.json
-          test -f generated/cli/dist/index.js
-          test -d generated/cli/dist/commands
-          test -f generated/cli/dist/lib/utils.js
+          test -f packages/cli/package.json
+          test -f packages/cli/dist/index.js
+          test -d packages/cli/dist/commands
+          test -f packages/cli/dist/lib/utils.js
           echo "✅ CLI package structure valid"
 
       - name: Check contract completeness
@@ -64,14 +64,14 @@ jobs:
 
           # Check that all controllers have contracts
           CONTROLLER_COUNT=$(find src -name "*.controller.ts" | wc -l)
-          CONTRACT_CONTROLLERS=$(jq '.contractsByController | keys | length' generated/contracts/extraction-summary.json)
+          CONTRACT_CONTROLLERS=$(jq '.contractsByController | keys | length' packages/contracts/extraction-summary.json)
 
           echo "Controllers in codebase: $CONTROLLER_COUNT"
           echo "Controllers with contracts: $CONTRACT_CONTROLLERS"
 
           # Validate essential contracts exist
-          jq -e '.[] | select(.contractMetadata.command == "projects create")' generated/contracts/contracts.json > /dev/null
-          jq -e '.[] | select(.contractMetadata.command == "projects list")' generated/contracts/contracts.json > /dev/null
+          jq -e '.[] | select(.contractMetadata.command == "projects create")' packages/contracts/contracts.json > /dev/null
+          jq -e '.[] | select(.contractMetadata.command == "projects list")' packages/contracts/contracts.json > /dev/null
           echo "✅ Essential contracts present"
 
       - name: Performance benchmarks
@@ -85,8 +85,8 @@ jobs:
           GENERATION_TIME=$((TIME_END - TIME_START))
 
           # Check package sizes
-          SDK_SIZE=$(du -sk generated/sdk/dist | cut -f1)
-          CLI_SIZE=$(du -sk generated/cli/dist | cut -f1)
+          SDK_SIZE=$(du -sk packages/sdk/dist | cut -f1)
+          CLI_SIZE=$(du -sk packages/cli/dist | cut -f1)
 
           echo "📊 Performance Metrics:"
           echo "   Generation time: ${GENERATION_TIME}s"

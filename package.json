@@ -1,12 +1,15 @@
 {
-  "name": "backend",
+  "name": "msgcore",
   "version": "1.1.0",
-  "description": "",
-  "author": "",
+  "description": "Universal messaging gateway - single API for Discord, Telegram, WhatsApp, and more",
+  "author": "MsgCore",
   "private": true,
   "license": "Apache-2.0",
+  "workspaces": [
+    "packages/*"
+  ],
   "scripts": {
-    "build": "npm run extract:contracts && npm run generate:sdk && cd generated/sdk && npm install && npm run build && cd ../.. && npm run build:frontend && npm run build:backend",
+    "build": "npm run extract:contracts && npm run generate:sdk && npm run build:sdk && npm run build:frontend && npm run build:backend",
     "build:frontend": "cd web && NODE_ENV=development npm install && npm run build",
     "build:backend": "nest build",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
@@ -22,14 +25,19 @@
     "test:e2e": "jest --config ./test/jest-e2e.json",
     "extract:contracts": "ts-node -r tsconfig-paths/register tools/extract-contracts.ts",
     "generate:all": "npm run extract:contracts && npm run validate:contracts:types && npm run generate:sdk && npm run generate:cli && npm run generate:n8n && npm run generate:openapi && npm run validate:generated",
-    "validate:generated": "cd generated/sdk && npm install && npm run build && cd ../cli && npm install && npm run build && cd ../n8n && npm install && npm run build && echo '✅ Generated packages validation completed'",
+    "validate:generated": "npm run build:sdk && npm run build:cli && npm run build:n8n && echo '✅ Generated packages validation completed'",
+    "build:sdk": "npm run build -w @msgcore/sdk",
+    "build:cli": "npm run build -w @msgcore/cli",
+    "build:n8n": "npm run build -w n8n-nodes-msgcore",
+    "publish:sdk": "npm run build:sdk && npm publish -w packages/sdk --access public",
+    "publish:cli": "npm run build:cli && npm publish -w packages/cli --access public",
+    "publish:n8n": "npm run build:n8n && npm publish -w packages/n8n --access public",
     "validate:contracts:types": "ts-node -r tsconfig-paths/register tools/scripts/validate-contracts.ts",
     "generate:sdk": "ts-node -r tsconfig-paths/register tools/generators/sdk-generator.ts",
     "generate:cli": "ts-node -r tsconfig-paths/register tools/generators/cli-generator.ts",
     "generate:n8n": "ts-node -r tsconfig-paths/register tools/generators/n8n-generator.ts",
     "generate:openapi": "ts-node -r tsconfig-paths/register tools/generators/openapi-generator.ts",
-    "version:check": "node -e \"const v = require('./package.json').version; console.log('Backend:', v); console.log('SDK:', require('./generated/sdk/package.json').version); console.log('CLI:', require('./generated/cli/package.json').version); console.log('n8n:', require('./generated/n8n/package.json').version);\"",
-    "prepare": "[ \"$NODE_ENV\" = \"production\" ] || husky || true"
+    "version:check": "node -e \"const v = require('./package.json').version; console.log('Backend:', v); console.log('SDK:', require('./packages/sdk/package.json').version); console.log('CLI:', require('./packages/cli/package.json').version); console.log('n8n:', require('./packages/n8n/package.json').version);\""
   },
   "dependencies": {
     "@langchain/core": "^1.0.2",

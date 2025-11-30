@@ -1,0 +1,59 @@
+{
+  "name": "n8n-nodes-msgcore",
+  "version": "1.1.0",
+  "description": "n8n community node for MsgCore universal messaging gateway",
+  "keywords": [
+    "n8n-community-node-package",
+    "msgcore",
+    "messaging",
+    "automation",
+    "communication"
+  ],
+  "license": "MIT",
+  "homepage": "https://github.com/msgcore/msgcore/tree/main/packages/n8n",
+  "author": {
+    "name": "MsgCore",
+    "email": "contact@msgcore.com"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/msgcore/msgcore.git",
+    "directory": "packages/n8n"
+  },
+  "bugs": {
+    "url": "https://github.com/msgcore/msgcore/issues"
+  },
+  "main": "index.js",
+  "scripts": {
+    "build": "tsc && gulp build:icons",
+    "dev": "tsc --watch",
+    "format": "prettier nodes credentials --write",
+    "lint": "eslint nodes credentials package.json",
+    "lint:fix": "eslint nodes credentials package.json --fix",
+    "prepublishOnly": "npm run build"
+  },
+  "files": [
+    "dist"
+  ],
+  "n8n": {
+    "n8nNodesApiVersion": 1,
+    "credentials": [
+      "dist/credentials/MsgCoreApi.credentials.js"
+    ],
+    "nodes": [
+      "dist/nodes/MsgCore/MsgCore.node.js",
+      "dist/nodes/MsgCoreTrigger/MsgCoreTrigger.node.js"
+    ]
+  },
+  "devDependencies": {
+    "@types/node": "^24.6.2",
+    "eslint": "^9.36.0",
+    "gulp": "^5.0.1",
+    "n8n-workflow": "*",
+    "prettier": "^3.6.2",
+    "typescript": "^5.9.3"
+  },
+  "peerDependencies": {
+    "n8n-workflow": "*"
+  }
+}

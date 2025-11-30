@@ -17,9 +17,9 @@ coverage
 Dockerfile
 docker-compose.yml
 .dockerignore
-generated/cli/
-generated/sdk/
-generated/n8n/
+packages/cli/
+packages/sdk/
+packages/n8n/
 test-sdk.ts
 
 # Web frontend build artifacts

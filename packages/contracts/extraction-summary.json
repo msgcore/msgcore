@@ -1,0 +1,41 @@
+{
+  "extractedAt": "2025-11-30T15:06:26.474Z",
+  "totalContracts": 87,
+  "contractsByController": {
+    "WebhooksController": 6,
+    "ProjectsController": 5,
+    "PlatformsController": 7,
+    "MessagesController": 9,
+    "MembersController": 5,
+    "IdentitiesController": 12,
+    "BillingController": 5,
+    "AuthController": 6,
+    "ApiKeysController": 4,
+    "PlatformLogsController": 3,
+    "PlatformHealthController": 1,
+    "ChatsController": 6,
+    "OpenRouterModelsController": 1,
+    "ExtractedEntitiesController": 2,
+    "EntitySchemasController": 5,
+    "AnalysisRunsController": 5,
+    "AnalysisProfilesController": 5
+  },
+  "contractsByCategory": {
+    "Webhooks": 6,
+    "Projects": 5,
+    "Platforms": 8,
+    "Messages": 9,
+    "Members": 5,
+    "Identities": 12,
+    "Billing": 5,
+    "Auth": 6,
+    "ApiKeys": 4,
+    "Platform Logs": 3,
+    "Chats": 6,
+    "Analysis / Models": 1,
+    "Analysis / Entities": 2,
+    "Analysis / Schemas": 5,
+    "Analysis / Runs": 5,
+    "Analysis / Profiles": 5
+  }
+}
