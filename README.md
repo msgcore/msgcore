@@ -2,6 +2,7 @@
 
 Universal messaging infrastructure for AI agents. Send messages across Discord, Telegram, WhatsApp, and Email with a single API.
 
+
 [![License: Apache 2.0](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 [![Discord Community](https://img.shields.io/badge/Discord-Join-7289da?logo=discord)](https://discord.gg/bQPsvycW)
 
@@ -13,6 +14,8 @@ Universal messaging infrastructure for AI agents. Send messages across Discord, 
 - **Webhook Events** - Subscribe to messages, reactions, and button clicks
 - **Multi-Tenant** - User/project management with role-based access
 - **MCP Support** - Native Model Context Protocol (HTTP server + stdio CLI)
+
+<img width="1205" height="907" alt="Screenshot 2025-12-01 at 23 34 52" src="https://github.com/user-attachments/assets/e520ecc5-7015-4fac-85ae-672df936e3d5" />
 
 ## Quick Start
 
