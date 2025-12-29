@@ -1817,6 +1817,128 @@ const CONTRACTS = [
     }
   },
   {
+    "controller": "BillingController",
+    "method": "createCheckout",
+    "httpMethod": "POST",
+    "path": "/api/v1/billing/checkout",
+    "contractMetadata": {
+      "command": "billing checkout",
+      "description": "Create Stripe checkout session for subscription upgrade",
+      "category": "Billing",
+      "requiredScopes": [],
+      "inputType": "CreateCheckoutDto",
+      "outputType": "CheckoutResponseDto",
+      "options": {
+        "tier": {
+          "required": true,
+          "description": "Subscription tier",
+          "choices": [
+            "STARTER",
+            "PRO",
+            "BUSINESS",
+            "ENTERPRISE"
+          ],
+          "type": "string"
+        },
+        "interval": {
+          "required": true,
+          "description": "Billing interval",
+          "choices": [
+            "monthly",
+            "annual"
+          ],
+          "type": "string"
+        }
+      },
+      "examples": [
+        {
+          "description": "Upgrade to PRO monthly",
+          "command": "msgcore billing checkout --tier PRO --interval monthly"
+        },
+        {
+          "description": "Upgrade to STARTER annually",
+          "command": "msgcore billing checkout --tier STARTER --interval annual"
+        }
+      ]
+    }
+  },
+  {
+    "controller": "BillingController",
+    "method": "createPortal",
+    "httpMethod": "POST",
+    "path": "/api/v1/billing/portal",
+    "contractMetadata": {
+      "command": "billing portal",
+      "description": "Access Stripe customer portal to manage subscription",
+      "category": "Billing",
+      "requiredScopes": [],
+      "outputType": "PortalResponseDto",
+      "examples": [
+        {
+          "description": "Open billing portal",
+          "command": "msgcore billing portal"
+        }
+      ]
+    }
+  },
+  {
+    "controller": "BillingController",
+    "method": "getSubscription",
+    "httpMethod": "GET",
+    "path": "/api/v1/billing/subscription",
+    "contractMetadata": {
+      "command": "billing subscription",
+      "description": "Get current subscription details including tier, status, and trial info",
+      "category": "Billing",
+      "requiredScopes": [],
+      "outputType": "SubscriptionResponseDto",
+      "examples": [
+        {
+          "description": "View subscription details",
+          "command": "msgcore billing subscription"
+        }
+      ]
+    }
+  },
+  {
+    "controller": "BillingController",
+    "method": "getUsage",
+    "httpMethod": "GET",
+    "path": "/api/v1/billing/usage",
+    "contractMetadata": {
+      "command": "billing usage",
+      "description": "Get usage statistics for projects, messages, platforms, webhooks with limit warnings",
+      "category": "Billing",
+      "requiredScopes": [],
+      "outputType": "UsageResponseDto",
+      "examples": [
+        {
+          "description": "View usage statistics",
+          "command": "msgcore billing usage"
+        }
+      ]
+    }
+  },
+  {
+    "controller": "BillingController",
+    "method": "syncSubscription",
+    "httpMethod": "POST",
+    "path": "/api/v1/billing/sync",
+    "contractMetadata": {
+      "command": "billing sync",
+      "description": "Manually sync subscription data from Stripe",
+      "category": "Billing",
+      "requiredScopes": [],
+      "outputType": "SyncResponseDto",
+      "examples": [
+        {
+          "description": "Sync subscription from Stripe",
+          "command": "msgcore billing sync"
+        }
+      ]
+    }
+  },
+  {
     "controller": "AuthController",
     "method": "signup",
     "httpMethod": "POST",
@@ -2120,123 +2242,182 @@ const CONTRACTS = [
     }
   },
   {
-    "controller": "BillingController",
-    "method": "createCheckout",
-    "httpMethod": "POST",
-    "path": "/api/v1/billing/checkout",
+    "controller": "PlatformLogsController",
+    "method": "listLogs",
+    "httpMethod": "GET",
+    "path": "/api/v1/projects/:project/platforms/logs",
     "contractMetadata": {
-      "command": "billing checkout",
-      "description": "Create Stripe checkout session for subscription upgrade",
-      "category": "Billing",
-      "requiredScopes": [],
-      "inputType": "CreateCheckoutDto",
-      "outputType": "CheckoutResponseDto",
+      "command": "platforms logs list",
+      "description": "List platform processing logs for a project",
+      "category": "Platform Logs",
+      "requiredScopes": [
+        "platforms:read"
+      ],
+      "outputType": "PlatformLogsResponse",
       "options": {
-        "tier": {
-          "required": true,
-          "description": "Subscription tier",
+        "platform": {
+          "description": "Filter by platform (telegram, discord)",
+          "type": "string"
+        },
+        "level": {
+          "description": "Filter by log level",
           "choices": [
-            "STARTER",
-            "PRO",
-            "BUSINESS",
-            "ENTERPRISE"
+            "info",
+            "warn",
+            "error",
+            "debug"
           ],
           "type": "string"
         },
-        "interval": {
-          "required": true,
-          "description": "Billing interval",
+        "category": {
+          "description": "Filter by log category",
           "choices": [
-            "monthly",
-            "annual"
+            "connection",
+            "webhook",
+            "message",
+            "error",
+            "auth",
+            "general"
           ],
           "type": "string"
+        },
+        "startDate": {
+          "description": "Filter logs after this date (ISO 8601)",
+          "type": "string"
+        },
+        "endDate": {
+          "description": "Filter logs before this date (ISO 8601)",
+          "type": "string"
+        },
+        "limit": {
+          "description": "Number of logs to return (1-1000)",
+          "type": "number",
+          "default": "100"
+        },
+        "offset": {
+          "description": "Number of logs to skip",
+          "type": "number"
         }
       },
       "examples": [
         {
-          "description": "Upgrade to PRO monthly",
-          "command": "msgcore billing checkout --tier PRO --interval monthly"
+          "description": "List recent platform logs",
+          "command": "msgcore platforms logs list my-project"
         },
         {
-          "description": "Upgrade to STARTER annually",
-          "command": "msgcore billing checkout --tier STARTER --interval annual"
-        }
-      ]
-    }
-  },
-  {
-    "controller": "BillingController",
-    "method": "createPortal",
-    "httpMethod": "POST",
-    "path": "/api/v1/billing/portal",
-    "contractMetadata": {
-      "command": "billing portal",
-      "description": "Access Stripe customer portal to manage subscription",
-      "category": "Billing",
-      "requiredScopes": [],
-      "outputType": "PortalResponseDto",
-      "examples": [
+          "description": "List only error logs",
+          "command": "msgcore platforms logs list my-project --level error"
+        },
         {
-          "description": "Open billing portal",
-          "command": "msgcore billing portal"
+          "description": "List webhook logs for Telegram",
+          "command": "msgcore platforms logs list my-project --platform telegram --category webhook"
         }
       ]
     }
   },
   {
-    "controller": "BillingController",
-    "method": "getSubscription",
+    "controller": "PlatformLogsController",
+    "method": "getPlatformLogs",
     "httpMethod": "GET",
-    "path": "/api/v1/billing/subscription",
+    "path": "/api/v1/projects/:project/platforms/:platformId/logs",
     "contractMetadata": {
-      "command": "billing subscription",
-      "description": "Get current subscription details including tier, status, and trial info",
-      "category": "Billing",
-      "requiredScopes": [],
-      "outputType": "SubscriptionResponseDto",
+      "command": "platforms logs get",
+      "description": "List logs for a specific platform configuration",
+      "category": "Platform Logs",
+      "requiredScopes": [
+        "platforms:read"
+      ],
+      "outputType": "PlatformLogsResponse",
+      "options": {
+        "level": {
+          "description": "Filter by log level",
+          "choices": [
+            "info",
+            "warn",
+            "error",
+            "debug"
+          ],
+          "type": "string"
+        },
+        "category": {
+          "description": "Filter by log category",
+          "choices": [
+            "connection",
+            "webhook",
+            "message",
+            "error",
+            "auth",
+            "general"
+          ],
+          "type": "string"
+        },
+        "startDate": {
+          "description": "Filter logs after this date (ISO 8601)",
+          "type": "string"
+        },
+        "endDate": {
+          "description": "Filter logs before this date (ISO 8601)",
+          "type": "string"
+        },
+        "limit": {
+          "description": "Number of logs to return (1-1000)",
+          "type": "number",
+          "default": "100"
+        },
+        "offset": {
+          "description": "Number of logs to skip",
+          "type": "number"
+        }
+      },
       "examples": [
         {
-          "description": "View subscription details",
-          "command": "msgcore billing subscription"
+          "description": "List logs for specific platform",
+          "command": "msgcore platforms logs get my-project platform-id-123"
+        },
+        {
+          "description": "List recent errors for platform",
+          "command": "msgcore platforms logs get my-project platform-id-123 --level error --limit 50"
         }
       ]
     }
   },
   {
-    "controller": "BillingController",
-    "method": "getUsage",
+    "controller": "PlatformLogsController",
+    "method": "getLogStats",
     "httpMethod": "GET",
-    "path": "/api/v1/billing/usage",
+    "path": "/api/v1/projects/:project/platforms/logs/stats",
     "contractMetadata": {
-      "command": "billing usage",
-      "description": "Get usage statistics for projects, messages, platforms, webhooks with limit warnings",
-      "category": "Billing",
-      "requiredScopes": [],
-      "outputType": "UsageResponseDto",
+      "command": "platforms logs stats",
+      "description": "Get platform logs statistics and recent errors",
+      "category": "Platform Logs",
+      "requiredScopes": [
+        "platforms:read"
+      ],
+      "outputType": "PlatformLogStatsResponse",
       "examples": [
         {
-          "description": "View usage statistics",
-          "command": "msgcore billing usage"
+          "description": "Get platform logs statistics",
+          "command": "msgcore platforms logs stats my-project"
         }
       ]
     }
   },
   {
-    "controller": "BillingController",
-    "method": "syncSubscription",
-    "httpMethod": "POST",
-    "path": "/api/v1/billing/sync",
+    "controller": "PlatformHealthController",
+    "method": "getSupportedPlatforms",
+    "httpMethod": "GET",
+    "path": "/api/v1/platforms/supported",
     "contractMetadata": {
-      "command": "billing sync",
-      "description": "Manually sync subscription data from Stripe",
-      "category": "Billing",
+      "command": "platforms supported",
+      "description": "List supported platforms with credential requirements",
+      "category": "Platforms",
       "requiredScopes": [],
-      "outputType": "SyncResponseDto",
+      "excludeFromMcp": true,
+      "outputType": "SupportedPlatformsResponse",
       "examples": [
         {
-          "description": "Sync subscription from Stripe",
-          "command": "msgcore billing sync"
+          "description": "List supported platforms",
+          "command": "msgcore platforms supported"
         }
       ]
     }
@@ -2420,187 +2601,6 @@ const CONTRACTS = [
           "default": 100
         }
       }
-    }
-  },
-  {
-    "controller": "PlatformLogsController",
-    "method": "listLogs",
-    "httpMethod": "GET",
-    "path": "/api/v1/projects/:project/platforms/logs",
-    "contractMetadata": {
-      "command": "platforms logs list",
-      "description": "List platform processing logs for a project",
-      "category": "Platform Logs",
-      "requiredScopes": [
-        "platforms:read"
-      ],
-      "outputType": "PlatformLogsResponse",
-      "options": {
-        "platform": {
-          "description": "Filter by platform (telegram, discord)",
-          "type": "string"
-        },
-        "level": {
-          "description": "Filter by log level",
-          "choices": [
-            "info",
-            "warn",
-            "error",
-            "debug"
-          ],
-          "type": "string"
-        },
-        "category": {
-          "description": "Filter by log category",
-          "choices": [
-            "connection",
-            "webhook",
-            "message",
-            "error",
-            "auth",
-            "general"
-          ],
-          "type": "string"
-        },
-        "startDate": {
-          "description": "Filter logs after this date (ISO 8601)",
-          "type": "string"
-        },
-        "endDate": {
-          "description": "Filter logs before this date (ISO 8601)",
-          "type": "string"
-        },
-        "limit": {
-          "description": "Number of logs to return (1-1000)",
-          "type": "number",
-          "default": "100"
-        },
-        "offset": {
-          "description": "Number of logs to skip",
-          "type": "number"
-        }
-      },
-      "examples": [
-        {
-          "description": "List recent platform logs",
-          "command": "msgcore platforms logs list my-project"
-        },
-        {
-          "description": "List only error logs",
-          "command": "msgcore platforms logs list my-project --level error"
-        },
-        {
-          "description": "List webhook logs for Telegram",
-          "command": "msgcore platforms logs list my-project --platform telegram --category webhook"
-        }
-      ]
-    }
-  },
-  {
-    "controller": "PlatformLogsController",
-    "method": "getPlatformLogs",
-    "httpMethod": "GET",
-    "path": "/api/v1/projects/:project/platforms/:platformId/logs",
-    "contractMetadata": {
-      "command": "platforms logs get",
-      "description": "List logs for a specific platform configuration",
-      "category": "Platform Logs",
-      "requiredScopes": [
-        "platforms:read"
-      ],
-      "outputType": "PlatformLogsResponse",
-      "options": {
-        "level": {
-          "description": "Filter by log level",
-          "choices": [
-            "info",
-            "warn",
-            "error",
-            "debug"
-          ],
-          "type": "string"
-        },
-        "category": {
-          "description": "Filter by log category",
-          "choices": [
-            "connection",
-            "webhook",
-            "message",
-            "error",
-            "auth",
-            "general"
-          ],
-          "type": "string"
-        },
-        "startDate": {
-          "description": "Filter logs after this date (ISO 8601)",
-          "type": "string"
-        },
-        "endDate": {
-          "description": "Filter logs before this date (ISO 8601)",
-          "type": "string"
-        },
-        "limit": {
-          "description": "Number of logs to return (1-1000)",
-          "type": "number",
-          "default": "100"
-        },
-        "offset": {
-          "description": "Number of logs to skip",
-          "type": "number"
-        }
-      },
-      "examples": [
-        {
-          "description": "List logs for specific platform",
-          "command": "msgcore platforms logs get my-project platform-id-123"
-        },
-        {
-          "description": "List recent errors for platform",
-          "command": "msgcore platforms logs get my-project platform-id-123 --level error --limit 50"
-        }
-      ]
-    }
-  },
-  {
-    "controller": "PlatformLogsController",
-    "method": "getLogStats",
-    "httpMethod": "GET",
-    "path": "/api/v1/projects/:project/platforms/logs/stats",
-    "contractMetadata": {
-      "command": "platforms logs stats",
-      "description": "Get platform logs statistics and recent errors",
-      "category": "Platform Logs",
-      "requiredScopes": [
-        "platforms:read"
-      ],
-      "outputType": "PlatformLogStatsResponse",
-      "examples": [
-        {
-          "description": "Get platform logs statistics",
-          "command": "msgcore platforms logs stats my-project"
-        }
-      ]
-    }
-  },
-  {
-    "controller": "PlatformHealthController",
-    "method": "getSupportedPlatforms",
-    "httpMethod": "GET",
-    "path": "/api/v1/platforms/supported",
-    "contractMetadata": {
-      "command": "platforms supported",
-      "description": "List supported platforms with credential requirements",
-      "category": "Platforms",
-      "requiredScopes": [],
-      "excludeFromMcp": true,
-      "outputType": "SupportedPlatformsResponse",
-      "examples": [
-        {
-          "description": "List supported platforms",
-          "command": "msgcore platforms supported"
-        }
-      ]
     }
   },
   {

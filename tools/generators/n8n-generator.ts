@@ -455,47 +455,21 @@ export class MsgCore implements INodeType {
       const operation = contractMetadata.command.split(' ')[1];
       const category = contractMetadata.category?.toLowerCase() || 'general';
 
-      // Collect required and optional parameters separately
-      const requiredParams: string[] = [];
-      const optionalParams: string[] = [];
-
-      // Determine routing type based on HTTP method
-      // POST/PUT/PATCH use body, GET/DELETE use query string
-      const httpMethod = contract.httpMethod.toUpperCase();
-      const usesBody = ['POST', 'PUT', 'PATCH'].includes(httpMethod);
-
-      // Process options from contract metadata
+      // Add parameters for this operation
       if (contractMetadata.options) {
         Object.entries(contractMetadata.options).forEach(
           ([optionName, optionConfig]) => {
             const paramType = this.getN8NParameterType(
               optionConfig.type || 'string',
             );
-            const isRequired = optionConfig.required || false;
 
-            // For body-based methods, all params go in body
-            // For query-based methods, only json types go in body (rare)
-            const routingType = usesBody ? 'body' : (paramType === 'json' ? 'body' : 'qs');
-
-            const paramDef = {
-              displayName: optionConfig.description || this.formatDisplayName(optionName),
-              name: optionName,
-              type: paramType,
-              default: optionConfig.default ?? (paramType === 'number' ? 0 : ''),
-              description: optionConfig.description || `${this.formatDisplayName(optionName)} parameter`,
-              choices: optionConfig.choices,
-              routingType,
-            };
-
-            if (isRequired) {
-              // Required parameters are top-level
-              requiredParams.push(`{
-            displayName: '${paramDef.displayName}',
-            name: '${paramDef.name}',
-            type: '${paramDef.type}',
-            required: true,
-            default: ${JSON.stringify(paramDef.default)},
-            ${paramDef.choices ? `options: [${paramDef.choices.map((choice) => `{name: '${choice}', value: '${choice}'}`).join(', ')}],` : ''}
+            parameters.push(`{
+            displayName: '${optionConfig.description || optionName}',
+            name: '${optionName}',
+            type: '${paramType}',
+            required: ${optionConfig.required || false},
+            default: ${JSON.stringify(optionConfig.default || '')},
+            ${optionConfig.choices ? `options: [${optionConfig.choices.map((choice) => `{name: '${choice}', value: '${choice}'}`).join(', ')}],` : ''}
             displayOptions: {
               show: {
                 resource: ['${category}'],
@@ -504,48 +478,30 @@ export class MsgCore implements INodeType {
             },
             routing: {
               request: {
-                ${paramDef.routingType}: {
-                  '${paramDef.name}': '={{$value}}',
+                ${paramType === 'json' ? 'body' : 'qs'}: {
+                  '${optionName}': '={{$value}}',
                 },
               },
             },
           }`);
-            } else {
-              // Optional parameters go into additionalFields
-              optionalParams.push(`{
-              displayName: '${paramDef.displayName}',
-              name: '${paramDef.name}',
-              type: '${paramDef.type}',
-              default: ${JSON.stringify(paramDef.default)},
-              description: '${paramDef.description}',
-              ${paramDef.choices ? `options: [${paramDef.choices.map((choice) => `{name: '${choice}', value: '${choice}'}`).join(', ')}],` : ''}
-              routing: {
-                request: {
-                  ${paramDef.routingType}: {
-                    '${paramDef.name}': '={{$value}}',
-                  },
-                },
-              },
-            }`);
-            }
           },
         );
       }
 
-      // Add path parameters (always required, top-level)
+      // Add path parameters (including project as parameter, not credential)
       const pathParams = this.extractPathParameters(contract.path);
       pathParams.forEach((param) => {
         const displayName =
           param === 'project'
             ? 'Project'
-            : this.formatDisplayName(param);
+            : param.charAt(0).toUpperCase() + param.slice(1);
         const description =
           param === 'project'
             ? 'Project identifier to operate on'
-            : `${this.formatDisplayName(param)} parameter`;
+            : `${param} parameter`;
         const defaultValue = param === 'project' ? 'default' : '';
 
-        requiredParams.push(`{
+        parameters.push(`{
           displayName: '${displayName}',
           name: '${param}',
           type: 'string',
@@ -560,40 +516,9 @@ export class MsgCore implements INodeType {
           },
         }`);
       });
-
-      // Add required parameters to the list
-      parameters.push(...requiredParams);
-
-      // If there are optional parameters, create an additionalFields collection
-      if (optionalParams.length > 0) {
-        parameters.push(`{
-          displayName: 'Additional Fields',
-          name: 'additionalFields',
-          type: 'collection',
-          placeholder: 'Add Field',
-          default: {},
-          displayOptions: {
-            show: {
-              resource: ['${category}'],
-              operation: ['${operation}'],
-            },
-          },
-          options: [
-            ${optionalParams.join(',\n            ')}
-          ],
-        }`);
-      }
     });
 
     return parameters.join(',\n      ');
-  }
-
-  private formatDisplayName(name: string): string {
-    // Convert camelCase to Title Case with spaces
-    return name
-      .replace(/([A-Z])/g, ' $1')
-      .replace(/^./, (str) => str.toUpperCase())
-      .trim();
   }
 
   private generateCredentialsFile(): string {

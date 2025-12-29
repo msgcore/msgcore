@@ -38,30 +38,31 @@ export class MessagesService {
   ) {}
 
   async sendMessage(projectId: string, sendMessageDto: SendMessageDto, authContext: AuthContext) {
-    // Parse and validate targets
-    const parsedTargets = this.parseTargetString(sendMessageDto.target);
-    const targetCount = parsedTargets.length;
-    const platformIds = parsedTargets.map((t) => t.platformId);
+    const targetCount = sendMessageDto.targets.length;
+    const platformIds = sendMessageDto.targets.map((t) => t.platformId);
 
-    this.logger.log(`Sending message to ${targetCount} target(s)`);
+    this.logger.log(`Sending message to ${targetCount} targets`);
 
-    // Get project
+    // Get project and validate platforms
     const project = await this.getProject(projectId);
 
     // BILLING: Check message limits and increment counter
     // Only check for JWT users (not API keys, as API keys are project-scoped)
     if (authContext.authType === 'jwt' && authContext.user?.userId) {
+      // Check if user has exceeded their message limit (throws PaymentRequiredException)
       await this.usageTracker.checkMessageLimit(authContext.user.userId);
+
+      // Increment message counter
       await this.usageTracker.incrementMessageCount(authContext.user.userId);
+
       this.logger.log(`Message limit checked and counter incremented for user ${authContext.user.userId}`);
     }
 
-    // Validate all platform IDs exist
-    for (const target of parsedTargets) {
+    for (const target of sendMessageDto.targets) {
       await this.platformsService.validatePlatformConfigById(target.platformId);
     }
 
-    // Queue message for processing (pass DTO directly)
+    // Queue message for processing
     const queueResult = await this.messageQueue.addMessage({
       projectId: project.id,
       message: sendMessageDto,
@@ -69,45 +70,16 @@ export class MessagesService {
 
     this.logger.log(`Message queued - Job ID: ${queueResult.jobId}`);
 
-    return {
+    const response = {
       success: true,
       jobId: queueResult.jobId,
       status: queueResult.status,
-      target: sendMessageDto.target,
+      targets: sendMessageDto.targets,
       platformIds,
       timestamp: new Date().toISOString(),
       message: 'Message queued for delivery',
     };
-  }
-
-  /**
-   * Parse target string for validation
-   * Format: "platformId:type:id" or comma-separated "p1:user:1,p2:channel:2"
-   */
-  parseTargetString(targetString: string): Array<{ platformId: string; type: string; id: string }> {
-    const validTypes = ['user', 'channel', 'group'];
-    const targetParts = targetString.split(',').map(s => s.trim()).filter(s => s);
-
-    return targetParts.map(part => {
-      const segments = part.split(':');
-      if (segments.length < 3) {
-        throw new BadRequestException(
-          `Invalid target format: "${part}". Expected "platformId:type:id" (e.g., "abc123:user:456")`,
-        );
-      }
-
-      const platformId = segments[0];
-      const typeStr = segments[1].toLowerCase();
-      const id = segments.slice(2).join(':'); // Join remaining parts in case id contains colons
-
-      if (!validTypes.includes(typeStr)) {
-        throw new BadRequestException(
-          `Invalid target type: "${typeStr}". Expected one of: user, channel, group`,
-        );
-      }
-
-      return { platformId, type: typeStr, id };
-    });
+    return response;
   }
 
   async getMessageStatus(jobId: string) {

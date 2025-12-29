@@ -19,13 +19,15 @@ import { CryptoUtil } from '../../common/utils/crypto.util';
 import { WebhookDeliveryService } from '../../webhooks/services/webhook-delivery.service';
 import { WebhookEventType } from '../../webhooks/types/webhook-event.types';
 
-// Matches SendMessageDto from API
 interface MessageJob {
   projectId: string;
   message: {
-    target: string; // Format: "platformId:type:id" or comma-separated
-    text?: string;  // Simple text shortcut
-    content?: {
+    targets: Array<{
+      platformId: string;
+      type: string;
+      id: string;
+    }>;
+    content: {
       subject?: string;
       text?: string;
       markdown?: string;
@@ -46,12 +48,6 @@ interface MessageJob {
       priority?: string;
     };
   };
-}
-
-interface ParsedTarget {
-  platformId: string;
-  type: string;
-  id: string;
 }
 
 @Injectable()
@@ -80,20 +76,12 @@ export class DynamicMessageProcessor
   async process(job: Job<MessageJob>) {
     const { projectId, message } = job.data;
 
-    // Parse target string into array
-    const parsedTargets = this.parseTargetString(message.target);
-
-    // Build content from text shortcut or content object
-    const content = message.content || {};
-    if (message.text && !content.text) {
-      content.text = message.text;
-    }
-
     // SECURITY: Deduplicate targets to prevent spam attacks
-    const targetMap = new Map<string, ParsedTarget>();
+    const targetMap = new Map<string, (typeof message.targets)[0]>();
     const duplicatesDetected: string[] = [];
 
-    for (const target of parsedTargets) {
+    for (const target of message.targets) {
+      // SECURITY: Safe key generation that handles special characters
       const targetKey = this.generateSafeTargetKey(target);
 
       if (!targetMap.has(targetKey)) {
@@ -107,7 +95,7 @@ export class DynamicMessageProcessor
     }
 
     const uniqueTargets = Array.from(targetMap.values());
-    const originalCount = parsedTargets.length;
+    const originalCount = message.targets.length;
     const deduplicatedCount = uniqueTargets.length;
 
     if (duplicatesDetected.length > 0) {
@@ -214,8 +202,8 @@ export class DynamicMessageProcessor
             jobId: job.id?.toString(),
             providerChatId: target.id,
             providerUserId: target.type === 'user' ? target.id : 'system',
-            messageText: content.text || null,
-            messageContent: content,
+            messageText: message.content.text || null,
+            messageContent: message.content,
             status: MessageStatus.queued,
           },
         });
@@ -248,7 +236,7 @@ export class DynamicMessageProcessor
             display: 'System',
           },
           message: {
-            text: content.text,
+            text: message.content.text,
           },
           provider: {
             eventId: `job-${job.id}-${platformConfig.platform}-${target.id}`,
@@ -261,14 +249,14 @@ export class DynamicMessageProcessor
 
         // Send the message through the adapter
         const result = await adapter.sendMessage(envelope, {
-          subject: content.subject,
-          text: content.text,
-          markdown: content.markdown,
-          html: content.html,
-          attachments: content.attachments,
-          buttons: content.buttons,
-          embeds: content.embeds,
-          platformOptions: content.platformOptions,
+          subject: message.content.subject,
+          text: message.content.text,
+          markdown: message.content.markdown,
+          html: message.content.html,
+          attachments: message.content.attachments,
+          buttons: message.content.buttons,
+          embeds: message.content.embeds,
+          platformOptions: message.content.platformOptions,
           threadId: target.id,
           replyTo: message.options?.replyTo,
           silent: message.options?.silent,
@@ -467,29 +455,6 @@ export class DynamicMessageProcessor
     }
 
     this.logger.log('Message processor cleanup complete');
-  }
-
-  /**
-   * Parse target string into array of ParsedTarget
-   * Format: "platformId:type:id" or comma-separated "p1:user:1,p2:channel:2"
-   */
-  private parseTargetString(targetString: string): ParsedTarget[] {
-    const targetParts = targetString.split(',').map(s => s.trim()).filter(s => s);
-
-    return targetParts.map(part => {
-      const segments = part.split(':');
-      if (segments.length < 3) {
-        throw new Error(
-          `Invalid target format: "${part}". Expected "platformId:type:id"`,
-        );
-      }
-
-      return {
-        platformId: segments[0],
-        type: segments[1].toLowerCase(),
-        id: segments.slice(2).join(':'), // Handle IDs with colons
-      };
-    });
   }
 
   /**

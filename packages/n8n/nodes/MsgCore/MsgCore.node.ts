@@ -128,7 +128,7 @@ export class MsgCore implements INodeType {
           type: 'string',
           required: true,
           default: '',
-          description: 'Id parameter',
+          description: 'id parameter',
           displayOptions: {
             show: {
               resource: ['analysis / entities'],
@@ -257,8 +257,29 @@ export class MsgCore implements INodeType {
             },
             routing: {
               request: {
-                body: {
+                qs: {
                   'name': '={{$value}}',
+                },
+              },
+            },
+          },
+      {
+            displayName: 'Profile description',
+            name: 'description',
+            type: 'string',
+            required: false,
+            default: "",
+            
+            displayOptions: {
+              show: {
+                resource: ['analysis / profiles'],
+                operation: ['profiles'],
+              },
+            },
+            routing: {
+              request: {
+                qs: {
+                  'description': '={{$value}}',
                 },
               },
             },
@@ -299,13 +320,55 @@ export class MsgCore implements INodeType {
             },
             routing: {
               request: {
-                body: {
+                qs: {
                   'entitySchemaIds': '={{$value}}',
                 },
               },
             },
           },
       {
+            displayName: 'Store extracted entities',
+            name: 'storeEntities',
+            type: 'boolean',
+            required: false,
+            default: "",
+            
+            displayOptions: {
+              show: {
+                resource: ['analysis / profiles'],
+                operation: ['profiles'],
+              },
+            },
+            routing: {
+              request: {
+                qs: {
+                  'storeEntities': '={{$value}}',
+                },
+              },
+            },
+          },
+      {
+            displayName: 'Generate tags from analysis',
+            name: 'generateTags',
+            type: 'boolean',
+            required: false,
+            default: "",
+            
+            displayOptions: {
+              show: {
+                resource: ['analysis / profiles'],
+                operation: ['profiles'],
+              },
+            },
+            routing: {
+              request: {
+                qs: {
+                  'generateTags': '={{$value}}',
+                },
+              },
+            },
+          },
+      {
           displayName: 'Project',
           name: 'project',
           type: 'string',
@@ -318,66 +381,6 @@ export class MsgCore implements INodeType {
               operation: ['profiles'],
             },
           },
-        },
-      {
-          displayName: 'Additional Fields',
-          name: 'additionalFields',
-          type: 'collection',
-          placeholder: 'Add Field',
-          default: {},
-          displayOptions: {
-            show: {
-              resource: ['analysis / profiles'],
-              operation: ['profiles'],
-            },
-          },
-          options: [
-            {
-              displayName: 'Profile description',
-              name: 'description',
-              type: 'string',
-              default: "",
-              description: 'Profile description',
-              
-              routing: {
-                request: {
-                  body: {
-                    'description': '={{$value}}',
-                  },
-                },
-              },
-            },
-            {
-              displayName: 'Store extracted entities',
-              name: 'storeEntities',
-              type: 'boolean',
-              default: "",
-              description: 'Store extracted entities',
-              
-              routing: {
-                request: {
-                  body: {
-                    'storeEntities': '={{$value}}',
-                  },
-                },
-              },
-            },
-            {
-              displayName: 'Generate tags from analysis',
-              name: 'generateTags',
-              type: 'boolean',
-              default: "",
-              description: 'Generate tags from analysis',
-              
-              routing: {
-                request: {
-                  body: {
-                    'generateTags': '={{$value}}',
-                  },
-                },
-              },
-            }
-          ],
         },
       {
           displayName: 'Project',
@@ -408,12 +411,12 @@ export class MsgCore implements INodeType {
           },
         },
       {
-          displayName: 'Profile Id',
+          displayName: 'ProfileId',
           name: 'profileId',
           type: 'string',
           required: true,
           default: '',
-          description: 'Profile Id parameter',
+          description: 'profileId parameter',
           displayOptions: {
             show: {
               resource: ['analysis / profiles'],
@@ -436,12 +439,12 @@ export class MsgCore implements INodeType {
           },
         },
       {
-          displayName: 'Profile Id',
+          displayName: 'ProfileId',
           name: 'profileId',
           type: 'string',
           required: true,
           default: '',
-          description: 'Profile Id parameter',
+          description: 'profileId parameter',
           displayOptions: {
             show: {
               resource: ['analysis / profiles'],
@@ -464,12 +467,12 @@ export class MsgCore implements INodeType {
           },
         },
       {
-          displayName: 'Profile Id',
+          displayName: 'ProfileId',
           name: 'profileId',
           type: 'string',
           required: true,
           default: '',
-          description: 'Profile Id parameter',
+          description: 'profileId parameter',
           displayOptions: {
             show: {
               resource: ['analysis / profiles'],
@@ -571,115 +574,96 @@ export class MsgCore implements INodeType {
             },
             routing: {
               request: {
-                body: {
+                qs: {
                   'profileId': '={{$value}}',
                 },
               },
             },
           },
       {
-          displayName: 'Project',
-          name: 'project',
-          type: 'string',
-          required: true,
-          default: 'default',
-          description: 'Project identifier to operate on',
-          displayOptions: {
-            show: {
-              resource: ['analysis / runs'],
-              operation: ['runs'],
+            displayName: 'Filter by chat IDs (JSON array)',
+            name: 'chatIds',
+            type: 'string',
+            required: false,
+            default: "",
+            
+            displayOptions: {
+              show: {
+                resource: ['analysis / runs'],
+                operation: ['runs'],
+              },
+            },
+            routing: {
+              request: {
+                qs: {
+                  'chatIds': '={{$value}}',
+                },
+              },
             },
           },
-        },
       {
-          displayName: 'Additional Fields',
-          name: 'additionalFields',
-          type: 'collection',
-          placeholder: 'Add Field',
-          default: {},
-          displayOptions: {
-            show: {
-              resource: ['analysis / runs'],
-              operation: ['runs'],
+            displayName: 'Filter by identity IDs (JSON array)',
+            name: 'identityIds',
+            type: 'string',
+            required: false,
+            default: "",
+            
+            displayOptions: {
+              show: {
+                resource: ['analysis / runs'],
+                operation: ['runs'],
+              },
+            },
+            routing: {
+              request: {
+                qs: {
+                  'identityIds': '={{$value}}',
+                },
+              },
             },
           },
-          options: [
-            {
-              displayName: 'Filter by chat IDs (JSON array)',
-              name: 'chatIds',
-              type: 'string',
-              default: "",
-              description: 'Filter by chat IDs (JSON array)',
-              
-              routing: {
-                request: {
-                  body: {
-                    'chatIds': '={{$value}}',
-                  },
-                },
-              },
-            },
-            {
-              displayName: 'Filter by identity IDs (JSON array)',
-              name: 'identityIds',
-              type: 'string',
-              default: "",
-              description: 'Filter by identity IDs (JSON array)',
-              
-              routing: {
-                request: {
-                  body: {
-                    'identityIds': '={{$value}}',
-                  },
-                },
-              },
-            },
-            {
-              displayName: 'Start date for analysis (ISO 8601)',
-              name: 'dateRangeStart',
-              type: 'string',
-              default: "",
-              description: 'Start date for analysis (ISO 8601)',
-              
-              routing: {
-                request: {
-                  body: {
-                    'dateRangeStart': '={{$value}}',
-                  },
-                },
-              },
-            },
-            {
-              displayName: 'End date for analysis (ISO 8601)',
-              name: 'dateRangeEnd',
-              type: 'string',
-              default: "",
-              description: 'End date for analysis (ISO 8601)',
-              
-              routing: {
-                request: {
-                  body: {
-                    'dateRangeEnd': '={{$value}}',
-                  },
-                },
-              },
-            }
-          ],
-        },
       {
-          displayName: 'Project',
-          name: 'project',
-          type: 'string',
-          required: true,
-          default: 'default',
-          description: 'Project identifier to operate on',
-          displayOptions: {
-            show: {
-              resource: ['analysis / runs'],
-              operation: ['runs'],
+            displayName: 'Start date for analysis (ISO 8601)',
+            name: 'dateRangeStart',
+            type: 'string',
+            required: false,
+            default: "",
+            
+            displayOptions: {
+              show: {
+                resource: ['analysis / runs'],
+                operation: ['runs'],
+              },
+            },
+            routing: {
+              request: {
+                qs: {
+                  'dateRangeStart': '={{$value}}',
+                },
+              },
             },
           },
-        },
+      {
+            displayName: 'End date for analysis (ISO 8601)',
+            name: 'dateRangeEnd',
+            type: 'string',
+            required: false,
+            default: "",
+            
+            displayOptions: {
+              show: {
+                resource: ['analysis / runs'],
+                operation: ['runs'],
+              },
+            },
+            routing: {
+              request: {
+                qs: {
+                  'dateRangeEnd': '={{$value}}',
+                },
+              },
+            },
+          },
       {
           displayName: 'Project',
           name: 'project',
@@ -709,12 +693,40 @@ export class MsgCore implements INodeType {
           },
         },
       {
-          displayName: 'Run Id',
+          displayName: 'Project',
+          name: 'project',
+          type: 'string',
+          required: true,
+          default: 'default',
+          description: 'Project identifier to operate on',
+          displayOptions: {
+            show: {
+              resource: ['analysis / runs'],
+              operation: ['runs'],
+            },
+          },
+        },
+      {
+          displayName: 'Project',
+          name: 'project',
+          type: 'string',
+          required: true,
+          default: 'default',
+          description: 'Project identifier to operate on',
+          displayOptions: {
+            show: {
+              resource: ['analysis / runs'],
+              operation: ['runs'],
+            },
+          },
+        },
+      {
+          displayName: 'RunId',
           name: 'runId',
           type: 'string',
           required: true,
           default: '',
-          description: 'Run Id parameter',
+          description: 'runId parameter',
           displayOptions: {
             show: {
               resource: ['analysis / runs'],
@@ -737,12 +749,12 @@ export class MsgCore implements INodeType {
           },
         },
       {
-          displayName: 'Run Id',
+          displayName: 'RunId',
           name: 'runId',
           type: 'string',
           required: true,
           default: '',
-          description: 'Run Id parameter',
+          description: 'runId parameter',
           displayOptions: {
             show: {
               resource: ['analysis / runs'],
@@ -844,7 +856,7 @@ export class MsgCore implements INodeType {
             },
             routing: {
               request: {
-                body: {
+                qs: {
                   'project': '={{$value}}',
                 },
               },
@@ -865,7 +877,7 @@ export class MsgCore implements INodeType {
             },
             routing: {
               request: {
-                body: {
+                qs: {
                   'name': '={{$value}}',
                 },
               },
@@ -886,7 +898,7 @@ export class MsgCore implements INodeType {
             },
             routing: {
               request: {
-                body: {
+                qs: {
                   'extractionType': '={{$value}}',
                 },
               },
@@ -907,13 +919,55 @@ export class MsgCore implements INodeType {
             },
             routing: {
               request: {
-                body: {
+                qs: {
                   'properties': '={{$value}}',
                 },
               },
             },
           },
       {
+            displayName: 'LLM prompt (for llm_extraction)',
+            name: 'prompt',
+            type: 'string',
+            required: false,
+            default: "",
+            
+            displayOptions: {
+              show: {
+                resource: ['analysis / schemas'],
+                operation: ['schemas'],
+              },
+            },
+            routing: {
+              request: {
+                qs: {
+                  'prompt': '={{$value}}',
+                },
+              },
+            },
+          },
+      {
+            displayName: 'Schema description',
+            name: 'description',
+            type: 'string',
+            required: false,
+            default: "",
+            
+            displayOptions: {
+              show: {
+                resource: ['analysis / schemas'],
+                operation: ['schemas'],
+              },
+            },
+            routing: {
+              request: {
+                qs: {
+                  'description': '={{$value}}',
+                },
+              },
+            },
+          },
+      {
           displayName: 'Project',
           name: 'project',
           type: 'string',
@@ -926,51 +980,6 @@ export class MsgCore implements INodeType {
               operation: ['schemas'],
             },
           },
-        },
-      {
-          displayName: 'Additional Fields',
-          name: 'additionalFields',
-          type: 'collection',
-          placeholder: 'Add Field',
-          default: {},
-          displayOptions: {
-            show: {
-              resource: ['analysis / schemas'],
-              operation: ['schemas'],
-            },
-          },
-          options: [
-            {
-              displayName: 'LLM prompt (for llm_extraction)',
-              name: 'prompt',
-              type: 'string',
-              default: "",
-              description: 'LLM prompt (for llm_extraction)',
-              
-              routing: {
-                request: {
-                  body: {
-                    'prompt': '={{$value}}',
-                  },
-                },
-              },
-            },
-            {
-              displayName: 'Schema description',
-              name: 'description',
-              type: 'string',
-              default: "",
-              description: 'Schema description',
-              
-              routing: {
-                request: {
-                  body: {
-                    'description': '={{$value}}',
-                  },
-                },
-              },
-            }
-          ],
         },
       {
             displayName: 'Project ID',
@@ -1000,6 +1009,188 @@ export class MsgCore implements INodeType {
           required: true,
           default: 'default',
           description: 'Project identifier to operate on',
+          displayOptions: {
+            show: {
+              resource: ['analysis / schemas'],
+              operation: ['schemas'],
+            },
+          },
+        },
+      {
+            displayName: 'Project ID',
+            name: 'project',
+            type: 'string',
+            required: true,
+            default: "",
+            
+            displayOptions: {
+              show: {
+                resource: ['analysis / schemas'],
+                operation: ['schemas'],
+              },
+            },
+            routing: {
+              request: {
+                qs: {
+                  'project': '={{$value}}',
+                },
+              },
+            },
+          },
+      {
+            displayName: 'Schema ID',
+            name: 'schemaId',
+            type: 'string',
+            required: true,
+            default: "",
+            
+            displayOptions: {
+              show: {
+                resource: ['analysis / schemas'],
+                operation: ['schemas'],
+              },
+            },
+            routing: {
+              request: {
+                qs: {
+                  'schemaId': '={{$value}}',
+                },
+              },
+            },
+          },
+      {
+          displayName: 'Project',
+          name: 'project',
+          type: 'string',
+          required: true,
+          default: 'default',
+          description: 'Project identifier to operate on',
+          displayOptions: {
+            show: {
+              resource: ['analysis / schemas'],
+              operation: ['schemas'],
+            },
+          },
+        },
+      {
+          displayName: 'SchemaId',
+          name: 'schemaId',
+          type: 'string',
+          required: true,
+          default: '',
+          description: 'schemaId parameter',
+          displayOptions: {
+            show: {
+              resource: ['analysis / schemas'],
+              operation: ['schemas'],
+            },
+          },
+        },
+      {
+            displayName: 'Project ID',
+            name: 'project',
+            type: 'string',
+            required: true,
+            default: "",
+            
+            displayOptions: {
+              show: {
+                resource: ['analysis / schemas'],
+                operation: ['schemas'],
+              },
+            },
+            routing: {
+              request: {
+                qs: {
+                  'project': '={{$value}}',
+                },
+              },
+            },
+          },
+      {
+            displayName: 'Schema ID',
+            name: 'schemaId',
+            type: 'string',
+            required: true,
+            default: "",
+            
+            displayOptions: {
+              show: {
+                resource: ['analysis / schemas'],
+                operation: ['schemas'],
+              },
+            },
+            routing: {
+              request: {
+                qs: {
+                  'schemaId': '={{$value}}',
+                },
+              },
+            },
+          },
+      {
+            displayName: 'New schema name',
+            name: 'name',
+            type: 'string',
+            required: false,
+            default: "",
+            
+            displayOptions: {
+              show: {
+                resource: ['analysis / schemas'],
+                operation: ['schemas'],
+              },
+            },
+            routing: {
+              request: {
+                qs: {
+                  'name': '={{$value}}',
+                },
+              },
+            },
+          },
+      {
+            displayName: 'New LLM prompt',
+            name: 'prompt',
+            type: 'string',
+            required: false,
+            default: "",
+            
+            displayOptions: {
+              show: {
+                resource: ['analysis / schemas'],
+                operation: ['schemas'],
+              },
+            },
+            routing: {
+              request: {
+                qs: {
+                  'prompt': '={{$value}}',
+                },
+              },
+            },
+          },
+      {
+          displayName: 'Project',
+          name: 'project',
+          type: 'string',
+          required: true,
+          default: 'default',
+          description: 'Project identifier to operate on',
+          displayOptions: {
+            show: {
+              resource: ['analysis / schemas'],
+              operation: ['schemas'],
+            },
+          },
+        },
+      {
+          displayName: 'SchemaId',
+          name: 'schemaId',
+          type: 'string',
+          required: true,
+          default: '',
+          description: 'schemaId parameter',
           displayOptions: {
             show: {
               resource: ['analysis / schemas'],
@@ -1064,197 +1255,12 @@ export class MsgCore implements INodeType {
           },
         },
       {
-          displayName: 'Schema Id',
+          displayName: 'SchemaId',
           name: 'schemaId',
           type: 'string',
           required: true,
           default: '',
-          description: 'Schema Id parameter',
-          displayOptions: {
-            show: {
-              resource: ['analysis / schemas'],
-              operation: ['schemas'],
-            },
-          },
-        },
-      {
-            displayName: 'Project ID',
-            name: 'project',
-            type: 'string',
-            required: true,
-            default: "",
-            
-            displayOptions: {
-              show: {
-                resource: ['analysis / schemas'],
-                operation: ['schemas'],
-              },
-            },
-            routing: {
-              request: {
-                body: {
-                  'project': '={{$value}}',
-                },
-              },
-            },
-          },
-      {
-            displayName: 'Schema ID',
-            name: 'schemaId',
-            type: 'string',
-            required: true,
-            default: "",
-            
-            displayOptions: {
-              show: {
-                resource: ['analysis / schemas'],
-                operation: ['schemas'],
-              },
-            },
-            routing: {
-              request: {
-                body: {
-                  'schemaId': '={{$value}}',
-                },
-              },
-            },
-          },
-      {
-          displayName: 'Project',
-          name: 'project',
-          type: 'string',
-          required: true,
-          default: 'default',
-          description: 'Project identifier to operate on',
-          displayOptions: {
-            show: {
-              resource: ['analysis / schemas'],
-              operation: ['schemas'],
-            },
-          },
-        },
-      {
-          displayName: 'Schema Id',
-          name: 'schemaId',
-          type: 'string',
-          required: true,
-          default: '',
-          description: 'Schema Id parameter',
-          displayOptions: {
-            show: {
-              resource: ['analysis / schemas'],
-              operation: ['schemas'],
-            },
-          },
-        },
-      {
-          displayName: 'Additional Fields',
-          name: 'additionalFields',
-          type: 'collection',
-          placeholder: 'Add Field',
-          default: {},
-          displayOptions: {
-            show: {
-              resource: ['analysis / schemas'],
-              operation: ['schemas'],
-            },
-          },
-          options: [
-            {
-              displayName: 'New schema name',
-              name: 'name',
-              type: 'string',
-              default: "",
-              description: 'New schema name',
-              
-              routing: {
-                request: {
-                  body: {
-                    'name': '={{$value}}',
-                  },
-                },
-              },
-            },
-            {
-              displayName: 'New LLM prompt',
-              name: 'prompt',
-              type: 'string',
-              default: "",
-              description: 'New LLM prompt',
-              
-              routing: {
-                request: {
-                  body: {
-                    'prompt': '={{$value}}',
-                  },
-                },
-              },
-            }
-          ],
-        },
-      {
-            displayName: 'Project ID',
-            name: 'project',
-            type: 'string',
-            required: true,
-            default: "",
-            
-            displayOptions: {
-              show: {
-                resource: ['analysis / schemas'],
-                operation: ['schemas'],
-              },
-            },
-            routing: {
-              request: {
-                qs: {
-                  'project': '={{$value}}',
-                },
-              },
-            },
-          },
-      {
-            displayName: 'Schema ID',
-            name: 'schemaId',
-            type: 'string',
-            required: true,
-            default: "",
-            
-            displayOptions: {
-              show: {
-                resource: ['analysis / schemas'],
-                operation: ['schemas'],
-              },
-            },
-            routing: {
-              request: {
-                qs: {
-                  'schemaId': '={{$value}}',
-                },
-              },
-            },
-          },
-      {
-          displayName: 'Project',
-          name: 'project',
-          type: 'string',
-          required: true,
-          default: 'default',
-          description: 'Project identifier to operate on',
-          displayOptions: {
-            show: {
-              resource: ['analysis / schemas'],
-              operation: ['schemas'],
-            },
-          },
-        },
-      {
-          displayName: 'Schema Id',
-          name: 'schemaId',
-          type: 'string',
-          required: true,
-          default: '',
-          description: 'Schema Id parameter',
+          description: 'schemaId parameter',
           displayOptions: {
             show: {
               resource: ['analysis / schemas'],
@@ -1343,7 +1349,7 @@ export class MsgCore implements INodeType {
             },
             routing: {
               request: {
-                body: {
+                qs: {
                   'name': '={{$value}}',
                 },
               },
@@ -1364,8 +1370,29 @@ export class MsgCore implements INodeType {
             },
             routing: {
               request: {
-                body: {
+                qs: {
                   'scopes': '={{$value}}',
+                },
+              },
+            },
+          },
+      {
+            displayName: 'Expiration in days',
+            name: 'expiresInDays',
+            type: 'number',
+            required: false,
+            default: "",
+            
+            displayOptions: {
+              show: {
+                resource: ['apikeys'],
+                operation: ['create'],
+              },
+            },
+            routing: {
+              request: {
+                qs: {
+                  'expiresInDays': '={{$value}}',
                 },
               },
             },
@@ -1383,36 +1410,6 @@ export class MsgCore implements INodeType {
               operation: ['create'],
             },
           },
-        },
-      {
-          displayName: 'Additional Fields',
-          name: 'additionalFields',
-          type: 'collection',
-          placeholder: 'Add Field',
-          default: {},
-          displayOptions: {
-            show: {
-              resource: ['apikeys'],
-              operation: ['create'],
-            },
-          },
-          options: [
-            {
-              displayName: 'Expiration in days',
-              name: 'expiresInDays',
-              type: 'number',
-              default: 0,
-              description: 'Expiration in days',
-              
-              routing: {
-                request: {
-                  body: {
-                    'expiresInDays': '={{$value}}',
-                  },
-                },
-              },
-            }
-          ],
         },
       {
           displayName: 'Project',
@@ -1464,12 +1461,12 @@ export class MsgCore implements INodeType {
           },
         },
       {
-          displayName: 'Key Id',
+          displayName: 'KeyId',
           name: 'keyId',
           type: 'string',
           required: true,
           default: '',
-          description: 'Key Id parameter',
+          description: 'keyId parameter',
           displayOptions: {
             show: {
               resource: ['apikeys'],
@@ -1492,7 +1489,7 @@ export class MsgCore implements INodeType {
             },
             routing: {
               request: {
-                body: {
+                qs: {
                   'keyId': '={{$value}}',
                 },
               },
@@ -1513,12 +1510,12 @@ export class MsgCore implements INodeType {
           },
         },
       {
-          displayName: 'Key Id',
+          displayName: 'KeyId',
           name: 'keyId',
           type: 'string',
           required: true,
           default: '',
-          description: 'Key Id parameter',
+          description: 'keyId parameter',
           displayOptions: {
             show: {
               resource: ['apikeys'],
@@ -1633,7 +1630,7 @@ export class MsgCore implements INodeType {
             },
             routing: {
               request: {
-                body: {
+                qs: {
                   'email': '={{$value}}',
                 },
               },
@@ -1654,42 +1651,33 @@ export class MsgCore implements INodeType {
             },
             routing: {
               request: {
-                body: {
+                qs: {
                   'password': '={{$value}}',
                 },
               },
             },
           },
       {
-          displayName: 'Additional Fields',
-          name: 'additionalFields',
-          type: 'collection',
-          placeholder: 'Add Field',
-          default: {},
-          displayOptions: {
-            show: {
-              resource: ['auth'],
-              operation: ['signup'],
+            displayName: 'Full name',
+            name: 'name',
+            type: 'string',
+            required: false,
+            default: "",
+            
+            displayOptions: {
+              show: {
+                resource: ['auth'],
+                operation: ['signup'],
+              },
             },
-          },
-          options: [
-            {
-              displayName: 'Full name',
-              name: 'name',
-              type: 'string',
-              default: "",
-              description: 'Full name',
-              
-              routing: {
-                request: {
-                  body: {
-                    'name': '={{$value}}',
-                  },
+            routing: {
+              request: {
+                qs: {
+                  'name': '={{$value}}',
                 },
               },
-            }
-          ],
-        },
+            },
+          },
       {
             displayName: 'Email address',
             name: 'email',
@@ -1705,7 +1693,7 @@ export class MsgCore implements INodeType {
             },
             routing: {
               request: {
-                body: {
+                qs: {
                   'email': '={{$value}}',
                 },
               },
@@ -1726,7 +1714,7 @@ export class MsgCore implements INodeType {
             },
             routing: {
               request: {
-                body: {
+                qs: {
                   'password': '={{$value}}',
                 },
               },
@@ -1747,7 +1735,7 @@ export class MsgCore implements INodeType {
             },
             routing: {
               request: {
-                body: {
+                qs: {
                   'token': '={{$value}}',
                 },
               },
@@ -1768,7 +1756,7 @@ export class MsgCore implements INodeType {
             },
             routing: {
               request: {
-                body: {
+                qs: {
                   'name': '={{$value}}',
                 },
               },
@@ -1789,7 +1777,7 @@ export class MsgCore implements INodeType {
             },
             routing: {
               request: {
-                body: {
+                qs: {
                   'password': '={{$value}}',
                 },
               },
@@ -1810,7 +1798,7 @@ export class MsgCore implements INodeType {
             },
             routing: {
               request: {
-                body: {
+                qs: {
                   'currentPassword': '={{$value}}',
                 },
               },
@@ -1831,42 +1819,33 @@ export class MsgCore implements INodeType {
             },
             routing: {
               request: {
-                body: {
+                qs: {
                   'newPassword': '={{$value}}',
                 },
               },
             },
           },
       {
-          displayName: 'Additional Fields',
-          name: 'additionalFields',
-          type: 'collection',
-          placeholder: 'Add Field',
-          default: {},
-          displayOptions: {
-            show: {
-              resource: ['auth'],
-              operation: ['update-profile'],
+            displayName: 'Full name',
+            name: 'name',
+            type: 'string',
+            required: false,
+            default: "",
+            
+            displayOptions: {
+              show: {
+                resource: ['auth'],
+                operation: ['update-profile'],
+              },
             },
-          },
-          options: [
-            {
-              displayName: 'Full name',
-              name: 'name',
-              type: 'string',
-              default: "",
-              description: 'Full name',
-              
-              routing: {
-                request: {
-                  body: {
-                    'name': '={{$value}}',
-                  },
+            routing: {
+              request: {
+                qs: {
+                  'name': '={{$value}}',
                 },
               },
-            }
-          ],
-        },
+            },
+          },
       {
         displayName: 'Operation',
         name: 'operation',
@@ -1961,7 +1940,7 @@ export class MsgCore implements INodeType {
             },
             routing: {
               request: {
-                body: {
+                qs: {
                   'tier': '={{$value}}',
                 },
               },
@@ -1982,7 +1961,7 @@ export class MsgCore implements INodeType {
             },
             routing: {
               request: {
-                body: {
+                qs: {
                   'interval': '={{$value}}',
                 },
               },
@@ -2081,6 +2060,111 @@ export class MsgCore implements INodeType {
         default: 'list',
       },
       {
+            displayName: 'Filter by platform ID',
+            name: 'platformId',
+            type: 'string',
+            required: false,
+            default: "",
+            
+            displayOptions: {
+              show: {
+                resource: ['chats'],
+                operation: ['list'],
+              },
+            },
+            routing: {
+              request: {
+                qs: {
+                  'platformId': '={{$value}}',
+                },
+              },
+            },
+          },
+      {
+            displayName: 'Filter by chat type (individual, group, channel)',
+            name: 'chatType',
+            type: 'string',
+            required: false,
+            default: "",
+            options: [{name: 'individual', value: 'individual'}, {name: 'group', value: 'group'}, {name: 'channel', value: 'channel'}],
+            displayOptions: {
+              show: {
+                resource: ['chats'],
+                operation: ['list'],
+              },
+            },
+            routing: {
+              request: {
+                qs: {
+                  'chatType': '={{$value}}',
+                },
+              },
+            },
+          },
+      {
+            displayName: 'Search chats by name or provider chat ID',
+            name: 'search',
+            type: 'string',
+            required: false,
+            default: "",
+            
+            displayOptions: {
+              show: {
+                resource: ['chats'],
+                operation: ['list'],
+              },
+            },
+            routing: {
+              request: {
+                qs: {
+                  'search': '={{$value}}',
+                },
+              },
+            },
+          },
+      {
+            displayName: 'Number of chats to return',
+            name: 'limit',
+            type: 'number',
+            required: false,
+            default: 50,
+            
+            displayOptions: {
+              show: {
+                resource: ['chats'],
+                operation: ['list'],
+              },
+            },
+            routing: {
+              request: {
+                qs: {
+                  'limit': '={{$value}}',
+                },
+              },
+            },
+          },
+      {
+            displayName: 'Number of chats to skip',
+            name: 'offset',
+            type: 'number',
+            required: false,
+            default: "",
+            
+            displayOptions: {
+              show: {
+                resource: ['chats'],
+                operation: ['list'],
+              },
+            },
+            routing: {
+              request: {
+                qs: {
+                  'offset': '={{$value}}',
+                },
+              },
+            },
+          },
+      {
           displayName: 'Project',
           name: 'project',
           type: 'string',
@@ -2093,96 +2177,6 @@ export class MsgCore implements INodeType {
               operation: ['list'],
             },
           },
-        },
-      {
-          displayName: 'Additional Fields',
-          name: 'additionalFields',
-          type: 'collection',
-          placeholder: 'Add Field',
-          default: {},
-          displayOptions: {
-            show: {
-              resource: ['chats'],
-              operation: ['list'],
-            },
-          },
-          options: [
-            {
-              displayName: 'Filter by platform ID',
-              name: 'platformId',
-              type: 'string',
-              default: "",
-              description: 'Filter by platform ID',
-              
-              routing: {
-                request: {
-                  qs: {
-                    'platformId': '={{$value}}',
-                  },
-                },
-              },
-            },
-            {
-              displayName: 'Filter by chat type (individual, group, channel)',
-              name: 'chatType',
-              type: 'string',
-              default: "",
-              description: 'Filter by chat type (individual, group, channel)',
-              options: [{name: 'individual', value: 'individual'}, {name: 'group', value: 'group'}, {name: 'channel', value: 'channel'}],
-              routing: {
-                request: {
-                  qs: {
-                    'chatType': '={{$value}}',
-                  },
-                },
-              },
-            },
-            {
-              displayName: 'Search chats by name or provider chat ID',
-              name: 'search',
-              type: 'string',
-              default: "",
-              description: 'Search chats by name or provider chat ID',
-              
-              routing: {
-                request: {
-                  qs: {
-                    'search': '={{$value}}',
-                  },
-                },
-              },
-            },
-            {
-              displayName: 'Number of chats to return',
-              name: 'limit',
-              type: 'number',
-              default: 50,
-              description: 'Number of chats to return',
-              
-              routing: {
-                request: {
-                  qs: {
-                    'limit': '={{$value}}',
-                  },
-                },
-              },
-            },
-            {
-              displayName: 'Number of chats to skip',
-              name: 'offset',
-              type: 'number',
-              default: 0,
-              description: 'Number of chats to skip',
-              
-              routing: {
-                request: {
-                  qs: {
-                    'offset': '={{$value}}',
-                  },
-                },
-              },
-            }
-          ],
         },
       {
             displayName: 'Chat ID',
@@ -2220,12 +2214,12 @@ export class MsgCore implements INodeType {
           },
         },
       {
-          displayName: 'Chat Id',
+          displayName: 'ChatId',
           name: 'chatId',
           type: 'string',
           required: true,
           default: '',
-          description: 'Chat Id parameter',
+          description: 'chatId parameter',
           displayOptions: {
             show: {
               resource: ['chats'],
@@ -2255,6 +2249,48 @@ export class MsgCore implements INodeType {
             },
           },
       {
+            displayName: 'Number of messages to return',
+            name: 'limit',
+            type: 'number',
+            required: false,
+            default: 50,
+            
+            displayOptions: {
+              show: {
+                resource: ['chats'],
+                operation: ['messages'],
+              },
+            },
+            routing: {
+              request: {
+                qs: {
+                  'limit': '={{$value}}',
+                },
+              },
+            },
+          },
+      {
+            displayName: 'Number of messages to skip',
+            name: 'offset',
+            type: 'number',
+            required: false,
+            default: "",
+            
+            displayOptions: {
+              show: {
+                resource: ['chats'],
+                operation: ['messages'],
+              },
+            },
+            routing: {
+              request: {
+                qs: {
+                  'offset': '={{$value}}',
+                },
+              },
+            },
+          },
+      {
           displayName: 'Project',
           name: 'project',
           type: 'string',
@@ -2269,63 +2305,18 @@ export class MsgCore implements INodeType {
           },
         },
       {
-          displayName: 'Chat Id',
+          displayName: 'ChatId',
           name: 'chatId',
           type: 'string',
           required: true,
           default: '',
-          description: 'Chat Id parameter',
+          description: 'chatId parameter',
           displayOptions: {
             show: {
               resource: ['chats'],
               operation: ['messages'],
             },
           },
-        },
-      {
-          displayName: 'Additional Fields',
-          name: 'additionalFields',
-          type: 'collection',
-          placeholder: 'Add Field',
-          default: {},
-          displayOptions: {
-            show: {
-              resource: ['chats'],
-              operation: ['messages'],
-            },
-          },
-          options: [
-            {
-              displayName: 'Number of messages to return',
-              name: 'limit',
-              type: 'number',
-              default: 50,
-              description: 'Number of messages to return',
-              
-              routing: {
-                request: {
-                  qs: {
-                    'limit': '={{$value}}',
-                  },
-                },
-              },
-            },
-            {
-              displayName: 'Number of messages to skip',
-              name: 'offset',
-              type: 'number',
-              default: 0,
-              description: 'Number of messages to skip',
-              
-              routing: {
-                request: {
-                  qs: {
-                    'offset': '={{$value}}',
-                  },
-                },
-              },
-            }
-          ],
         },
       {
             displayName: 'Chat ID',
@@ -2342,13 +2333,76 @@ export class MsgCore implements INodeType {
             },
             routing: {
               request: {
-                body: {
+                qs: {
                   'chatId': '={{$value}}',
                 },
               },
             },
           },
       {
+            displayName: 'Chat display name',
+            name: 'name',
+            type: 'string',
+            required: false,
+            default: "",
+            
+            displayOptions: {
+              show: {
+                resource: ['chats'],
+                operation: ['update'],
+              },
+            },
+            routing: {
+              request: {
+                qs: {
+                  'name': '={{$value}}',
+                },
+              },
+            },
+          },
+      {
+            displayName: 'Chat avatar URL',
+            name: 'avatarUrl',
+            type: 'string',
+            required: false,
+            default: "",
+            
+            displayOptions: {
+              show: {
+                resource: ['chats'],
+                operation: ['update'],
+              },
+            },
+            routing: {
+              request: {
+                qs: {
+                  'avatarUrl': '={{$value}}',
+                },
+              },
+            },
+          },
+      {
+            displayName: 'Custom metadata (JSON string)',
+            name: 'metadata',
+            type: 'string',
+            required: false,
+            default: "",
+            
+            displayOptions: {
+              show: {
+                resource: ['chats'],
+                operation: ['update'],
+              },
+            },
+            routing: {
+              request: {
+                qs: {
+                  'metadata': '={{$value}}',
+                },
+              },
+            },
+          },
+      {
           displayName: 'Project',
           name: 'project',
           type: 'string',
@@ -2363,12 +2417,12 @@ export class MsgCore implements INodeType {
           },
         },
       {
-          displayName: 'Chat Id',
+          displayName: 'ChatId',
           name: 'chatId',
           type: 'string',
           required: true,
           default: '',
-          description: 'Chat Id parameter',
+          description: 'chatId parameter',
           displayOptions: {
             show: {
               resource: ['chats'],
@@ -2377,65 +2431,89 @@ export class MsgCore implements INodeType {
           },
         },
       {
-          displayName: 'Additional Fields',
-          name: 'additionalFields',
-          type: 'collection',
-          placeholder: 'Add Field',
-          default: {},
-          displayOptions: {
-            show: {
-              resource: ['chats'],
-              operation: ['update'],
+            displayName: 'Optional: Sync only chats from specific platform',
+            name: 'platformId',
+            type: 'string',
+            required: false,
+            default: "",
+            
+            displayOptions: {
+              show: {
+                resource: ['chats'],
+                operation: ['sync-all'],
+              },
+            },
+            routing: {
+              request: {
+                qs: {
+                  'platformId': '={{$value}}',
+                },
+              },
             },
           },
-          options: [
-            {
-              displayName: 'Chat display name',
-              name: 'name',
-              type: 'string',
-              default: "",
-              description: 'Chat display name',
-              
-              routing: {
-                request: {
-                  body: {
-                    'name': '={{$value}}',
-                  },
+      {
+            displayName: 'Start date for history sync (ISO 8601)',
+            name: 'startDate',
+            type: 'string',
+            required: false,
+            default: "",
+            
+            displayOptions: {
+              show: {
+                resource: ['chats'],
+                operation: ['sync-all'],
+              },
+            },
+            routing: {
+              request: {
+                qs: {
+                  'startDate': '={{$value}}',
                 },
               },
             },
-            {
-              displayName: 'Chat avatar URL',
-              name: 'avatarUrl',
-              type: 'string',
-              default: "",
-              description: 'Chat avatar URL',
-              
-              routing: {
-                request: {
-                  body: {
-                    'avatarUrl': '={{$value}}',
-                  },
+          },
+      {
+            displayName: 'End date for history sync (ISO 8601)',
+            name: 'endDate',
+            type: 'string',
+            required: false,
+            default: "",
+            
+            displayOptions: {
+              show: {
+                resource: ['chats'],
+                operation: ['sync-all'],
+              },
+            },
+            routing: {
+              request: {
+                qs: {
+                  'endDate': '={{$value}}',
                 },
               },
             },
-            {
-              displayName: 'Custom metadata (JSON string)',
-              name: 'metadata',
-              type: 'string',
-              default: "",
-              description: 'Custom metadata (JSON string)',
-              
-              routing: {
-                request: {
-                  body: {
-                    'metadata': '={{$value}}',
-                  },
+          },
+      {
+            displayName: 'Maximum number of messages to sync per chat (1-1000)',
+            name: 'limit',
+            type: 'number',
+            required: false,
+            default: 100,
+            
+            displayOptions: {
+              show: {
+                resource: ['chats'],
+                operation: ['sync-all'],
+              },
+            },
+            routing: {
+              request: {
+                qs: {
+                  'limit': '={{$value}}',
                 },
               },
-            }
-          ],
-        },
+            },
+          },
       {
           displayName: 'Project',
           name: 'project',
@@ -2449,81 +2527,6 @@ export class MsgCore implements INodeType {
               operation: ['sync-all'],
             },
           },
-        },
-      {
-          displayName: 'Additional Fields',
-          name: 'additionalFields',
-          type: 'collection',
-          placeholder: 'Add Field',
-          default: {},
-          displayOptions: {
-            show: {
-              resource: ['chats'],
-              operation: ['sync-all'],
-            },
-          },
-          options: [
-            {
-              displayName: 'Optional: Sync only chats from specific platform',
-              name: 'platformId',
-              type: 'string',
-              default: "",
-              description: 'Optional: Sync only chats from specific platform',
-              
-              routing: {
-                request: {
-                  body: {
-                    'platformId': '={{$value}}',
-                  },
-                },
-              },
-            },
-            {
-              displayName: 'Start date for history sync (ISO 8601)',
-              name: 'startDate',
-              type: 'string',
-              default: "",
-              description: 'Start date for history sync (ISO 8601)',
-              
-              routing: {
-                request: {
-                  body: {
-                    'startDate': '={{$value}}',
-                  },
-                },
-              },
-            },
-            {
-              displayName: 'End date for history sync (ISO 8601)',
-              name: 'endDate',
-              type: 'string',
-              default: "",
-              description: 'End date for history sync (ISO 8601)',
-              
-              routing: {
-                request: {
-                  body: {
-                    'endDate': '={{$value}}',
-                  },
-                },
-              },
-            },
-            {
-              displayName: 'Maximum number of messages to sync per chat (1-1000)',
-              name: 'limit',
-              type: 'number',
-              default: 100,
-              description: 'Maximum number of messages to sync per chat (1-1000)',
-              
-              routing: {
-                request: {
-                  body: {
-                    'limit': '={{$value}}',
-                  },
-                },
-              },
-            }
-          ],
         },
       {
             displayName: 'Chat ID',
@@ -2540,8 +2543,71 @@ export class MsgCore implements INodeType {
             },
             routing: {
               request: {
-                body: {
+                qs: {
                   'chatId': '={{$value}}',
+                },
+              },
+            },
+          },
+      {
+            displayName: 'Start date for history sync (ISO 8601)',
+            name: 'startDate',
+            type: 'string',
+            required: false,
+            default: "",
+            
+            displayOptions: {
+              show: {
+                resource: ['chats'],
+                operation: ['sync'],
+              },
+            },
+            routing: {
+              request: {
+                qs: {
+                  'startDate': '={{$value}}',
+                },
+              },
+            },
+          },
+      {
+            displayName: 'End date for history sync (ISO 8601)',
+            name: 'endDate',
+            type: 'string',
+            required: false,
+            default: "",
+            
+            displayOptions: {
+              show: {
+                resource: ['chats'],
+                operation: ['sync'],
+              },
+            },
+            routing: {
+              request: {
+                qs: {
+                  'endDate': '={{$value}}',
+                },
+              },
+            },
+          },
+      {
+            displayName: 'Maximum number of messages to sync (1-1000)',
+            name: 'limit',
+            type: 'number',
+            required: false,
+            default: 100,
+            
+            displayOptions: {
+              show: {
+                resource: ['chats'],
+                operation: ['sync'],
+              },
+            },
+            routing: {
+              request: {
+                qs: {
+                  'limit': '={{$value}}',
                 },
               },
             },
@@ -2561,78 +2627,18 @@ export class MsgCore implements INodeType {
           },
         },
       {
-          displayName: 'Chat Id',
+          displayName: 'ChatId',
           name: 'chatId',
           type: 'string',
           required: true,
           default: '',
-          description: 'Chat Id parameter',
+          description: 'chatId parameter',
           displayOptions: {
             show: {
               resource: ['chats'],
               operation: ['sync'],
             },
           },
-        },
-      {
-          displayName: 'Additional Fields',
-          name: 'additionalFields',
-          type: 'collection',
-          placeholder: 'Add Field',
-          default: {},
-          displayOptions: {
-            show: {
-              resource: ['chats'],
-              operation: ['sync'],
-            },
-          },
-          options: [
-            {
-              displayName: 'Start date for history sync (ISO 8601)',
-              name: 'startDate',
-              type: 'string',
-              default: "",
-              description: 'Start date for history sync (ISO 8601)',
-              
-              routing: {
-                request: {
-                  body: {
-                    'startDate': '={{$value}}',
-                  },
-                },
-              },
-            },
-            {
-              displayName: 'End date for history sync (ISO 8601)',
-              name: 'endDate',
-              type: 'string',
-              default: "",
-              description: 'End date for history sync (ISO 8601)',
-              
-              routing: {
-                request: {
-                  body: {
-                    'endDate': '={{$value}}',
-                  },
-                },
-              },
-            },
-            {
-              displayName: 'Maximum number of messages to sync (1-1000)',
-              name: 'limit',
-              type: 'number',
-              default: 100,
-              description: 'Maximum number of messages to sync (1-1000)',
-              
-              routing: {
-                request: {
-                  body: {
-                    'limit': '={{$value}}',
-                  },
-                },
-              },
-            }
-          ],
         },
       {
         displayName: 'Operation',
@@ -2805,6 +2811,69 @@ export class MsgCore implements INodeType {
         default: 'create',
       },
       {
+            displayName: 'Display name for the identity',
+            name: 'displayName',
+            type: 'string',
+            required: false,
+            default: "",
+            
+            displayOptions: {
+              show: {
+                resource: ['identities'],
+                operation: ['create'],
+              },
+            },
+            routing: {
+              request: {
+                qs: {
+                  'displayName': '={{$value}}',
+                },
+              },
+            },
+          },
+      {
+            displayName: 'Email address for the identity',
+            name: 'email',
+            type: 'string',
+            required: false,
+            default: "",
+            
+            displayOptions: {
+              show: {
+                resource: ['identities'],
+                operation: ['create'],
+              },
+            },
+            routing: {
+              request: {
+                qs: {
+                  'email': '={{$value}}',
+                },
+              },
+            },
+          },
+      {
+            displayName: 'JSON metadata for the identity',
+            name: 'metadata',
+            type: 'string',
+            required: false,
+            default: "",
+            
+            displayOptions: {
+              show: {
+                resource: ['identities'],
+                operation: ['create'],
+              },
+            },
+            routing: {
+              request: {
+                qs: {
+                  'metadata': '={{$value}}',
+                },
+              },
+            },
+          },
+      {
             displayName: 'JSON array of platform aliases',
             name: 'aliases',
             type: 'string',
@@ -2819,7 +2888,7 @@ export class MsgCore implements INodeType {
             },
             routing: {
               request: {
-                body: {
+                qs: {
                   'aliases': '={{$value}}',
                 },
               },
@@ -2838,66 +2907,6 @@ export class MsgCore implements INodeType {
               operation: ['create'],
             },
           },
-        },
-      {
-          displayName: 'Additional Fields',
-          name: 'additionalFields',
-          type: 'collection',
-          placeholder: 'Add Field',
-          default: {},
-          displayOptions: {
-            show: {
-              resource: ['identities'],
-              operation: ['create'],
-            },
-          },
-          options: [
-            {
-              displayName: 'Display name for the identity',
-              name: 'displayName',
-              type: 'string',
-              default: "",
-              description: 'Display name for the identity',
-              
-              routing: {
-                request: {
-                  body: {
-                    'displayName': '={{$value}}',
-                  },
-                },
-              },
-            },
-            {
-              displayName: 'Email address for the identity',
-              name: 'email',
-              type: 'string',
-              default: "",
-              description: 'Email address for the identity',
-              
-              routing: {
-                request: {
-                  body: {
-                    'email': '={{$value}}',
-                  },
-                },
-              },
-            },
-            {
-              displayName: 'JSON metadata for the identity',
-              name: 'metadata',
-              type: 'string',
-              default: "",
-              description: 'JSON metadata for the identity',
-              
-              routing: {
-                request: {
-                  body: {
-                    'metadata': '={{$value}}',
-                  },
-                },
-              },
-            }
-          ],
         },
       {
           displayName: 'Project',
@@ -2963,7 +2972,7 @@ export class MsgCore implements INodeType {
             },
             routing: {
               request: {
-                body: {
+                qs: {
                   'platformId': '={{$value}}',
                 },
               },
@@ -2984,8 +2993,71 @@ export class MsgCore implements INodeType {
             },
             routing: {
               request: {
-                body: {
+                qs: {
                   'providerUserId': '={{$value}}',
+                },
+              },
+            },
+          },
+      {
+            displayName: 'Display name on the platform',
+            name: 'providerUserDisplay',
+            type: 'string',
+            required: false,
+            default: "",
+            
+            displayOptions: {
+              show: {
+                resource: ['identities'],
+                operation: ['quick-link'],
+              },
+            },
+            routing: {
+              request: {
+                qs: {
+                  'providerUserDisplay': '={{$value}}',
+                },
+              },
+            },
+          },
+      {
+            displayName: 'Display name for the new identity',
+            name: 'displayName',
+            type: 'string',
+            required: false,
+            default: "",
+            
+            displayOptions: {
+              show: {
+                resource: ['identities'],
+                operation: ['quick-link'],
+              },
+            },
+            routing: {
+              request: {
+                qs: {
+                  'displayName': '={{$value}}',
+                },
+              },
+            },
+          },
+      {
+            displayName: 'Email address for the new identity',
+            name: 'email',
+            type: 'string',
+            required: false,
+            default: "",
+            
+            displayOptions: {
+              show: {
+                resource: ['identities'],
+                operation: ['quick-link'],
+              },
+            },
+            routing: {
+              request: {
+                qs: {
+                  'email': '={{$value}}',
                 },
               },
             },
@@ -3003,66 +3075,6 @@ export class MsgCore implements INodeType {
               operation: ['quick-link'],
             },
           },
-        },
-      {
-          displayName: 'Additional Fields',
-          name: 'additionalFields',
-          type: 'collection',
-          placeholder: 'Add Field',
-          default: {},
-          displayOptions: {
-            show: {
-              resource: ['identities'],
-              operation: ['quick-link'],
-            },
-          },
-          options: [
-            {
-              displayName: 'Display name on the platform',
-              name: 'providerUserDisplay',
-              type: 'string',
-              default: "",
-              description: 'Display name on the platform',
-              
-              routing: {
-                request: {
-                  body: {
-                    'providerUserDisplay': '={{$value}}',
-                  },
-                },
-              },
-            },
-            {
-              displayName: 'Display name for the new identity',
-              name: 'displayName',
-              type: 'string',
-              default: "",
-              description: 'Display name for the new identity',
-              
-              routing: {
-                request: {
-                  body: {
-                    'displayName': '={{$value}}',
-                  },
-                },
-              },
-            },
-            {
-              displayName: 'Email address for the new identity',
-              name: 'email',
-              type: 'string',
-              default: "",
-              description: 'Email address for the new identity',
-              
-              routing: {
-                request: {
-                  body: {
-                    'email': '={{$value}}',
-                  },
-                },
-              },
-            }
-          ],
         },
       {
             displayName: 'Platform configuration ID',
@@ -3161,7 +3173,7 @@ export class MsgCore implements INodeType {
           type: 'string',
           required: true,
           default: '',
-          description: 'Id parameter',
+          description: 'id parameter',
           displayOptions: {
             show: {
               resource: ['identities'],
@@ -3184,8 +3196,71 @@ export class MsgCore implements INodeType {
             },
             routing: {
               request: {
-                body: {
+                qs: {
                   'id': '={{$value}}',
+                },
+              },
+            },
+          },
+      {
+            displayName: 'Updated display name',
+            name: 'displayName',
+            type: 'string',
+            required: false,
+            default: "",
+            
+            displayOptions: {
+              show: {
+                resource: ['identities'],
+                operation: ['update'],
+              },
+            },
+            routing: {
+              request: {
+                qs: {
+                  'displayName': '={{$value}}',
+                },
+              },
+            },
+          },
+      {
+            displayName: 'Updated email address',
+            name: 'email',
+            type: 'string',
+            required: false,
+            default: "",
+            
+            displayOptions: {
+              show: {
+                resource: ['identities'],
+                operation: ['update'],
+              },
+            },
+            routing: {
+              request: {
+                qs: {
+                  'email': '={{$value}}',
+                },
+              },
+            },
+          },
+      {
+            displayName: 'Updated JSON metadata',
+            name: 'metadata',
+            type: 'string',
+            required: false,
+            default: "",
+            
+            displayOptions: {
+              show: {
+                resource: ['identities'],
+                operation: ['update'],
+              },
+            },
+            routing: {
+              request: {
+                qs: {
+                  'metadata': '={{$value}}',
                 },
               },
             },
@@ -3210,73 +3285,13 @@ export class MsgCore implements INodeType {
           type: 'string',
           required: true,
           default: '',
-          description: 'Id parameter',
+          description: 'id parameter',
           displayOptions: {
             show: {
               resource: ['identities'],
               operation: ['update'],
             },
           },
-        },
-      {
-          displayName: 'Additional Fields',
-          name: 'additionalFields',
-          type: 'collection',
-          placeholder: 'Add Field',
-          default: {},
-          displayOptions: {
-            show: {
-              resource: ['identities'],
-              operation: ['update'],
-            },
-          },
-          options: [
-            {
-              displayName: 'Updated display name',
-              name: 'displayName',
-              type: 'string',
-              default: "",
-              description: 'Updated display name',
-              
-              routing: {
-                request: {
-                  body: {
-                    'displayName': '={{$value}}',
-                  },
-                },
-              },
-            },
-            {
-              displayName: 'Updated email address',
-              name: 'email',
-              type: 'string',
-              default: "",
-              description: 'Updated email address',
-              
-              routing: {
-                request: {
-                  body: {
-                    'email': '={{$value}}',
-                  },
-                },
-              },
-            },
-            {
-              displayName: 'Updated JSON metadata',
-              name: 'metadata',
-              type: 'string',
-              default: "",
-              description: 'Updated JSON metadata',
-              
-              routing: {
-                request: {
-                  body: {
-                    'metadata': '={{$value}}',
-                  },
-                },
-              },
-            }
-          ],
         },
       {
             displayName: 'Identity ID',
@@ -3293,7 +3308,7 @@ export class MsgCore implements INodeType {
             },
             routing: {
               request: {
-                body: {
+                qs: {
                   'id': '={{$value}}',
                 },
               },
@@ -3314,7 +3329,7 @@ export class MsgCore implements INodeType {
             },
             routing: {
               request: {
-                body: {
+                qs: {
                   'platformId': '={{$value}}',
                 },
               },
@@ -3335,8 +3350,29 @@ export class MsgCore implements INodeType {
             },
             routing: {
               request: {
-                body: {
+                qs: {
                   'providerUserId': '={{$value}}',
+                },
+              },
+            },
+          },
+      {
+            displayName: 'Display name on the platform',
+            name: 'providerUserDisplay',
+            type: 'string',
+            required: false,
+            default: "",
+            
+            displayOptions: {
+              show: {
+                resource: ['identities'],
+                operation: ['add-alias'],
+              },
+            },
+            routing: {
+              request: {
+                qs: {
+                  'providerUserDisplay': '={{$value}}',
                 },
               },
             },
@@ -3361,43 +3397,13 @@ export class MsgCore implements INodeType {
           type: 'string',
           required: true,
           default: '',
-          description: 'Id parameter',
+          description: 'id parameter',
           displayOptions: {
             show: {
               resource: ['identities'],
               operation: ['add-alias'],
             },
           },
-        },
-      {
-          displayName: 'Additional Fields',
-          name: 'additionalFields',
-          type: 'collection',
-          placeholder: 'Add Field',
-          default: {},
-          displayOptions: {
-            show: {
-              resource: ['identities'],
-              operation: ['add-alias'],
-            },
-          },
-          options: [
-            {
-              displayName: 'Display name on the platform',
-              name: 'providerUserDisplay',
-              type: 'string',
-              default: "",
-              description: 'Display name on the platform',
-              
-              routing: {
-                request: {
-                  body: {
-                    'providerUserDisplay': '={{$value}}',
-                  },
-                },
-              },
-            }
-          ],
         },
       {
             displayName: 'Identity ID',
@@ -3461,7 +3467,7 @@ export class MsgCore implements INodeType {
           type: 'string',
           required: true,
           default: '',
-          description: 'Id parameter',
+          description: 'id parameter',
           displayOptions: {
             show: {
               resource: ['identities'],
@@ -3470,12 +3476,12 @@ export class MsgCore implements INodeType {
           },
         },
       {
-          displayName: 'Alias Id',
+          displayName: 'AliasId',
           name: 'aliasId',
           type: 'string',
           required: true,
           default: '',
-          description: 'Alias Id parameter',
+          description: 'aliasId parameter',
           displayOptions: {
             show: {
               resource: ['identities'],
@@ -3524,7 +3530,7 @@ export class MsgCore implements INodeType {
           type: 'string',
           required: true,
           default: '',
-          description: 'Id parameter',
+          description: 'id parameter',
           displayOptions: {
             show: {
               resource: ['identities'],
@@ -3573,7 +3579,7 @@ export class MsgCore implements INodeType {
           type: 'string',
           required: true,
           default: '',
-          description: 'Id parameter',
+          description: 'id parameter',
           displayOptions: {
             show: {
               resource: ['identities'],
@@ -3622,7 +3628,7 @@ export class MsgCore implements INodeType {
           type: 'string',
           required: true,
           default: '',
-          description: 'Id parameter',
+          description: 'id parameter',
           displayOptions: {
             show: {
               resource: ['identities'],
@@ -3738,7 +3744,7 @@ export class MsgCore implements INodeType {
             },
             routing: {
               request: {
-                body: {
+                qs: {
                   'email': '={{$value}}',
                 },
               },
@@ -3759,7 +3765,7 @@ export class MsgCore implements INodeType {
             },
             routing: {
               request: {
-                body: {
+                qs: {
                   'role': '={{$value}}',
                 },
               },
@@ -3794,7 +3800,7 @@ export class MsgCore implements INodeType {
             },
             routing: {
               request: {
-                body: {
+                qs: {
                   'userId': '={{$value}}',
                 },
               },
@@ -3815,7 +3821,7 @@ export class MsgCore implements INodeType {
             },
             routing: {
               request: {
-                body: {
+                qs: {
                   'role': '={{$value}}',
                 },
               },
@@ -3836,12 +3842,12 @@ export class MsgCore implements INodeType {
           },
         },
       {
-          displayName: 'User Id',
+          displayName: 'UserId',
           name: 'userId',
           type: 'string',
           required: true,
           default: '',
-          description: 'User Id parameter',
+          description: 'userId parameter',
           displayOptions: {
             show: {
               resource: ['members'],
@@ -3885,12 +3891,12 @@ export class MsgCore implements INodeType {
           },
         },
       {
-          displayName: 'User Id',
+          displayName: 'UserId',
           name: 'userId',
           type: 'string',
           required: true,
           default: '',
-          description: 'User Id parameter',
+          description: 'userId parameter',
           displayOptions: {
             show: {
               resource: ['members'],
@@ -3913,7 +3919,7 @@ export class MsgCore implements INodeType {
             },
             routing: {
               request: {
-                body: {
+                qs: {
                   'email': '={{$value}}',
                 },
               },
@@ -4065,6 +4071,237 @@ export class MsgCore implements INodeType {
         default: 'list',
       },
       {
+            displayName: 'Filter by platform ID',
+            name: 'platformId',
+            type: 'string',
+            required: false,
+            default: "",
+            
+            displayOptions: {
+              show: {
+                resource: ['messages'],
+                operation: ['list'],
+              },
+            },
+            routing: {
+              request: {
+                qs: {
+                  'platformId': '={{$value}}',
+                },
+              },
+            },
+          },
+      {
+            displayName: 'Filter by chat/channel ID',
+            name: 'chatId',
+            type: 'string',
+            required: false,
+            default: "",
+            
+            displayOptions: {
+              show: {
+                resource: ['messages'],
+                operation: ['list'],
+              },
+            },
+            routing: {
+              request: {
+                qs: {
+                  'chatId': '={{$value}}',
+                },
+              },
+            },
+          },
+      {
+            displayName: 'Filter by user ID',
+            name: 'userId',
+            type: 'string',
+            required: false,
+            default: "",
+            
+            displayOptions: {
+              show: {
+                resource: ['messages'],
+                operation: ['list'],
+              },
+            },
+            routing: {
+              request: {
+                qs: {
+                  'userId': '={{$value}}',
+                },
+              },
+            },
+          },
+      {
+            displayName: 'Filter by message direction',
+            name: 'direction',
+            type: 'string',
+            required: false,
+            default: "",
+            options: [{name: 'sent', value: 'sent'}, {name: 'received', value: 'received'}],
+            displayOptions: {
+              show: {
+                resource: ['messages'],
+                operation: ['list'],
+              },
+            },
+            routing: {
+              request: {
+                qs: {
+                  'direction': '={{$value}}',
+                },
+              },
+            },
+          },
+      {
+            displayName: 'Filter messages after this date (ISO 8601)',
+            name: 'startDate',
+            type: 'string',
+            required: false,
+            default: "",
+            
+            displayOptions: {
+              show: {
+                resource: ['messages'],
+                operation: ['list'],
+              },
+            },
+            routing: {
+              request: {
+                qs: {
+                  'startDate': '={{$value}}',
+                },
+              },
+            },
+          },
+      {
+            displayName: 'Filter messages before this date (ISO 8601)',
+            name: 'endDate',
+            type: 'string',
+            required: false,
+            default: "",
+            
+            displayOptions: {
+              show: {
+                resource: ['messages'],
+                operation: ['list'],
+              },
+            },
+            routing: {
+              request: {
+                qs: {
+                  'endDate': '={{$value}}',
+                },
+              },
+            },
+          },
+      {
+            displayName: 'Number of messages to return (1-100)',
+            name: 'limit',
+            type: 'number',
+            required: false,
+            default: 50,
+            
+            displayOptions: {
+              show: {
+                resource: ['messages'],
+                operation: ['list'],
+              },
+            },
+            routing: {
+              request: {
+                qs: {
+                  'limit': '={{$value}}',
+                },
+              },
+            },
+          },
+      {
+            displayName: 'Number of messages to skip',
+            name: 'offset',
+            type: 'number',
+            required: false,
+            default: "",
+            
+            displayOptions: {
+              show: {
+                resource: ['messages'],
+                operation: ['list'],
+              },
+            },
+            routing: {
+              request: {
+                qs: {
+                  'offset': '={{$value}}',
+                },
+              },
+            },
+          },
+      {
+            displayName: 'Sort order (asc or desc)',
+            name: 'order',
+            type: 'string',
+            required: false,
+            default: "desc",
+            options: [{name: 'asc', value: 'asc'}, {name: 'desc', value: 'desc'}],
+            displayOptions: {
+              show: {
+                resource: ['messages'],
+                operation: ['list'],
+              },
+            },
+            routing: {
+              request: {
+                qs: {
+                  'order': '={{$value}}',
+                },
+              },
+            },
+          },
+      {
+            displayName: 'Include raw platform message data',
+            name: 'raw',
+            type: 'boolean',
+            required: false,
+            default: "",
+            
+            displayOptions: {
+              show: {
+                resource: ['messages'],
+                operation: ['list'],
+              },
+            },
+            routing: {
+              request: {
+                qs: {
+                  'raw': '={{$value}}',
+                },
+              },
+            },
+          },
+      {
+            displayName: 'Include reactions on each message',
+            name: 'reactions',
+            type: 'boolean',
+            required: false,
+            default: "",
+            
+            displayOptions: {
+              show: {
+                resource: ['messages'],
+                operation: ['list'],
+              },
+            },
+            routing: {
+              request: {
+                qs: {
+                  'reactions': '={{$value}}',
+                },
+              },
+            },
+          },
+      {
           displayName: 'Project',
           name: 'project',
           type: 'string',
@@ -4077,186 +4314,6 @@ export class MsgCore implements INodeType {
               operation: ['list'],
             },
           },
-        },
-      {
-          displayName: 'Additional Fields',
-          name: 'additionalFields',
-          type: 'collection',
-          placeholder: 'Add Field',
-          default: {},
-          displayOptions: {
-            show: {
-              resource: ['messages'],
-              operation: ['list'],
-            },
-          },
-          options: [
-            {
-              displayName: 'Filter by platform ID',
-              name: 'platformId',
-              type: 'string',
-              default: "",
-              description: 'Filter by platform ID',
-              
-              routing: {
-                request: {
-                  qs: {
-                    'platformId': '={{$value}}',
-                  },
-                },
-              },
-            },
-            {
-              displayName: 'Filter by chat/channel ID',
-              name: 'chatId',
-              type: 'string',
-              default: "",
-              description: 'Filter by chat/channel ID',
-              
-              routing: {
-                request: {
-                  qs: {
-                    'chatId': '={{$value}}',
-                  },
-                },
-              },
-            },
-            {
-              displayName: 'Filter by user ID',
-              name: 'userId',
-              type: 'string',
-              default: "",
-              description: 'Filter by user ID',
-              
-              routing: {
-                request: {
-                  qs: {
-                    'userId': '={{$value}}',
-                  },
-                },
-              },
-            },
-            {
-              displayName: 'Filter by message direction',
-              name: 'direction',
-              type: 'string',
-              default: "",
-              description: 'Filter by message direction',
-              options: [{name: 'sent', value: 'sent'}, {name: 'received', value: 'received'}],
-              routing: {
-                request: {
-                  qs: {
-                    'direction': '={{$value}}',
-                  },
-                },
-              },
-            },
-            {
-              displayName: 'Filter messages after this date (ISO 8601)',
-              name: 'startDate',
-              type: 'string',
-              default: "",
-              description: 'Filter messages after this date (ISO 8601)',
-              
-              routing: {
-                request: {
-                  qs: {
-                    'startDate': '={{$value}}',
-                  },
-                },
-              },
-            },
-            {
-              displayName: 'Filter messages before this date (ISO 8601)',
-              name: 'endDate',
-              type: 'string',
-              default: "",
-              description: 'Filter messages before this date (ISO 8601)',
-              
-              routing: {
-                request: {
-                  qs: {
-                    'endDate': '={{$value}}',
-                  },
-                },
-              },
-            },
-            {
-              displayName: 'Number of messages to return (1-100)',
-              name: 'limit',
-              type: 'number',
-              default: 50,
-              description: 'Number of messages to return (1-100)',
-              
-              routing: {
-                request: {
-                  qs: {
-                    'limit': '={{$value}}',
-                  },
-                },
-              },
-            },
-            {
-              displayName: 'Number of messages to skip',
-              name: 'offset',
-              type: 'number',
-              default: 0,
-              description: 'Number of messages to skip',
-              
-              routing: {
-                request: {
-                  qs: {
-                    'offset': '={{$value}}',
-                  },
-                },
-              },
-            },
-            {
-              displayName: 'Sort order (asc or desc)',
-              name: 'order',
-              type: 'string',
-              default: "desc",
-              description: 'Sort order (asc or desc)',
-              options: [{name: 'asc', value: 'asc'}, {name: 'desc', value: 'desc'}],
-              routing: {
-                request: {
-                  qs: {
-                    'order': '={{$value}}',
-                  },
-                },
-              },
-            },
-            {
-              displayName: 'Include raw platform message data',
-              name: 'raw',
-              type: 'boolean',
-              default: false,
-              description: 'Include raw platform message data',
-              
-              routing: {
-                request: {
-                  qs: {
-                    'raw': '={{$value}}',
-                  },
-                },
-              },
-            },
-            {
-              displayName: 'Include reactions on each message',
-              name: 'reactions',
-              type: 'boolean',
-              default: false,
-              description: 'Include reactions on each message',
-              
-              routing: {
-                request: {
-                  qs: {
-                    'reactions': '={{$value}}',
-                  },
-                },
-              },
-            }
-          ],
         },
       {
           displayName: 'Project',
@@ -4308,12 +4365,12 @@ export class MsgCore implements INodeType {
           },
         },
       {
-          displayName: 'Message Id',
+          displayName: 'MessageId',
           name: 'messageId',
           type: 'string',
           required: true,
           default: '',
-          description: 'Message Id parameter',
+          description: 'messageId parameter',
           displayOptions: {
             show: {
               resource: ['messages'],
@@ -4326,7 +4383,7 @@ export class MsgCore implements INodeType {
             name: 'daysBefore',
             type: 'number',
             required: true,
-            default: 0,
+            default: "",
             
             displayOptions: {
               show: {
@@ -4357,10 +4414,73 @@ export class MsgCore implements INodeType {
           },
         },
       {
-            displayName: 'Target(s) in format platformId:type:id. For multiple, comma-separate: p1:user:1,p2:channel:2',
+            displayName: 'Single target in format: platformId:type:id',
             name: 'target',
             type: 'string',
-            required: true,
+            required: false,
+            default: "",
+            
+            displayOptions: {
+              show: {
+                resource: ['messages'],
+                operation: ['send'],
+              },
+            },
+            routing: {
+              request: {
+                qs: {
+                  'target': '={{$value}}',
+                },
+              },
+            },
+          },
+      {
+            displayName: 'Multiple targets comma-separated: platformId:type:id,platformId:type:id',
+            name: 'targets',
+            type: 'string',
+            required: false,
+            default: "",
+            
+            displayOptions: {
+              show: {
+                resource: ['messages'],
+                operation: ['send'],
+              },
+            },
+            routing: {
+              request: {
+                qs: {
+                  'targets': '={{$value}}',
+                },
+              },
+            },
+          },
+      {
+            displayName: 'Message text content',
+            name: 'text',
+            type: 'string',
+            required: false,
+            default: "",
+            
+            displayOptions: {
+              show: {
+                resource: ['messages'],
+                operation: ['send'],
+              },
+            },
+            routing: {
+              request: {
+                qs: {
+                  'text': '={{$value}}',
+                },
+              },
+            },
+          },
+      {
+            displayName: 'Full message content object (advanced)',
+            name: 'content',
+            type: 'json',
+            required: false,
             default: "",
             
             displayOptions: {
@@ -4372,7 +4492,49 @@ export class MsgCore implements INodeType {
             routing: {
               request: {
                 body: {
-                  'target': '={{$value}}',
+                  'content': '={{$value}}',
+                },
+              },
+            },
+          },
+      {
+            displayName: 'Message options',
+            name: 'options',
+            type: 'json',
+            required: false,
+            default: "",
+            
+            displayOptions: {
+              show: {
+                resource: ['messages'],
+                operation: ['send'],
+              },
+            },
+            routing: {
+              request: {
+                body: {
+                  'options': '={{$value}}',
+                },
+              },
+            },
+          },
+      {
+            displayName: 'Message metadata',
+            name: 'metadata',
+            type: 'json',
+            required: false,
+            default: "",
+            
+            displayOptions: {
+              show: {
+                resource: ['messages'],
+                operation: ['send'],
+              },
+            },
+            routing: {
+              request: {
+                body: {
+                  'metadata': '={{$value}}',
                 },
               },
             },
@@ -4390,81 +4552,6 @@ export class MsgCore implements INodeType {
               operation: ['send'],
             },
           },
-        },
-      {
-          displayName: 'Additional Fields',
-          name: 'additionalFields',
-          type: 'collection',
-          placeholder: 'Add Field',
-          default: {},
-          displayOptions: {
-            show: {
-              resource: ['messages'],
-              operation: ['send'],
-            },
-          },
-          options: [
-            {
-              displayName: 'Message text content',
-              name: 'text',
-              type: 'string',
-              default: "",
-              description: 'Message text content',
-              
-              routing: {
-                request: {
-                  body: {
-                    'text': '={{$value}}',
-                  },
-                },
-              },
-            },
-            {
-              displayName: 'Full content object (text, markdown, html, attachments, buttons, embeds)',
-              name: 'content',
-              type: 'json',
-              default: "",
-              description: 'Full content object (text, markdown, html, attachments, buttons, embeds)',
-              
-              routing: {
-                request: {
-                  body: {
-                    'content': '={{$value}}',
-                  },
-                },
-              },
-            },
-            {
-              displayName: 'Message options (replyTo, silent, scheduled)',
-              name: 'options',
-              type: 'json',
-              default: "",
-              description: 'Message options (replyTo, silent, scheduled)',
-              
-              routing: {
-                request: {
-                  body: {
-                    'options': '={{$value}}',
-                  },
-                },
-              },
-            },
-            {
-              displayName: 'Message metadata (trackingId, tags, priority)',
-              name: 'metadata',
-              type: 'json',
-              default: "",
-              description: 'Message metadata (trackingId, tags, priority)',
-              
-              routing: {
-                request: {
-                  body: {
-                    'metadata': '={{$value}}',
-                  },
-                },
-              },
-            }
-          ],
         },
       {
             displayName: 'Message job ID',
@@ -4502,12 +4589,12 @@ export class MsgCore implements INodeType {
           },
         },
       {
-          displayName: 'Job Id',
+          displayName: 'JobId',
           name: 'jobId',
           type: 'string',
           required: true,
           default: '',
-          description: 'Job Id parameter',
+          description: 'jobId parameter',
           displayOptions: {
             show: {
               resource: ['messages'],
@@ -4530,7 +4617,7 @@ export class MsgCore implements INodeType {
             },
             routing: {
               request: {
-                body: {
+                qs: {
                   'jobId': '={{$value}}',
                 },
               },
@@ -4551,12 +4638,12 @@ export class MsgCore implements INodeType {
           },
         },
       {
-          displayName: 'Job Id',
+          displayName: 'JobId',
           name: 'jobId',
           type: 'string',
           required: true,
           default: '',
-          description: 'Job Id parameter',
+          description: 'jobId parameter',
           displayOptions: {
             show: {
               resource: ['messages'],
@@ -4579,7 +4666,7 @@ export class MsgCore implements INodeType {
             },
             routing: {
               request: {
-                body: {
+                qs: {
                   'platformId': '={{$value}}',
                 },
               },
@@ -4600,7 +4687,7 @@ export class MsgCore implements INodeType {
             },
             routing: {
               request: {
-                body: {
+                qs: {
                   'messageId': '={{$value}}',
                 },
               },
@@ -4621,7 +4708,7 @@ export class MsgCore implements INodeType {
             },
             routing: {
               request: {
-                body: {
+                qs: {
                   'emoji': '={{$value}}',
                 },
               },
@@ -4656,7 +4743,7 @@ export class MsgCore implements INodeType {
             },
             routing: {
               request: {
-                body: {
+                qs: {
                   'platformId': '={{$value}}',
                 },
               },
@@ -4677,7 +4764,7 @@ export class MsgCore implements INodeType {
             },
             routing: {
               request: {
-                body: {
+                qs: {
                   'messageId': '={{$value}}',
                 },
               },
@@ -4698,7 +4785,7 @@ export class MsgCore implements INodeType {
             },
             routing: {
               request: {
-                body: {
+                qs: {
                   'emoji': '={{$value}}',
                 },
               },
@@ -4772,6 +4859,153 @@ export class MsgCore implements INodeType {
         default: 'logs',
       },
       {
+            displayName: 'Filter by platform (telegram, discord)',
+            name: 'platform',
+            type: 'string',
+            required: false,
+            default: "",
+            
+            displayOptions: {
+              show: {
+                resource: ['platform logs'],
+                operation: ['logs'],
+              },
+            },
+            routing: {
+              request: {
+                qs: {
+                  'platform': '={{$value}}',
+                },
+              },
+            },
+          },
+      {
+            displayName: 'Filter by log level',
+            name: 'level',
+            type: 'string',
+            required: false,
+            default: "",
+            options: [{name: 'info', value: 'info'}, {name: 'warn', value: 'warn'}, {name: 'error', value: 'error'}, {name: 'debug', value: 'debug'}],
+            displayOptions: {
+              show: {
+                resource: ['platform logs'],
+                operation: ['logs'],
+              },
+            },
+            routing: {
+              request: {
+                qs: {
+                  'level': '={{$value}}',
+                },
+              },
+            },
+          },
+      {
+            displayName: 'Filter by log category',
+            name: 'category',
+            type: 'string',
+            required: false,
+            default: "",
+            options: [{name: 'connection', value: 'connection'}, {name: 'webhook', value: 'webhook'}, {name: 'message', value: 'message'}, {name: 'error', value: 'error'}, {name: 'auth', value: 'auth'}, {name: 'general', value: 'general'}],
+            displayOptions: {
+              show: {
+                resource: ['platform logs'],
+                operation: ['logs'],
+              },
+            },
+            routing: {
+              request: {
+                qs: {
+                  'category': '={{$value}}',
+                },
+              },
+            },
+          },
+      {
+            displayName: 'Filter logs after this date (ISO 8601)',
+            name: 'startDate',
+            type: 'string',
+            required: false,
+            default: "",
+            
+            displayOptions: {
+              show: {
+                resource: ['platform logs'],
+                operation: ['logs'],
+              },
+            },
+            routing: {
+              request: {
+                qs: {
+                  'startDate': '={{$value}}',
+                },
+              },
+            },
+          },
+      {
+            displayName: 'Filter logs before this date (ISO 8601)',
+            name: 'endDate',
+            type: 'string',
+            required: false,
+            default: "",
+            
+            displayOptions: {
+              show: {
+                resource: ['platform logs'],
+                operation: ['logs'],
+              },
+            },
+            routing: {
+              request: {
+                qs: {
+                  'endDate': '={{$value}}',
+                },
+              },
+            },
+          },
+      {
+            displayName: 'Number of logs to return (1-1000)',
+            name: 'limit',
+            type: 'number',
+            required: false,
+            default: "100",
+            
+            displayOptions: {
+              show: {
+                resource: ['platform logs'],
+                operation: ['logs'],
+              },
+            },
+            routing: {
+              request: {
+                qs: {
+                  'limit': '={{$value}}',
+                },
+              },
+            },
+          },
+      {
+            displayName: 'Number of logs to skip',
+            name: 'offset',
+            type: 'number',
+            required: false,
+            default: "",
+            
+            displayOptions: {
+              show: {
+                resource: ['platform logs'],
+                operation: ['logs'],
+              },
+            },
+            routing: {
+              request: {
+                qs: {
+                  'offset': '={{$value}}',
+                },
+              },
+            },
+          },
+      {
           displayName: 'Project',
           name: 'project',
           type: 'string',
@@ -4786,125 +5020,131 @@ export class MsgCore implements INodeType {
           },
         },
       {
-          displayName: 'Additional Fields',
-          name: 'additionalFields',
-          type: 'collection',
-          placeholder: 'Add Field',
-          default: {},
-          displayOptions: {
-            show: {
-              resource: ['platform logs'],
-              operation: ['logs'],
+            displayName: 'Filter by log level',
+            name: 'level',
+            type: 'string',
+            required: false,
+            default: "",
+            options: [{name: 'info', value: 'info'}, {name: 'warn', value: 'warn'}, {name: 'error', value: 'error'}, {name: 'debug', value: 'debug'}],
+            displayOptions: {
+              show: {
+                resource: ['platform logs'],
+                operation: ['logs'],
+              },
+            },
+            routing: {
+              request: {
+                qs: {
+                  'level': '={{$value}}',
+                },
+              },
             },
           },
-          options: [
-            {
-              displayName: 'Filter by platform (telegram, discord)',
-              name: 'platform',
-              type: 'string',
-              default: "",
-              description: 'Filter by platform (telegram, discord)',
-              
-              routing: {
-                request: {
-                  qs: {
-                    'platform': '={{$value}}',
-                  },
+      {
+            displayName: 'Filter by log category',
+            name: 'category',
+            type: 'string',
+            required: false,
+            default: "",
+            options: [{name: 'connection', value: 'connection'}, {name: 'webhook', value: 'webhook'}, {name: 'message', value: 'message'}, {name: 'error', value: 'error'}, {name: 'auth', value: 'auth'}, {name: 'general', value: 'general'}],
+            displayOptions: {
+              show: {
+                resource: ['platform logs'],
+                operation: ['logs'],
+              },
+            },
+            routing: {
+              request: {
+                qs: {
+                  'category': '={{$value}}',
                 },
               },
             },
-            {
-              displayName: 'Filter by log level',
-              name: 'level',
-              type: 'string',
-              default: "",
-              description: 'Filter by log level',
-              options: [{name: 'info', value: 'info'}, {name: 'warn', value: 'warn'}, {name: 'error', value: 'error'}, {name: 'debug', value: 'debug'}],
-              routing: {
-                request: {
-                  qs: {
-                    'level': '={{$value}}',
-                  },
+          },
+      {
+            displayName: 'Filter logs after this date (ISO 8601)',
+            name: 'startDate',
+            type: 'string',
+            required: false,
+            default: "",
+            
+            displayOptions: {
+              show: {
+                resource: ['platform logs'],
+                operation: ['logs'],
+              },
+            },
+            routing: {
+              request: {
+                qs: {
+                  'startDate': '={{$value}}',
                 },
               },
             },
-            {
-              displayName: 'Filter by log category',
-              name: 'category',
-              type: 'string',
-              default: "",
-              description: 'Filter by log category',
-              options: [{name: 'connection', value: 'connection'}, {name: 'webhook', value: 'webhook'}, {name: 'message', value: 'message'}, {name: 'error', value: 'error'}, {name: 'auth', value: 'auth'}, {name: 'general', value: 'general'}],
-              routing: {
-                request: {
-                  qs: {
-                    'category': '={{$value}}',
-                  },
+          },
+      {
+            displayName: 'Filter logs before this date (ISO 8601)',
+            name: 'endDate',
+            type: 'string',
+            required: false,
+            default: "",
+            
+            displayOptions: {
+              show: {
+                resource: ['platform logs'],
+                operation: ['logs'],
+              },
+            },
+            routing: {
+              request: {
+                qs: {
+                  'endDate': '={{$value}}',
                 },
               },
             },
-            {
-              displayName: 'Filter logs after this date (ISO 8601)',
-              name: 'startDate',
-              type: 'string',
-              default: "",
-              description: 'Filter logs after this date (ISO 8601)',
-              
-              routing: {
-                request: {
-                  qs: {
-                    'startDate': '={{$value}}',
-                  },
+          },
+      {
+            displayName: 'Number of logs to return (1-1000)',
+            name: 'limit',
+            type: 'number',
+            required: false,
+            default: "100",
+            
+            displayOptions: {
+              show: {
+                resource: ['platform logs'],
+                operation: ['logs'],
+              },
+            },
+            routing: {
+              request: {
+                qs: {
+                  'limit': '={{$value}}',
                 },
               },
             },
-            {
-              displayName: 'Filter logs before this date (ISO 8601)',
-              name: 'endDate',
-              type: 'string',
-              default: "",
-              description: 'Filter logs before this date (ISO 8601)',
-              
-              routing: {
-                request: {
-                  qs: {
-                    'endDate': '={{$value}}',
-                  },
+          },
+      {
+            displayName: 'Number of logs to skip',
+            name: 'offset',
+            type: 'number',
+            required: false,
+            default: "",
+            
+            displayOptions: {
+              show: {
+                resource: ['platform logs'],
+                operation: ['logs'],
+              },
+            },
+            routing: {
+              request: {
+                qs: {
+                  'offset': '={{$value}}',
                 },
               },
             },
-            {
-              displayName: 'Number of logs to return (1-1000)',
-              name: 'limit',
-              type: 'number',
-              default: "100",
-              description: 'Number of logs to return (1-1000)',
-              
-              routing: {
-                request: {
-                  qs: {
-                    'limit': '={{$value}}',
-                  },
-                },
-              },
-            },
-            {
-              displayName: 'Number of logs to skip',
-              name: 'offset',
-              type: 'number',
-              default: 0,
-              description: 'Number of logs to skip',
-              
-              routing: {
-                request: {
-                  qs: {
-                    'offset': '={{$value}}',
-                  },
-                },
-              },
-            }
-          ],
-        },
+          },
       {
           displayName: 'Project',
           name: 'project',
@@ -4920,123 +5160,18 @@ export class MsgCore implements INodeType {
           },
         },
       {
-          displayName: 'Platform Id',
+          displayName: 'PlatformId',
           name: 'platformId',
           type: 'string',
           required: true,
           default: '',
-          description: 'Platform Id parameter',
+          description: 'platformId parameter',
           displayOptions: {
             show: {
               resource: ['platform logs'],
               operation: ['logs'],
             },
           },
-        },
-      {
-          displayName: 'Additional Fields',
-          name: 'additionalFields',
-          type: 'collection',
-          placeholder: 'Add Field',
-          default: {},
-          displayOptions: {
-            show: {
-              resource: ['platform logs'],
-              operation: ['logs'],
-            },
-          },
-          options: [
-            {
-              displayName: 'Filter by log level',
-              name: 'level',
-              type: 'string',
-              default: "",
-              description: 'Filter by log level',
-              options: [{name: 'info', value: 'info'}, {name: 'warn', value: 'warn'}, {name: 'error', value: 'error'}, {name: 'debug', value: 'debug'}],
-              routing: {
-                request: {
-                  qs: {
-                    'level': '={{$value}}',
-                  },
-                },
-              },
-            },
-            {
-              displayName: 'Filter by log category',
-              name: 'category',
-              type: 'string',
-              default: "",
-              description: 'Filter by log category',
-              options: [{name: 'connection', value: 'connection'}, {name: 'webhook', value: 'webhook'}, {name: 'message', value: 'message'}, {name: 'error', value: 'error'}, {name: 'auth', value: 'auth'}, {name: 'general', value: 'general'}],
-              routing: {
-                request: {
-                  qs: {
-                    'category': '={{$value}}',
-                  },
-                },
-              },
-            },
-            {
-              displayName: 'Filter logs after this date (ISO 8601)',
-              name: 'startDate',
-              type: 'string',
-              default: "",
-              description: 'Filter logs after this date (ISO 8601)',
-              
-              routing: {
-                request: {
-                  qs: {
-                    'startDate': '={{$value}}',
-                  },
-                },
-              },
-            },
-            {
-              displayName: 'Filter logs before this date (ISO 8601)',
-              name: 'endDate',
-              type: 'string',
-              default: "",
-              description: 'Filter logs before this date (ISO 8601)',
-              
-              routing: {
-                request: {
-                  qs: {
-                    'endDate': '={{$value}}',
-                  },
-                },
-              },
-            },
-            {
-              displayName: 'Number of logs to return (1-1000)',
-              name: 'limit',
-              type: 'number',
-              default: "100",
-              description: 'Number of logs to return (1-1000)',
-              
-              routing: {
-                request: {
-                  qs: {
-                    'limit': '={{$value}}',
-                  },
-                },
-              },
-            },
-            {
-              displayName: 'Number of logs to skip',
-              name: 'offset',
-              type: 'number',
-              default: 0,
-              description: 'Number of logs to skip',
-              
-              routing: {
-                request: {
-                  qs: {
-                    'offset': '={{$value}}',
-                  },
-                },
-              },
-            }
-          ],
         },
       {
           displayName: 'Project',
@@ -5185,7 +5320,7 @@ export class MsgCore implements INodeType {
             },
             routing: {
               request: {
-                body: {
+                qs: {
                   'platform': '={{$value}}',
                 },
               },
@@ -5206,8 +5341,29 @@ export class MsgCore implements INodeType {
             },
             routing: {
               request: {
-                body: {
+                qs: {
                   'name': '={{$value}}',
+                },
+              },
+            },
+          },
+      {
+            displayName: 'Optional description for the platform instance',
+            name: 'description',
+            type: 'string',
+            required: false,
+            default: "",
+            
+            displayOptions: {
+              show: {
+                resource: ['platforms'],
+                operation: ['create'],
+              },
+            },
+            routing: {
+              request: {
+                qs: {
+                  'description': '={{$value}}',
                 },
               },
             },
@@ -5234,6 +5390,48 @@ export class MsgCore implements INodeType {
             },
           },
       {
+            displayName: 'Enable platform',
+            name: 'isActive',
+            type: 'boolean',
+            required: false,
+            default: true,
+            
+            displayOptions: {
+              show: {
+                resource: ['platforms'],
+                operation: ['create'],
+              },
+            },
+            routing: {
+              request: {
+                qs: {
+                  'isActive': '={{$value}}',
+                },
+              },
+            },
+          },
+      {
+            displayName: 'Enable test mode',
+            name: 'testMode',
+            type: 'boolean',
+            required: false,
+            default: "",
+            
+            displayOptions: {
+              show: {
+                resource: ['platforms'],
+                operation: ['create'],
+              },
+            },
+            routing: {
+              request: {
+                qs: {
+                  'testMode': '={{$value}}',
+                },
+              },
+            },
+          },
+      {
           displayName: 'Project',
           name: 'project',
           type: 'string',
@@ -5246,66 +5444,6 @@ export class MsgCore implements INodeType {
               operation: ['create'],
             },
           },
-        },
-      {
-          displayName: 'Additional Fields',
-          name: 'additionalFields',
-          type: 'collection',
-          placeholder: 'Add Field',
-          default: {},
-          displayOptions: {
-            show: {
-              resource: ['platforms'],
-              operation: ['create'],
-            },
-          },
-          options: [
-            {
-              displayName: 'Optional description for the platform instance',
-              name: 'description',
-              type: 'string',
-              default: "",
-              description: 'Optional description for the platform instance',
-              
-              routing: {
-                request: {
-                  body: {
-                    'description': '={{$value}}',
-                  },
-                },
-              },
-            },
-            {
-              displayName: 'Enable platform',
-              name: 'isActive',
-              type: 'boolean',
-              default: true,
-              description: 'Enable platform',
-              
-              routing: {
-                request: {
-                  body: {
-                    'isActive': '={{$value}}',
-                  },
-                },
-              },
-            },
-            {
-              displayName: 'Enable test mode',
-              name: 'testMode',
-              type: 'boolean',
-              default: false,
-              description: 'Enable test mode',
-              
-              routing: {
-                request: {
-                  body: {
-                    'testMode': '={{$value}}',
-                  },
-                },
-              },
-            }
-          ],
         },
       {
           displayName: 'Project',
@@ -5362,7 +5500,7 @@ export class MsgCore implements INodeType {
           type: 'string',
           required: true,
           default: '',
-          description: 'Id parameter',
+          description: 'id parameter',
           displayOptions: {
             show: {
               resource: ['platforms'],
@@ -5370,6 +5508,111 @@ export class MsgCore implements INodeType {
             },
           },
         },
+      {
+            displayName: 'Updated friendly name',
+            name: 'name',
+            type: 'string',
+            required: false,
+            default: "",
+            
+            displayOptions: {
+              show: {
+                resource: ['platforms'],
+                operation: ['update'],
+              },
+            },
+            routing: {
+              request: {
+                qs: {
+                  'name': '={{$value}}',
+                },
+              },
+            },
+          },
+      {
+            displayName: 'Updated description',
+            name: 'description',
+            type: 'string',
+            required: false,
+            default: "",
+            
+            displayOptions: {
+              show: {
+                resource: ['platforms'],
+                operation: ['update'],
+              },
+            },
+            routing: {
+              request: {
+                qs: {
+                  'description': '={{$value}}',
+                },
+              },
+            },
+          },
+      {
+            displayName: 'Updated credentials (JSON object)',
+            name: 'credentials',
+            type: 'json',
+            required: false,
+            default: "",
+            
+            displayOptions: {
+              show: {
+                resource: ['platforms'],
+                operation: ['update'],
+              },
+            },
+            routing: {
+              request: {
+                body: {
+                  'credentials': '={{$value}}',
+                },
+              },
+            },
+          },
+      {
+            displayName: 'Enable/disable platform',
+            name: 'isActive',
+            type: 'boolean',
+            required: false,
+            default: "",
+            
+            displayOptions: {
+              show: {
+                resource: ['platforms'],
+                operation: ['update'],
+              },
+            },
+            routing: {
+              request: {
+                qs: {
+                  'isActive': '={{$value}}',
+                },
+              },
+            },
+          },
+      {
+            displayName: 'Enable/disable test mode',
+            name: 'testMode',
+            type: 'boolean',
+            required: false,
+            default: "",
+            
+            displayOptions: {
+              show: {
+                resource: ['platforms'],
+                operation: ['update'],
+              },
+            },
+            routing: {
+              request: {
+                qs: {
+                  'testMode': '={{$value}}',
+                },
+              },
+            },
+          },
       {
           displayName: 'Project',
           name: 'project',
@@ -5390,103 +5633,13 @@ export class MsgCore implements INodeType {
           type: 'string',
           required: true,
           default: '',
-          description: 'Id parameter',
+          description: 'id parameter',
           displayOptions: {
             show: {
               resource: ['platforms'],
               operation: ['update'],
             },
           },
-        },
-      {
-          displayName: 'Additional Fields',
-          name: 'additionalFields',
-          type: 'collection',
-          placeholder: 'Add Field',
-          default: {},
-          displayOptions: {
-            show: {
-              resource: ['platforms'],
-              operation: ['update'],
-            },
-          },
-          options: [
-            {
-              displayName: 'Updated friendly name',
-              name: 'name',
-              type: 'string',
-              default: "",
-              description: 'Updated friendly name',
-              
-              routing: {
-                request: {
-                  body: {
-                    'name': '={{$value}}',
-                  },
-                },
-              },
-            },
-            {
-              displayName: 'Updated description',
-              name: 'description',
-              type: 'string',
-              default: "",
-              description: 'Updated description',
-              
-              routing: {
-                request: {
-                  body: {
-                    'description': '={{$value}}',
-                  },
-                },
-              },
-            },
-            {
-              displayName: 'Updated credentials (JSON object)',
-              name: 'credentials',
-              type: 'json',
-              default: "",
-              description: 'Updated credentials (JSON object)',
-              
-              routing: {
-                request: {
-                  body: {
-                    'credentials': '={{$value}}',
-                  },
-                },
-              },
-            },
-            {
-              displayName: 'Enable/disable platform',
-              name: 'isActive',
-              type: 'boolean',
-              default: "",
-              description: 'Enable/disable platform',
-              
-              routing: {
-                request: {
-                  body: {
-                    'isActive': '={{$value}}',
-                  },
-                },
-              },
-            },
-            {
-              displayName: 'Enable/disable test mode',
-              name: 'testMode',
-              type: 'boolean',
-              default: "",
-              description: 'Enable/disable test mode',
-              
-              routing: {
-                request: {
-                  body: {
-                    'testMode': '={{$value}}',
-                  },
-                },
-              },
-            }
-          ],
         },
       {
             displayName: 'Platform ID',
@@ -5529,7 +5682,7 @@ export class MsgCore implements INodeType {
           type: 'string',
           required: true,
           default: '',
-          description: 'Id parameter',
+          description: 'id parameter',
           displayOptions: {
             show: {
               resource: ['platforms'],
@@ -5552,7 +5705,7 @@ export class MsgCore implements INodeType {
             },
             routing: {
               request: {
-                body: {
+                qs: {
                   'id': '={{$value}}',
                 },
               },
@@ -5578,7 +5731,7 @@ export class MsgCore implements INodeType {
           type: 'string',
           required: true,
           default: '',
-          description: 'Id parameter',
+          description: 'id parameter',
           displayOptions: {
             show: {
               resource: ['platforms'],
@@ -5627,7 +5780,7 @@ export class MsgCore implements INodeType {
           type: 'string',
           required: true,
           default: '',
-          description: 'Id parameter',
+          description: 'id parameter',
           displayOptions: {
             show: {
               resource: ['platforms'],
@@ -5729,57 +5882,54 @@ export class MsgCore implements INodeType {
             },
             routing: {
               request: {
-                body: {
+                qs: {
                   'name': '={{$value}}',
                 },
               },
             },
           },
       {
-          displayName: 'Additional Fields',
-          name: 'additionalFields',
-          type: 'collection',
-          placeholder: 'Add Field',
-          default: {},
-          displayOptions: {
-            show: {
-              resource: ['projects'],
-              operation: ['create'],
+            displayName: 'Project description',
+            name: 'description',
+            type: 'string',
+            required: false,
+            default: "",
+            
+            displayOptions: {
+              show: {
+                resource: ['projects'],
+                operation: ['create'],
+              },
+            },
+            routing: {
+              request: {
+                qs: {
+                  'description': '={{$value}}',
+                },
+              },
             },
           },
-          options: [
-            {
-              displayName: 'Project description',
-              name: 'description',
-              type: 'string',
-              default: "",
-              description: 'Project description',
-              
-              routing: {
-                request: {
-                  body: {
-                    'description': '={{$value}}',
-                  },
+      {
+            displayName: 'Project environment',
+            name: 'environment',
+            type: 'string',
+            required: false,
+            default: "development",
+            options: [{name: 'development', value: 'development'}, {name: 'staging', value: 'staging'}, {name: 'production', value: 'production'}],
+            displayOptions: {
+              show: {
+                resource: ['projects'],
+                operation: ['create'],
+              },
+            },
+            routing: {
+              request: {
+                qs: {
+                  'environment': '={{$value}}',
                 },
               },
             },
-            {
-              displayName: 'Project environment',
-              name: 'environment',
-              type: 'string',
-              default: "development",
-              description: 'Project environment',
-              options: [{name: 'development', value: 'development'}, {name: 'staging', value: 'staging'}, {name: 'production', value: 'production'}],
-              routing: {
-                request: {
-                  body: {
-                    'environment': '={{$value}}',
-                  },
-                },
-              },
-            }
-          ],
-        },
+          },
       {
           displayName: 'Project',
           name: 'project',
@@ -5795,6 +5945,90 @@ export class MsgCore implements INodeType {
           },
         },
       {
+            displayName: 'Project name',
+            name: 'name',
+            type: 'string',
+            required: false,
+            default: "",
+            
+            displayOptions: {
+              show: {
+                resource: ['projects'],
+                operation: ['update'],
+              },
+            },
+            routing: {
+              request: {
+                qs: {
+                  'name': '={{$value}}',
+                },
+              },
+            },
+          },
+      {
+            displayName: 'Project description',
+            name: 'description',
+            type: 'string',
+            required: false,
+            default: "",
+            
+            displayOptions: {
+              show: {
+                resource: ['projects'],
+                operation: ['update'],
+              },
+            },
+            routing: {
+              request: {
+                qs: {
+                  'description': '={{$value}}',
+                },
+              },
+            },
+          },
+      {
+            displayName: 'Project environment',
+            name: 'environment',
+            type: 'string',
+            required: false,
+            default: "",
+            options: [{name: 'development', value: 'development'}, {name: 'staging', value: 'staging'}, {name: 'production', value: 'production'}],
+            displayOptions: {
+              show: {
+                resource: ['projects'],
+                operation: ['update'],
+              },
+            },
+            routing: {
+              request: {
+                qs: {
+                  'environment': '={{$value}}',
+                },
+              },
+            },
+          },
+      {
+            displayName: 'Set as default project',
+            name: 'isDefault',
+            type: 'boolean',
+            required: false,
+            default: "",
+            
+            displayOptions: {
+              show: {
+                resource: ['projects'],
+                operation: ['update'],
+              },
+            },
+            routing: {
+              request: {
+                qs: {
+                  'isDefault': '={{$value}}',
+                },
+              },
+            },
+          },
+      {
           displayName: 'Project',
           name: 'project',
           type: 'string',
@@ -5807,81 +6041,6 @@ export class MsgCore implements INodeType {
               operation: ['update'],
             },
           },
-        },
-      {
-          displayName: 'Additional Fields',
-          name: 'additionalFields',
-          type: 'collection',
-          placeholder: 'Add Field',
-          default: {},
-          displayOptions: {
-            show: {
-              resource: ['projects'],
-              operation: ['update'],
-            },
-          },
-          options: [
-            {
-              displayName: 'Project name',
-              name: 'name',
-              type: 'string',
-              default: "",
-              description: 'Project name',
-              
-              routing: {
-                request: {
-                  body: {
-                    'name': '={{$value}}',
-                  },
-                },
-              },
-            },
-            {
-              displayName: 'Project description',
-              name: 'description',
-              type: 'string',
-              default: "",
-              description: 'Project description',
-              
-              routing: {
-                request: {
-                  body: {
-                    'description': '={{$value}}',
-                  },
-                },
-              },
-            },
-            {
-              displayName: 'Project environment',
-              name: 'environment',
-              type: 'string',
-              default: "",
-              description: 'Project environment',
-              options: [{name: 'development', value: 'development'}, {name: 'staging', value: 'staging'}, {name: 'production', value: 'production'}],
-              routing: {
-                request: {
-                  body: {
-                    'environment': '={{$value}}',
-                  },
-                },
-              },
-            },
-            {
-              displayName: 'Set as default project',
-              name: 'isDefault',
-              type: 'boolean',
-              default: "",
-              description: 'Set as default project',
-              
-              routing: {
-                request: {
-                  body: {
-                    'isDefault': '={{$value}}',
-                  },
-                },
-              },
-            }
-          ],
         },
       {
           displayName: 'Project',
@@ -6004,7 +6163,7 @@ export class MsgCore implements INodeType {
             },
             routing: {
               request: {
-                body: {
+                qs: {
                   'name': '={{$value}}',
                 },
               },
@@ -6025,7 +6184,7 @@ export class MsgCore implements INodeType {
             },
             routing: {
               request: {
-                body: {
+                qs: {
                   'url': '={{$value}}',
                 },
               },
@@ -6046,8 +6205,29 @@ export class MsgCore implements INodeType {
             },
             routing: {
               request: {
-                body: {
+                qs: {
                   'events': '={{$value}}',
+                },
+              },
+            },
+          },
+      {
+            displayName: 'Custom webhook secret (auto-generated if not provided)',
+            name: 'secret',
+            type: 'string',
+            required: false,
+            default: "",
+            
+            displayOptions: {
+              show: {
+                resource: ['webhooks'],
+                operation: ['create'],
+              },
+            },
+            routing: {
+              request: {
+                qs: {
+                  'secret': '={{$value}}',
                 },
               },
             },
@@ -6065,36 +6245,6 @@ export class MsgCore implements INodeType {
               operation: ['create'],
             },
           },
-        },
-      {
-          displayName: 'Additional Fields',
-          name: 'additionalFields',
-          type: 'collection',
-          placeholder: 'Add Field',
-          default: {},
-          displayOptions: {
-            show: {
-              resource: ['webhooks'],
-              operation: ['create'],
-            },
-          },
-          options: [
-            {
-              displayName: 'Custom webhook secret (auto-generated if not provided)',
-              name: 'secret',
-              type: 'string',
-              default: "",
-              description: 'Custom webhook secret (auto-generated if not provided)',
-              
-              routing: {
-                request: {
-                  body: {
-                    'secret': '={{$value}}',
-                  },
-                },
-              },
-            }
-          ],
         },
       {
           displayName: 'Project',
@@ -6146,12 +6296,12 @@ export class MsgCore implements INodeType {
           },
         },
       {
-          displayName: 'Webhook Id',
+          displayName: 'WebhookId',
           name: 'webhookId',
           type: 'string',
           required: true,
           default: '',
-          description: 'Webhook Id parameter',
+          description: 'webhookId parameter',
           displayOptions: {
             show: {
               resource: ['webhooks'],
@@ -6174,8 +6324,92 @@ export class MsgCore implements INodeType {
             },
             routing: {
               request: {
-                body: {
+                qs: {
                   'webhookId': '={{$value}}',
+                },
+              },
+            },
+          },
+      {
+            displayName: 'New webhook name',
+            name: 'name',
+            type: 'string',
+            required: false,
+            default: "",
+            
+            displayOptions: {
+              show: {
+                resource: ['webhooks'],
+                operation: ['update'],
+              },
+            },
+            routing: {
+              request: {
+                qs: {
+                  'name': '={{$value}}',
+                },
+              },
+            },
+          },
+      {
+            displayName: 'New webhook URL',
+            name: 'url',
+            type: 'string',
+            required: false,
+            default: "",
+            
+            displayOptions: {
+              show: {
+                resource: ['webhooks'],
+                operation: ['update'],
+              },
+            },
+            routing: {
+              request: {
+                qs: {
+                  'url': '={{$value}}',
+                },
+              },
+            },
+          },
+      {
+            displayName: 'New events subscription',
+            name: 'events',
+            type: 'string',
+            required: false,
+            default: "",
+            
+            displayOptions: {
+              show: {
+                resource: ['webhooks'],
+                operation: ['update'],
+              },
+            },
+            routing: {
+              request: {
+                qs: {
+                  'events': '={{$value}}',
+                },
+              },
+            },
+          },
+      {
+            displayName: 'Enable or disable webhook',
+            name: 'isActive',
+            type: 'boolean',
+            required: false,
+            default: "",
+            
+            displayOptions: {
+              show: {
+                resource: ['webhooks'],
+                operation: ['update'],
+              },
+            },
+            routing: {
+              request: {
+                qs: {
+                  'isActive': '={{$value}}',
                 },
               },
             },
@@ -6195,93 +6429,18 @@ export class MsgCore implements INodeType {
           },
         },
       {
-          displayName: 'Webhook Id',
+          displayName: 'WebhookId',
           name: 'webhookId',
           type: 'string',
           required: true,
           default: '',
-          description: 'Webhook Id parameter',
+          description: 'webhookId parameter',
           displayOptions: {
             show: {
               resource: ['webhooks'],
               operation: ['update'],
             },
           },
-        },
-      {
-          displayName: 'Additional Fields',
-          name: 'additionalFields',
-          type: 'collection',
-          placeholder: 'Add Field',
-          default: {},
-          displayOptions: {
-            show: {
-              resource: ['webhooks'],
-              operation: ['update'],
-            },
-          },
-          options: [
-            {
-              displayName: 'New webhook name',
-              name: 'name',
-              type: 'string',
-              default: "",
-              description: 'New webhook name',
-              
-              routing: {
-                request: {
-                  body: {
-                    'name': '={{$value}}',
-                  },
-                },
-              },
-            },
-            {
-              displayName: 'New webhook URL',
-              name: 'url',
-              type: 'string',
-              default: "",
-              description: 'New webhook URL',
-              
-              routing: {
-                request: {
-                  body: {
-                    'url': '={{$value}}',
-                  },
-                },
-              },
-            },
-            {
-              displayName: 'New events subscription',
-              name: 'events',
-              type: 'string',
-              default: "",
-              description: 'New events subscription',
-              
-              routing: {
-                request: {
-                  body: {
-                    'events': '={{$value}}',
-                  },
-                },
-              },
-            },
-            {
-              displayName: 'Enable or disable webhook',
-              name: 'isActive',
-              type: 'boolean',
-              default: "",
-              description: 'Enable or disable webhook',
-              
-              routing: {
-                request: {
-                  body: {
-                    'isActive': '={{$value}}',
-                  },
-                },
-              },
-            }
-          ],
         },
       {
             displayName: 'Webhook ID',
@@ -6319,12 +6478,12 @@ export class MsgCore implements INodeType {
           },
         },
       {
-          displayName: 'Webhook Id',
+          displayName: 'WebhookId',
           name: 'webhookId',
           type: 'string',
           required: true,
           default: '',
-          description: 'Webhook Id parameter',
+          description: 'webhookId parameter',
           displayOptions: {
             show: {
               resource: ['webhooks'],
@@ -6354,6 +6513,90 @@ export class MsgCore implements INodeType {
             },
           },
       {
+            displayName: 'Filter by event type',
+            name: 'event',
+            type: 'string',
+            required: false,
+            default: "",
+            
+            displayOptions: {
+              show: {
+                resource: ['webhooks'],
+                operation: ['deliveries'],
+              },
+            },
+            routing: {
+              request: {
+                qs: {
+                  'event': '={{$value}}',
+                },
+              },
+            },
+          },
+      {
+            displayName: 'Filter by delivery status',
+            name: 'status',
+            type: 'string',
+            required: false,
+            default: "",
+            options: [{name: 'pending', value: 'pending'}, {name: 'success', value: 'success'}, {name: 'failed', value: 'failed'}],
+            displayOptions: {
+              show: {
+                resource: ['webhooks'],
+                operation: ['deliveries'],
+              },
+            },
+            routing: {
+              request: {
+                qs: {
+                  'status': '={{$value}}',
+                },
+              },
+            },
+          },
+      {
+            displayName: 'Number of deliveries to return (1-100)',
+            name: 'limit',
+            type: 'number',
+            required: false,
+            default: 50,
+            
+            displayOptions: {
+              show: {
+                resource: ['webhooks'],
+                operation: ['deliveries'],
+              },
+            },
+            routing: {
+              request: {
+                qs: {
+                  'limit': '={{$value}}',
+                },
+              },
+            },
+          },
+      {
+            displayName: 'Number of deliveries to skip',
+            name: 'offset',
+            type: 'number',
+            required: false,
+            default: "",
+            
+            displayOptions: {
+              show: {
+                resource: ['webhooks'],
+                operation: ['deliveries'],
+              },
+            },
+            routing: {
+              request: {
+                qs: {
+                  'offset': '={{$value}}',
+                },
+              },
+            },
+          },
+      {
           displayName: 'Project',
           name: 'project',
           type: 'string',
@@ -6368,93 +6611,18 @@ export class MsgCore implements INodeType {
           },
         },
       {
-          displayName: 'Webhook Id',
+          displayName: 'WebhookId',
           name: 'webhookId',
           type: 'string',
           required: true,
           default: '',
-          description: 'Webhook Id parameter',
+          description: 'webhookId parameter',
           displayOptions: {
             show: {
               resource: ['webhooks'],
               operation: ['deliveries'],
             },
           },
-        },
-      {
-          displayName: 'Additional Fields',
-          name: 'additionalFields',
-          type: 'collection',
-          placeholder: 'Add Field',
-          default: {},
-          displayOptions: {
-            show: {
-              resource: ['webhooks'],
-              operation: ['deliveries'],
-            },
-          },
-          options: [
-            {
-              displayName: 'Filter by event type',
-              name: 'event',
-              type: 'string',
-              default: "",
-              description: 'Filter by event type',
-              
-              routing: {
-                request: {
-                  qs: {
-                    'event': '={{$value}}',
-                  },
-                },
-              },
-            },
-            {
-              displayName: 'Filter by delivery status',
-              name: 'status',
-              type: 'string',
-              default: "",
-              description: 'Filter by delivery status',
-              options: [{name: 'pending', value: 'pending'}, {name: 'success', value: 'success'}, {name: 'failed', value: 'failed'}],
-              routing: {
-                request: {
-                  qs: {
-                    'status': '={{$value}}',
-                  },
-                },
-              },
-            },
-            {
-              displayName: 'Number of deliveries to return (1-100)',
-              name: 'limit',
-              type: 'number',
-              default: 50,
-              description: 'Number of deliveries to return (1-100)',
-              
-              routing: {
-                request: {
-                  qs: {
-                    'limit': '={{$value}}',
-                  },
-                },
-              },
-            },
-            {
-              displayName: 'Number of deliveries to skip',
-              name: 'offset',
-              type: 'number',
-              default: 0,
-              description: 'Number of deliveries to skip',
-              
-              routing: {
-                request: {
-                  qs: {
-                    'offset': '={{$value}}',
-                  },
-                },
-              },
-            }
-          ],
         }
     ],
   };
