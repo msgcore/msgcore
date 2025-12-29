@@ -106,6 +106,13 @@ npm install n8n-nodes-msgcore
 - **billing usage** - Get usage statistics for projects, messages, platforms, webhooks with limit warnings
 - **billing sync** - Manually sync subscription data from Stripe
 
+### ApiKeys
+
+- **keys create** - Generate a new API key
+- **keys list** - List all API keys for project
+- **keys revoke** - Revoke an API key
+- **keys roll** - Roll an API key (generate new key, revoke old after 24h)
+
 ### Auth
 
 - **auth signup** - Create a new user account (first user becomes admin)
@@ -114,13 +121,6 @@ npm install n8n-nodes-msgcore
 - **auth whoami** - Get current authentication context and permissions
 - **auth update-password** - Update your password (requires current password)
 - **auth update-profile** - Update your profile information
-
-### ApiKeys
-
-- **keys create** - Generate a new API key
-- **keys list** - List all API keys for project
-- **keys revoke** - Revoke an API key
-- **keys roll** - Roll an API key (generate new key, revoke old after 24h)
 
 ### Platform Logs
 

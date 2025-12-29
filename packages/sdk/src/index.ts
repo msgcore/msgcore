@@ -6,6 +6,6 @@ export * from './types.js';
 export * from './errors.js';
 
 // Version info
-export const SDK_VERSION = '1.1.0';
-export const GENERATED_AT = '2025-11-30T15:06:28.849Z';
+export const SDK_VERSION = '1.1.2';
+export const GENERATED_AT = '2025-12-29T14:27:48.662Z';
 export const CONTRACTS_COUNT = 87;

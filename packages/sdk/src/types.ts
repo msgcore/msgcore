@@ -593,8 +593,9 @@ export interface ResourceUsage {
 }
 
 export interface SendMessageDto {
-  targets: TargetDto[];
-  content: ContentDto;
+  target: string;
+  text?: string;
+  content?: ContentDto;
   options?: OptionsDto;
   metadata?: MetadataDto;
 }
@@ -658,14 +659,6 @@ export interface SyncHistoryDto {
 export interface SyncResponseDto {
   synced: boolean;
 }
-
-export interface TargetDto {
-  platformId: string;
-  type: TargetType;
-  id: string;
-}
-
-export type TargetType = 'chat' | 'identity' | 'messages' | 'date_range';
 
 export interface UpdateAnalysisProfileDto {
   name?: string;
