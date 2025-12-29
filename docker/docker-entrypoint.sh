@@ -28,7 +28,7 @@ BACKEND_PORT=${PORT:-7890}
 # Run database migrations
 echo "Running database migrations..."
 cd /app/backend
-npx prisma migrate deploy
+npx prisma@6 migrate deploy
 if [ $? -ne 0 ]; then
     echo "✗ Migration failed"
     exit 1

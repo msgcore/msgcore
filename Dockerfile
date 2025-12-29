@@ -17,8 +17,8 @@ COPY prisma ./prisma/
 # Install all dependencies (including dev)
 RUN npm ci
 
-# Generate Prisma client
-RUN npx prisma generate
+# Generate Prisma client (use local version from package.json)
+RUN npm exec prisma generate
 
 # Copy backend source and tools
 COPY src ./src
@@ -87,8 +87,8 @@ RUN npm ci --only=production --legacy-peer-deps --ignore-scripts && \
     npm rebuild && \
     npm cache clean --force
 
-# Generate Prisma client for production
-RUN npx prisma generate
+# Generate Prisma client for production (explicit v6 to avoid v7 breaking changes)
+RUN npx prisma@6 generate
 
 # ==============================================================================
 # Stage 4: Final Production Image
