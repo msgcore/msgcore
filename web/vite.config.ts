@@ -14,6 +14,8 @@ export default defineConfig({
     alias: {
       '@': path.resolve(__dirname, './src'),
     },
+    // Ensure shared dependencies are resolved from web's node_modules
+    dedupe: ['axios'],
   },
   server: {
     port: parseInt(process.env.MSGCORE_PORT || '5173'),
