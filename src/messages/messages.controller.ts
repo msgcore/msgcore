@@ -220,24 +220,20 @@ export class MessagesController {
     outputType: 'MessageSendResponse',
     options: {
       target: {
-        description: 'Single target in format: platformId:type:id',
-        type: 'target_pattern',
-      },
-      targets: {
-        description:
-          'Multiple targets comma-separated: platformId:type:id,platformId:type:id',
-        type: 'targets_pattern',
+        required: true,
+        description: 'Target(s) in format platformId:type:id. For multiple, comma-separate: p1:user:1,p2:channel:2',
+        type: 'string',
       },
       text: {
         description: 'Message text content',
         type: 'string',
       },
       content: {
-        description: 'Full message content object (advanced)',
+        description: 'Full content object (text, markdown, html, attachments, buttons, embeds)',
         type: 'object',
       },
-      options: { description: 'Message options', type: 'object' },
-      metadata: { description: 'Message metadata', type: 'object' },
+      options: { description: 'Message options (replyTo, silent, scheduled)', type: 'object' },
+      metadata: { description: 'Message metadata (trackingId, tags, priority)', type: 'object' },
     },
     examples: [
       {
@@ -248,7 +244,7 @@ export class MessagesController {
       {
         description: 'Send to multiple targets',
         command:
-          'msgcore messages send --targets "platform1:user:123,platform2:channel:456" --text "Broadcast message"',
+          'msgcore messages send --target "platform1:user:123,platform2:channel:456" --text "Broadcast message"',
       },
       {
         description: 'Advanced with full content object',

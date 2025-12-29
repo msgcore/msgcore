@@ -230,14 +230,17 @@ export class MetadataDto {
 }
 
 export class SendMessageDto {
-  @IsArray()
-  @ValidateNested({ each: true })
-  @Type(() => TargetDto)
-  targets: TargetDto[];
+  @IsString()
+  target: string; // Format: "platformId:type:id" or comma-separated "p1:user:1,p2:channel:2"
 
+  @IsOptional()
+  @IsString()
+  text?: string; // Simple text shortcut
+
+  @IsOptional()
   @ValidateNested()
   @Type(() => ContentDto)
-  content: ContentDto;
+  content?: ContentDto; // Full content object (advanced)
 
   @IsOptional()
   @ValidateNested()

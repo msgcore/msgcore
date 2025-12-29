@@ -33,9 +33,9 @@ export class MessageQueue implements OnModuleInit, OnModuleDestroy {
   async addMessage(data: MessageJobData) {
     const job = await this.messageQueue.add('send-message', data);
 
-    const platformIds = data.message.targets.map((t) => t.platformId);
+    const targetCount = data.message.target.split(',').length;
     this.logger.log(
-      `Message queued for ${data.message.targets.length} targets (Job ID: ${job.id})`,
+      `Message queued for ${targetCount} target(s) (Job ID: ${job.id})`,
     );
 
     return {
