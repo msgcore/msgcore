@@ -1803,6 +1803,194 @@
     }
   },
   {
+    "controller": "AuthController",
+    "method": "signup",
+    "httpMethod": "POST",
+    "path": "/api/v1/auth/signup",
+    "contractMetadata": {
+      "command": "auth signup",
+      "description": "Create a new user account (first user becomes admin)",
+      "category": "Auth",
+      "requiredScopes": [],
+      "excludeFromMcp": true,
+      "inputType": "SignupDto",
+      "outputType": "AuthResponse",
+      "options": {
+        "email": {
+          "required": true,
+          "description": "Email address",
+          "type": "string"
+        },
+        "password": {
+          "required": true,
+          "description": "Password (min 8 chars, 1 uppercase, 1 number)",
+          "type": "string"
+        },
+        "name": {
+          "required": false,
+          "description": "Full name",
+          "type": "string"
+        }
+      },
+      "examples": [
+        {
+          "description": "Create first admin user",
+          "command": "msgcore auth signup --email admin@example.com --password Admin123 --name \"Admin User\""
+        }
+      ]
+    }
+  },
+  {
+    "controller": "AuthController",
+    "method": "login",
+    "httpMethod": "POST",
+    "path": "/api/v1/auth/login",
+    "contractMetadata": {
+      "command": "auth login",
+      "description": "Login with email and password",
+      "category": "Auth",
+      "requiredScopes": [],
+      "excludeFromMcp": true,
+      "inputType": "LoginDto",
+      "outputType": "AuthResponse",
+      "options": {
+        "email": {
+          "required": true,
+          "description": "Email address",
+          "type": "string"
+        },
+        "password": {
+          "required": true,
+          "description": "Password",
+          "type": "string"
+        }
+      },
+      "examples": [
+        {
+          "description": "Login with email and password",
+          "command": "msgcore auth login --email admin@example.com --password Admin123"
+        }
+      ]
+    }
+  },
+  {
+    "controller": "AuthController",
+    "method": "acceptInvite",
+    "httpMethod": "POST",
+    "path": "/api/v1/auth/accept-invite",
+    "contractMetadata": {
+      "command": "auth accept-invite",
+      "description": "Accept a project invitation and create account",
+      "category": "Auth",
+      "requiredScopes": [],
+      "excludeFromMcp": true,
+      "inputType": "AcceptInviteDto",
+      "outputType": "AuthResponse",
+      "options": {
+        "token": {
+          "required": true,
+          "description": "Invite token from invitation link",
+          "type": "string"
+        },
+        "name": {
+          "required": true,
+          "description": "Full name",
+          "type": "string"
+        },
+        "password": {
+          "required": true,
+          "description": "Password (min 8 chars, 1 uppercase, 1 number)",
+          "type": "string"
+        }
+      },
+      "examples": [
+        {
+          "description": "Accept invitation",
+          "command": "msgcore auth accept-invite --token abc123... --name \"John Doe\" --password SecurePass123"
+        }
+      ]
+    }
+  },
+  {
+    "controller": "AuthController",
+    "method": "getPermissions",
+    "httpMethod": "GET",
+    "path": "/api/v1/auth/whoami",
+    "contractMetadata": {
+      "command": "auth whoami",
+      "description": "Get current authentication context and permissions",
+      "category": "Auth",
+      "requiredScopes": [],
+      "outputType": "PermissionResponse",
+      "examples": [
+        {
+          "description": "Check your authentication context",
+          "command": "msgcore auth whoami"
+        }
+      ]
+    }
+  },
+  {
+    "controller": "AuthController",
+    "method": "updatePassword",
+    "httpMethod": "PATCH",
+    "path": "/api/v1/auth/password",
+    "contractMetadata": {
+      "command": "auth update-password",
+      "description": "Update your password (requires current password)",
+      "category": "Auth",
+      "requiredScopes": [],
+      "excludeFromMcp": true,
+      "inputType": "UpdatePasswordDto",
+      "outputType": "MessageResponse",
+      "options": {
+        "currentPassword": {
+          "required": true,
+          "description": "Current password",
+          "type": "string"
+        },
+        "newPassword": {
+          "required": true,
+          "description": "New password (min 8 chars, 1 uppercase, 1 number)",
+          "type": "string"
+        }
+      },
+      "examples": [
+        {
+          "description": "Update your password",
+          "command": "msgcore auth update-password --currentPassword OldPass123 --newPassword NewPass456"
+        }
+      ]
+    }
+  },
+  {
+    "controller": "AuthController",
+    "method": "updateProfile",
+    "httpMethod": "PATCH",
+    "path": "/api/v1/auth/profile",
+    "contractMetadata": {
+      "command": "auth update-profile",
+      "description": "Update your profile information",
+      "category": "Auth",
+      "requiredScopes": [],
+      "inputType": "UpdateProfileDto",
+      "outputType": "UpdateProfileResponse",
+      "options": {
+        "name": {
+          "required": false,
+          "description": "Full name",
+          "type": "string"
+        }
+      },
+      "examples": [
+        {
+          "description": "Update your name",
+          "command": "msgcore auth update-profile --name \"John Doe\""
+        }
+      ]
+    }
+  },
+  {
     "controller": "BillingController",
     "method": "createCheckout",
     "httpMethod": "POST",
@@ -2035,194 +2223,6 @@
         {
           "description": "Roll an API key",
           "command": "msgcore keys roll --keyId \"key-123\""
-        }
-      ]
-    }
-  },
-  {
-    "controller": "AuthController",
-    "method": "signup",
-    "httpMethod": "POST",
-    "path": "/api/v1/auth/signup",
-    "contractMetadata": {
-      "command": "auth signup",
-      "description": "Create a new user account (first user becomes admin)",
-      "category": "Auth",
-      "requiredScopes": [],
-      "excludeFromMcp": true,
-      "inputType": "SignupDto",
-      "outputType": "AuthResponse",
-      "options": {
-        "email": {
-          "required": true,
-          "description": "Email address",
-          "type": "string"
-        },
-        "password": {
-          "required": true,
-          "description": "Password (min 8 chars, 1 uppercase, 1 number)",
-          "type": "string"
-        },
-        "name": {
-          "required": false,
-          "description": "Full name",
-          "type": "string"
-        }
-      },
-      "examples": [
-        {
-          "description": "Create first admin user",
-          "command": "msgcore auth signup --email admin@example.com --password Admin123 --name \"Admin User\""
-        }
-      ]
-    }
-  },
-  {
-    "controller": "AuthController",
-    "method": "login",
-    "httpMethod": "POST",
-    "path": "/api/v1/auth/login",
-    "contractMetadata": {
-      "command": "auth login",
-      "description": "Login with email and password",
-      "category": "Auth",
-      "requiredScopes": [],
-      "excludeFromMcp": true,
-      "inputType": "LoginDto",
-      "outputType": "AuthResponse",
-      "options": {
-        "email": {
-          "required": true,
-          "description": "Email address",
-          "type": "string"
-        },
-        "password": {
-          "required": true,
-          "description": "Password",
-          "type": "string"
-        }
-      },
-      "examples": [
-        {
-          "description": "Login with email and password",
-          "command": "msgcore auth login --email admin@example.com --password Admin123"
-        }
-      ]
-    }
-  },
-  {
-    "controller": "AuthController",
-    "method": "acceptInvite",
-    "httpMethod": "POST",
-    "path": "/api/v1/auth/accept-invite",
-    "contractMetadata": {
-      "command": "auth accept-invite",
-      "description": "Accept a project invitation and create account",
-      "category": "Auth",
-      "requiredScopes": [],
-      "excludeFromMcp": true,
-      "inputType": "AcceptInviteDto",
-      "outputType": "AuthResponse",
-      "options": {
-        "token": {
-          "required": true,
-          "description": "Invite token from invitation link",
-          "type": "string"
-        },
-        "name": {
-          "required": true,
-          "description": "Full name",
-          "type": "string"
-        },
-        "password": {
-          "required": true,
-          "description": "Password (min 8 chars, 1 uppercase, 1 number)",
-          "type": "string"
-        }
-      },
-      "examples": [
-        {
-          "description": "Accept invitation",
-          "command": "msgcore auth accept-invite --token abc123... --name \"John Doe\" --password SecurePass123"
-        }
-      ]
-    }
-  },
-  {
-    "controller": "AuthController",
-    "method": "getPermissions",
-    "httpMethod": "GET",
-    "path": "/api/v1/auth/whoami",
-    "contractMetadata": {
-      "command": "auth whoami",
-      "description": "Get current authentication context and permissions",
-      "category": "Auth",
-      "requiredScopes": [],
-      "outputType": "PermissionResponse",
-      "examples": [
-        {
-          "description": "Check your authentication context",
-          "command": "msgcore auth whoami"
-        }
-      ]
-    }
-  },
-  {
-    "controller": "AuthController",
-    "method": "updatePassword",
-    "httpMethod": "PATCH",
-    "path": "/api/v1/auth/password",
-    "contractMetadata": {
-      "command": "auth update-password",
-      "description": "Update your password (requires current password)",
-      "category": "Auth",
-      "requiredScopes": [],
-      "excludeFromMcp": true,
-      "inputType": "UpdatePasswordDto",
-      "outputType": "MessageResponse",
-      "options": {
-        "currentPassword": {
-          "required": true,
-          "description": "Current password",
-          "type": "string"
-        },
-        "newPassword": {
-          "required": true,
-          "description": "New password (min 8 chars, 1 uppercase, 1 number)",
-          "type": "string"
-        }
-      },
-      "examples": [
-        {
-          "description": "Update your password",
-          "command": "msgcore auth update-password --currentPassword OldPass123 --newPassword NewPass456"
-        }
-      ]
-    }
-  },
-  {
-    "controller": "AuthController",
-    "method": "updateProfile",
-    "httpMethod": "PATCH",
-    "path": "/api/v1/auth/profile",
-    "contractMetadata": {
-      "command": "auth update-profile",
-      "description": "Update your profile information",
-      "category": "Auth",
-      "requiredScopes": [],
-      "inputType": "UpdateProfileDto",
-      "outputType": "UpdateProfileResponse",
-      "options": {
-        "name": {
-          "required": false,
-          "description": "Full name",
-          "type": "string"
-        }
-      },
-      "examples": [
-        {
-          "description": "Update your name",
-          "command": "msgcore auth update-profile --name \"John Doe\""
         }
       ]
     }

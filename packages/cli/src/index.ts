@@ -27,7 +27,7 @@ const program = new Command();
 program
   .name('msgcore')
   .description('MsgCore Universal Messaging Gateway CLI')
-  .version('1.1.0');
+  .version('1.1.3');
 
 // Config command
 const config = new Command('config');

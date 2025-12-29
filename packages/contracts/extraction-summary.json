@@ -1,5 +1,5 @@
 {
-  "extractedAt": "2025-12-29T14:27:47.211Z",
+  "extractedAt": "2025-12-29T14:40:12.728Z",
   "totalContracts": 87,
   "contractsByController": {
     "WebhooksController": 6,
@@ -8,9 +8,9 @@
     "MessagesController": 9,
     "MembersController": 5,
     "IdentitiesController": 12,
+    "AuthController": 6,
     "BillingController": 5,
     "ApiKeysController": 4,
-    "AuthController": 6,
     "PlatformLogsController": 3,
     "PlatformHealthController": 1,
     "ChatsController": 6,
@@ -27,9 +27,9 @@
     "Messages": 9,
     "Members": 5,
     "Identities": 12,
+    "Auth": 6,
     "Billing": 5,
     "ApiKeys": 4,
-    "Auth": 6,
     "Platform Logs": 3,
     "Chats": 6,
     "Analysis / Models": 1,

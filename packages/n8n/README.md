@@ -98,6 +98,15 @@ npm install n8n-nodes-msgcore
 - **identities messages** - Get all messages for an identity (across all linked platform accounts)
 - **identities reactions** - Get all reactions for an identity (across all linked platform accounts)
 
+### Auth
+
+- **auth signup** - Create a new user account (first user becomes admin)
+- **auth login** - Login with email and password
+- **auth accept-invite** - Accept a project invitation and create account
+- **auth whoami** - Get current authentication context and permissions
+- **auth update-password** - Update your password (requires current password)
+- **auth update-profile** - Update your profile information
+
 ### Billing
 
 - **billing checkout** - Create Stripe checkout session for subscription upgrade
@@ -112,15 +121,6 @@ npm install n8n-nodes-msgcore
 - **keys list** - List all API keys for project
 - **keys revoke** - Revoke an API key
 - **keys roll** - Roll an API key (generate new key, revoke old after 24h)
-
-### Auth
-
-- **auth signup** - Create a new user account (first user becomes admin)
-- **auth login** - Login with email and password
-- **auth accept-invite** - Accept a project invitation and create account
-- **auth whoami** - Get current authentication context and permissions
-- **auth update-password** - Update your password (requires current password)
-- **auth update-profile** - Update your profile information
 
 ### Platform Logs
 
