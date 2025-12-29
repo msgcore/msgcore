@@ -88,13 +88,9 @@ export class CLIGenerator {
       .map((contract) => this.generateCommand(contract, platformMetadata))
       .join('\n\n');
 
-    // Check if any command in this category uses pattern-based DTO (has target/targets patterns)
+    // Check if any command in this category uses SendMessageDto
     const needsMessageUtils = contracts.some((contract) => {
-      const options = contract.contractMetadata?.options || {};
-      return Object.values(options).some(
-        (opt: any) =>
-          opt.type === 'target_pattern' || opt.type === 'targets_pattern',
-      );
+      return contract.contractMetadata?.inputType === 'SendMessageDto';
     });
 
     const messageUtilsImport = needsMessageUtils
@@ -269,12 +265,10 @@ ${allOptions}
       return '{}';
     }
 
-    // Check if we have target patterns
-    const hasTargetPattern = options.target?.type === 'target_pattern';
-    const hasTargetsPattern = options.targets?.type === 'targets_pattern';
-    const hasTextShortcut = options.text?.type === 'string';
+    // Check if this is a SendMessageDto (has required target field)
+    const isSendMessageDto = options.target?.required === true && options.text !== undefined;
 
-    if (hasTargetPattern || hasTargetsPattern || hasTextShortcut) {
+    if (isSendMessageDto) {
       return this.buildPatternBasedDto(options);
     }
 

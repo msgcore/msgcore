@@ -124,7 +124,7 @@ const CONTRACTS = [
       "ReceivedMessageResponse": "export interface ReceivedMessageResponse {\n  id: string;\n  platform: string;\n  providerMessageId: string;\n  providerChatId: string;\n  providerUserId: string;\n  userDisplay: string | null;\n  messageText: string | null;\n  messageType: string;\n  timestamp: Date;\n  direction: string;\n  source: string;\n  rawData: any;\n  platformConfig?: {\n    id: string;\n    platform: string;\n    isActive: boolean;\n    testMode: boolean;\n  };\n}",
       "ReceivedReactionResponse": "export interface ReceivedReactionResponse {\n  id: string;\n  projectId: string;\n  platformId: string;\n  platform: string;\n  providerMessageId: string;\n  providerChatId: string;\n  providerUserId: string;\n  userDisplay: string | null;\n  emoji: string;\n  reactionType: 'added' | 'removed';\n  rawData: Record<string, any>;\n  timestamp: Date;\n}",
       "ResourceUsage": "export interface ResourceUsage {\n  current: number;\n  limit: number;\n  usagePercent: number;\n  isApproachingLimit: boolean;\n  isAtLimit: boolean;\n  nextTier?: string;\n}",
-      "SendMessageDto": "export interface SendMessageDto {\n  targets: TargetDto[];\n  content: ContentDto;\n  options?: OptionsDto;\n  metadata?: MetadataDto;\n}",
+      "SendMessageDto": "export interface SendMessageDto {\n  target: string;\n  text?: string;\n  content?: ContentDto;\n  options?: OptionsDto;\n  metadata?: MetadataDto;\n}",
       "SendReactionDto": "export interface SendReactionDto {\n  platformId: string;\n  messageId: string;\n  emoji: string;\n}",
       "SignupDto": "export interface SignupDto {\n  email: string;\n  password: string;\n  name?: string;\n}",
       "SubscriptionResponseDto": "export interface SubscriptionResponseDto {\n  tier: SubscriptionTier;\n  status: SubscriptionStatus;\n  startedAt: Date | null;\n  endsAt: Date | null;\n  stripeCustomerId: string | null;\n  stripeSubscriptionId: string | null;\n  isTrialing: boolean;\n  daysUntilEnd: number | null;\n}",
@@ -133,8 +133,6 @@ const CONTRACTS = [
       "SupportedPlatformsResponse": "export interface SupportedPlatformsResponse {\n  platforms: Array<{\n    name: string;\n    displayName: string;\n    connectionType: string;\n    features: {\n      supportsWebhooks: boolean;\n      supportsPolling: boolean;\n      supportsWebSocket: boolean;\n    };\n    capabilities: Array<{\n      capability: string;\n      limitations?: string;\n    }>;\n    credentials: {\n      required: string[];\n      optional: string[];\n      example: Record<string, any>;\n    } | null;\n  }>;\n}",
       "SyncHistoryDto": "export interface SyncHistoryDto {\n  platformId?: string;\n  startDate?: string;\n  endDate?: string;\n  limit?: number;\n}",
       "SyncResponseDto": "export interface SyncResponseDto {\n  synced: boolean;\n}",
-      "TargetDto": "export interface TargetDto {\n  platformId: string;\n  type: TargetType;\n  id: string;\n}",
-      "TargetType": "export type TargetType = 'chat' | 'identity' | 'messages' | 'date_range';",
       "UpdateAnalysisProfileDto": "export interface UpdateAnalysisProfileDto {\n  name?: string;\n  description?: string;\n  graphDefinition?: Record<string, any>;\n  entitySchemaIds?: string[];\n  storeEntities?: boolean;\n  generateTags?: boolean;\n}",
       "UpdateChatDto": "export interface UpdateChatDto {\n  name?: string;\n  avatarUrl?: string;\n  metadata?: any;\n}",
       "UpdateEntitySchemaDto": "export interface UpdateEntitySchemaDto {\n  name?: string;\n  description?: string;\n  extractionType?: 'llm_extraction' | 'rule_based' | 'api_logged';\n  properties?: Record<string, any>;\n  prompt?: string;\n  model?: string;\n  temperature?: number;\n  ruleDefinition?: Record<string, any>;\n}",
@@ -1061,27 +1059,24 @@ const CONTRACTS = [
       "outputType": "MessageSendResponse",
       "options": {
         "target": {
-          "description": "Single target in format: platformId:type:id",
-          "type": "target_pattern"
-        },
-        "targets": {
-          "description": "Multiple targets comma-separated: platformId:type:id,platformId:type:id",
-          "type": "targets_pattern"
+          "required": true,
+          "description": "Target(s) in format platformId:type:id. For multiple, comma-separate: p1:user:1,p2:channel:2",
+          "type": "string"
         },
         "text": {
           "description": "Message text content",
           "type": "string"
         },
         "content": {
-          "description": "Full message content object (advanced)",
+          "description": "Full content object (text, markdown, html, attachments, buttons, embeds)",
           "type": "object"
         },
         "options": {
-          "description": "Message options",
+          "description": "Message options (replyTo, silent, scheduled)",
           "type": "object"
         },
         "metadata": {
-          "description": "Message metadata",
+          "description": "Message metadata (trackingId, tags, priority)",
           "type": "object"
         }
       },
@@ -1092,7 +1087,7 @@ const CONTRACTS = [
         },
         {
           "description": "Send to multiple targets",
-          "command": "msgcore messages send --targets \"platform1:user:123,platform2:channel:456\" --text \"Broadcast message\""
+          "command": "msgcore messages send --target \"platform1:user:123,platform2:channel:456\" --text \"Broadcast message\""
         },
         {
           "description": "Advanced with full content object",
@@ -2005,121 +2000,6 @@ const CONTRACTS = [
     }
   },
   {
-    "controller": "ApiKeysController",
-    "method": "create",
-    "httpMethod": "POST",
-    "path": "/api/v1/projects/:project/keys",
-    "contractMetadata": {
-      "command": "keys create",
-      "description": "Generate a new API key",
-      "category": "ApiKeys",
-      "requiredScopes": [
-        "keys:write"
-      ],
-      "inputType": "CreateApiKeyDto",
-      "outputType": "ApiKeyResponse",
-      "options": {
-        "name": {
-          "required": true,
-          "description": "API key name",
-          "type": "string"
-        },
-        "scopes": {
-          "required": true,
-          "description": "Array of scope strings (e.g., [\"messages:read\", \"messages:write\"])",
-          "type": "array"
-        },
-        "expiresInDays": {
-          "description": "Expiration in days",
-          "type": "number"
-        }
-      },
-      "examples": [
-        {
-          "description": "Create messaging API key",
-          "command": "msgcore keys create --name \"Bot Key\" --scopes \"messages:send,messages:read\""
-        }
-      ]
-    }
-  },
-  {
-    "controller": "ApiKeysController",
-    "method": "findAll",
-    "httpMethod": "GET",
-    "path": "/api/v1/projects/:project/keys",
-    "contractMetadata": {
-      "command": "keys list",
-      "description": "List all API keys for project",
-      "category": "ApiKeys",
-      "requiredScopes": [
-        "keys:read"
-      ],
-      "outputType": "ApiKeyListResponse[]",
-      "examples": [
-        {
-          "description": "List all API keys",
-          "command": "msgcore keys list"
-        }
-      ]
-    }
-  },
-  {
-    "controller": "ApiKeysController",
-    "method": "revoke",
-    "httpMethod": "DELETE",
-    "path": "/api/v1/projects/:project/keys/:keyId",
-    "contractMetadata": {
-      "command": "keys revoke",
-      "description": "Revoke an API key",
-      "category": "ApiKeys",
-      "requiredScopes": [
-        "keys:write"
-      ],
-      "outputType": "MessageResponse",
-      "options": {
-        "keyId": {
-          "required": true,
-          "description": "API key ID to revoke",
-          "type": "string"
-        }
-      },
-      "examples": [
-        {
-          "description": "Revoke an API key",
-          "command": "msgcore keys revoke --keyId \"key-123\""
-        }
-      ]
-    }
-  },
-  {
-    "controller": "ApiKeysController",
-    "method": "roll",
-    "httpMethod": "POST",
-    "path": "/api/v1/projects/:project/keys/:keyId/roll",
-    "contractMetadata": {
-      "command": "keys roll",
-      "description": "Roll an API key (generate new key, revoke old after 24h)",
-      "category": "ApiKeys",
-      "requiredScopes": [
-        "keys:write"
-      ],
-      "outputType": "ApiKeyRollResponse",
-      "options": {
-        "keyId": {
-          "required": true,
-          "description": "API key ID to roll",
-          "type": "string"
-        }
-      },
-      "examples": [
-        {
-          "description": "Roll an API key",
-          "command": "msgcore keys roll --keyId \"key-123\""
-        }
-      ]
-    }
-  },
-  {
     "controller": "BillingController",
     "method": "createCheckout",
     "httpMethod": "POST",
@@ -2237,6 +2117,302 @@ const CONTRACTS = [
         {
           "description": "Sync subscription from Stripe",
           "command": "msgcore billing sync"
+        }
+      ]
+    }
+  },
+  {
+    "controller": "ApiKeysController",
+    "method": "create",
+    "httpMethod": "POST",
+    "path": "/api/v1/projects/:project/keys",
+    "contractMetadata": {
+      "command": "keys create",
+      "description": "Generate a new API key",
+      "category": "ApiKeys",
+      "requiredScopes": [
+        "keys:write"
+      ],
+      "inputType": "CreateApiKeyDto",
+      "outputType": "ApiKeyResponse",
+      "options": {
+        "name": {
+          "required": true,
+          "description": "API key name",
+          "type": "string"
+        },
+        "scopes": {
+          "required": true,
+          "description": "Array of scope strings (e.g., [\"messages:read\", \"messages:write\"])",
+          "type": "array"
+        },
+        "expiresInDays": {
+          "description": "Expiration in days",
+          "type": "number"
+        }
+      },
+      "examples": [
+        {
+          "description": "Create messaging API key",
+          "command": "msgcore keys create --name \"Bot Key\" --scopes \"messages:send,messages:read\""
+        }
+      ]
+    }
+  },
+  {
+    "controller": "ApiKeysController",
+    "method": "findAll",
+    "httpMethod": "GET",
+    "path": "/api/v1/projects/:project/keys",
+    "contractMetadata": {
+      "command": "keys list",
+      "description": "List all API keys for project",
+      "category": "ApiKeys",
+      "requiredScopes": [
+        "keys:read"
+      ],
+      "outputType": "ApiKeyListResponse[]",
+      "examples": [
+        {
+          "description": "List all API keys",
+          "command": "msgcore keys list"
+        }
+      ]
+    }
+  },
+  {
+    "controller": "ApiKeysController",
+    "method": "revoke",
+    "httpMethod": "DELETE",
+    "path": "/api/v1/projects/:project/keys/:keyId",
+    "contractMetadata": {
+      "command": "keys revoke",
+      "description": "Revoke an API key",
+      "category": "ApiKeys",
+      "requiredScopes": [
+        "keys:write"
+      ],
+      "outputType": "MessageResponse",
+      "options": {
+        "keyId": {
+          "required": true,
+          "description": "API key ID to revoke",
+          "type": "string"
+        }
+      },
+      "examples": [
+        {
+          "description": "Revoke an API key",
+          "command": "msgcore keys revoke --keyId \"key-123\""
+        }
+      ]
+    }
+  },
+  {
+    "controller": "ApiKeysController",
+    "method": "roll",
+    "httpMethod": "POST",
+    "path": "/api/v1/projects/:project/keys/:keyId/roll",
+    "contractMetadata": {
+      "command": "keys roll",
+      "description": "Roll an API key (generate new key, revoke old after 24h)",
+      "category": "ApiKeys",
+      "requiredScopes": [
+        "keys:write"
+      ],
+      "outputType": "ApiKeyRollResponse",
+      "options": {
+        "keyId": {
+          "required": true,
+          "description": "API key ID to roll",
+          "type": "string"
+        }
+      },
+      "examples": [
+        {
+          "description": "Roll an API key",
+          "command": "msgcore keys roll --keyId \"key-123\""
+        }
+      ]
+    }
+  },
+  {
+    "controller": "PlatformLogsController",
+    "method": "listLogs",
+    "httpMethod": "GET",
+    "path": "/api/v1/projects/:project/platforms/logs",
+    "contractMetadata": {
+      "command": "platforms logs list",
+      "description": "List platform processing logs for a project",
+      "category": "Platform Logs",
+      "requiredScopes": [
+        "platforms:read"
+      ],
+      "outputType": "PlatformLogsResponse",
+      "options": {
+        "platform": {
+          "description": "Filter by platform (telegram, discord)",
+          "type": "string"
+        },
+        "level": {
+          "description": "Filter by log level",
+          "choices": [
+            "info",
+            "warn",
+            "error",
+            "debug"
+          ],
+          "type": "string"
+        },
+        "category": {
+          "description": "Filter by log category",
+          "choices": [
+            "connection",
+            "webhook",
+            "message",
+            "error",
+            "auth",
+            "general"
+          ],
+          "type": "string"
+        },
+        "startDate": {
+          "description": "Filter logs after this date (ISO 8601)",
+          "type": "string"
+        },
+        "endDate": {
+          "description": "Filter logs before this date (ISO 8601)",
+          "type": "string"
+        },
+        "limit": {
+          "description": "Number of logs to return (1-1000)",
+          "type": "number",
+          "default": "100"
+        },
+        "offset": {
+          "description": "Number of logs to skip",
+          "type": "number"
+        }
+      },
+      "examples": [
+        {
+          "description": "List recent platform logs",
+          "command": "msgcore platforms logs list my-project"
+        },
+        {
+          "description": "List only error logs",
+          "command": "msgcore platforms logs list my-project --level error"
+        },
+        {
+          "description": "List webhook logs for Telegram",
+          "command": "msgcore platforms logs list my-project --platform telegram --category webhook"
+        }
+      ]
+    }
+  },
+  {
+    "controller": "PlatformLogsController",
+    "method": "getPlatformLogs",
+    "httpMethod": "GET",
+    "path": "/api/v1/projects/:project/platforms/:platformId/logs",
+    "contractMetadata": {
+      "command": "platforms logs get",
+      "description": "List logs for a specific platform configuration",
+      "category": "Platform Logs",
+      "requiredScopes": [
+        "platforms:read"
+      ],
+      "outputType": "PlatformLogsResponse",
+      "options": {
+        "level": {
+          "description": "Filter by log level",
+          "choices": [
+            "info",
+            "warn",
+            "error",
+            "debug"
+          ],
+          "type": "string"
+        },
+        "category": {
+          "description": "Filter by log category",
+          "choices": [
+            "connection",
+            "webhook",
+            "message",
+            "error",
+            "auth",
+            "general"
+          ],
+          "type": "string"
+        },
+        "startDate": {
+          "description": "Filter logs after this date (ISO 8601)",
+          "type": "string"
+        },
+        "endDate": {
+          "description": "Filter logs before this date (ISO 8601)",
+          "type": "string"
+        },
+        "limit": {
+          "description": "Number of logs to return (1-1000)",
+          "type": "number",
+          "default": "100"
+        },
+        "offset": {
+          "description": "Number of logs to skip",
+          "type": "number"
+        }
+      },
+      "examples": [
+        {
+          "description": "List logs for specific platform",
+          "command": "msgcore platforms logs get my-project platform-id-123"
+        },
+        {
+          "description": "List recent errors for platform",
+          "command": "msgcore platforms logs get my-project platform-id-123 --level error --limit 50"
+        }
+      ]
+    }
+  },
+  {
+    "controller": "PlatformLogsController",
+    "method": "getLogStats",
+    "httpMethod": "GET",
+    "path": "/api/v1/projects/:project/platforms/logs/stats",
+    "contractMetadata": {
+      "command": "platforms logs stats",
+      "description": "Get platform logs statistics and recent errors",
+      "category": "Platform Logs",
+      "requiredScopes": [
+        "platforms:read"
+      ],
+      "outputType": "PlatformLogStatsResponse",
+      "examples": [
+        {
+          "description": "Get platform logs statistics",
+          "command": "msgcore platforms logs stats my-project"
+        }
+      ]
+    }
+  },
+  {
+    "controller": "PlatformHealthController",
+    "method": "getSupportedPlatforms",
+    "httpMethod": "GET",
+    "path": "/api/v1/platforms/supported",
+    "contractMetadata": {
+      "command": "platforms supported",
+      "description": "List supported platforms with credential requirements",
+      "category": "Platforms",
+      "requiredScopes": [],
+      "excludeFromMcp": true,
+      "outputType": "SupportedPlatformsResponse",
+      "examples": [
+        {
+          "description": "List supported platforms",
+          "command": "msgcore platforms supported"
         }
       ]
     }
@@ -2420,187 +2596,6 @@ const CONTRACTS = [
           "default": 100
         }
       }
-    }
-  },
-  {
-    "controller": "PlatformLogsController",
-    "method": "listLogs",
-    "httpMethod": "GET",
-    "path": "/api/v1/projects/:project/platforms/logs",
-    "contractMetadata": {
-      "command": "platforms logs list",
-      "description": "List platform processing logs for a project",
-      "category": "Platform Logs",
-      "requiredScopes": [
-        "platforms:read"
-      ],
-      "outputType": "PlatformLogsResponse",
-      "options": {
-        "platform": {
-          "description": "Filter by platform (telegram, discord)",
-          "type": "string"
-        },
-        "level": {
-          "description": "Filter by log level",
-          "choices": [
-            "info",
-            "warn",
-            "error",
-            "debug"
-          ],
-          "type": "string"
-        },
-        "category": {
-          "description": "Filter by log category",
-          "choices": [
-            "connection",
-            "webhook",
-            "message",
-            "error",
-            "auth",
-            "general"
-          ],
-          "type": "string"
-        },
-        "startDate": {
-          "description": "Filter logs after this date (ISO 8601)",
-          "type": "string"
-        },
-        "endDate": {
-          "description": "Filter logs before this date (ISO 8601)",
-          "type": "string"
-        },
-        "limit": {
-          "description": "Number of logs to return (1-1000)",
-          "type": "number",
-          "default": "100"
-        },
-        "offset": {
-          "description": "Number of logs to skip",
-          "type": "number"
-        }
-      },
-      "examples": [
-        {
-          "description": "List recent platform logs",
-          "command": "msgcore platforms logs list my-project"
-        },
-        {
-          "description": "List only error logs",
-          "command": "msgcore platforms logs list my-project --level error"
-        },
-        {
-          "description": "List webhook logs for Telegram",
-          "command": "msgcore platforms logs list my-project --platform telegram --category webhook"
-        }
-      ]
-    }
-  },
-  {
-    "controller": "PlatformLogsController",
-    "method": "getPlatformLogs",
-    "httpMethod": "GET",
-    "path": "/api/v1/projects/:project/platforms/:platformId/logs",
-    "contractMetadata": {
-      "command": "platforms logs get",
-      "description": "List logs for a specific platform configuration",
-      "category": "Platform Logs",
-      "requiredScopes": [
-        "platforms:read"
-      ],
-      "outputType": "PlatformLogsResponse",
-      "options": {
-        "level": {
-          "description": "Filter by log level",
-          "choices": [
-            "info",
-            "warn",
-            "error",
-            "debug"
-          ],
-          "type": "string"
-        },
-        "category": {
-          "description": "Filter by log category",
-          "choices": [
-            "connection",
-            "webhook",
-            "message",
-            "error",
-            "auth",
-            "general"
-          ],
-          "type": "string"
-        },
-        "startDate": {
-          "description": "Filter logs after this date (ISO 8601)",
-          "type": "string"
-        },
-        "endDate": {
-          "description": "Filter logs before this date (ISO 8601)",
-          "type": "string"
-        },
-        "limit": {
-          "description": "Number of logs to return (1-1000)",
-          "type": "number",
-          "default": "100"
-        },
-        "offset": {
-          "description": "Number of logs to skip",
-          "type": "number"
-        }
-      },
-      "examples": [
-        {
-          "description": "List logs for specific platform",
-          "command": "msgcore platforms logs get my-project platform-id-123"
-        },
-        {
-          "description": "List recent errors for platform",
-          "command": "msgcore platforms logs get my-project platform-id-123 --level error --limit 50"
-        }
-      ]
-    }
-  },
-  {
-    "controller": "PlatformLogsController",
-    "method": "getLogStats",
-    "httpMethod": "GET",
-    "path": "/api/v1/projects/:project/platforms/logs/stats",
-    "contractMetadata": {
-      "command": "platforms logs stats",
-      "description": "Get platform logs statistics and recent errors",
-      "category": "Platform Logs",
-      "requiredScopes": [
-        "platforms:read"
-      ],
-      "outputType": "PlatformLogStatsResponse",
-      "examples": [
-        {
-          "description": "Get platform logs statistics",
-          "command": "msgcore platforms logs stats my-project"
-        }
-      ]
-    }
-  },
-  {
-    "controller": "PlatformHealthController",
-    "method": "getSupportedPlatforms",
-    "httpMethod": "GET",
-    "path": "/api/v1/platforms/supported",
-    "contractMetadata": {
-      "command": "platforms supported",
-      "description": "List supported platforms with credential requirements",
-      "category": "Platforms",
-      "requiredScopes": [],
-      "excludeFromMcp": true,
-      "outputType": "SupportedPlatformsResponse",
-      "examples": [
-        {
-          "description": "List supported platforms",
-          "command": "msgcore platforms supported"
-        }
-      ]
     }
   },
   {
@@ -3428,7 +3423,7 @@ class McpStdioServer {
       result: {
         protocolVersion: '2024-11-05',
         capabilities: { tools: {} },
-        serverInfo: { name: 'msgcore-mcp-cli', version: '1.1.0' },
+        serverInfo: { name: 'msgcore-mcp-cli', version: '1.1.3' },
       },
     };
   }
